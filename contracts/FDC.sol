@@ -300,6 +300,41 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   //
   // Only provided for public use, not used internally
 
+  function getStatus(uint donationPhase, address dfnAddr, address fwdAddr) public constant returns (
+	state currentState,
+	uint fxRate,
+	uint donationCount,
+	uint totalTokenAmount,
+	uint startTime,
+	uint endTime,
+	bool isCapReached,
+	uint chfCentsDonated,
+	uint tokenAmount,
+	uint fwdBalance)
+  {
+    // global state
+    currentState = getState();
+    fxRate = weiPerCHF;
+    donationCount = totalUnrestrictedAssignments;
+    totalTokenAmount = totalUnrestrictedTokens;
+
+    // phase dependent state
+    uint i;
+    if (donationPhase == 0) {
+      i = 2;
+    } else {
+      i = 4;
+    }
+    startTime = phaseEndTime[i=1];
+    endTime = phaseEndTime[i];
+    isCapReached = capReached(i);
+    chfCentsDonated = counter[i];
+
+    // addr dependent state
+    tokenAmount = balanceOf(dfnAddr);
+    fwdBalance = fwdAddr.balance;
+  }
+
   function getCurrentMultiplier() public constant returns (uint) {
     return getMultiplierAtTime(now);
   }
