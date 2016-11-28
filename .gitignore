@@ -1,0 +1,15 @@
+**/.DS_Store
+**/.*.swp
+**/*.log
+
+# Directories used by tools like mocha & istanbul
+coverage
+shippable
+
+# Dependency directory
+**/node_modules
+
+# Generated files
+**/*.sol.js
+build/
+dist/
