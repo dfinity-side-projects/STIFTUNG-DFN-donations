@@ -1,48 +1,323 @@
+* {
+	color: white;
+	font-family: 'Open Sans', 'Arial', sans-serif;
+	font-size: 15px;
+}
 body {
-  margin-left: 25%;
-  margin-right: 25%;
-  margin-top: 10%;
-  font-family: "Open Sans", sans-serif;
+	background-color: white;
+	padding: 0px;
+	margin: 0px;
+	color: white;
+}
+a {
+	text-decoration: underline;
+}
+a:hover {
+	text-decoration: none;
+}
+a.tip-link {
+	color: #75DB3C  !important;
+	text-decoration: none;
+}
+input, button {
+	background-color: white;
+}			
+#content {
+	width: 975px;
+	margin: auto;
+	text-align: center;
+	/*background-color: black;*/
+	background-color: rgb(34, 34, 34);
+	box-shadow: 0px 0px 17px 0px rgba(0,0,0,0.75);
+}
+#logo {
+	padding: 20px 0px;
+}
+#logo img {
+	width: 300px;
+}
+#heading {
+	border-bottom: 1px solid black;
+	padding-top: 20px;
+	padding-bottom: 5px;
+}
+#heading h2 {
+	margin: 0px;
+}
+#dashboard, #tasks {
+	text-align: left;				
+}
+#dashboard .box-header, #tasks .box-header {
+}
+#dashboard ul, #tasks ul {
+	margin: 0px;
+	padding: 0px;
+
+}
+#dashboard li, #tasks li {
+	list-style-type: none;
+	padding-bottom: 30px;
+}
+#dashboard li div > span, #tasks li span.tick {
+	float: right;
+}
+#dashboard li {
+	font-weight: bold;
+	padding-bottom: 40px;
+}
+#dashboard li span {
+	font-weight: normal;
+}
+#dashboard div.error {
+	color: #333;
+	background-color: white;
+	border: 7px solid red;
+	padding: 10px;
+	font-weight: normal;
+	margin-bottom: 25px;
+}
+#dashboard div.error a {
+	color: black;
+	text-decoration: underline;
+}
+#dashboard div.error a:hover {
+	text-decoration: none;
+}
+#tasks {
+	height: 420px;				
+	width: 400px;
+	float: left;
+	border-right: 1px solid #666;	
+}
+#tasks li {
+	padding: 5 0 5 0px;
+}
+#tasks li div {
+	padding: 15px;
+	color: #CCC;
+}
+#tasks li .done, #tasks li .done * {
+	/*color: #33E9FF; */
+	/*color: #A0A0A0;*/
+	color: white;
+}	
+#tasks li a {
+	color: white;
+	text-decoration: underline;
+}	
+#tasks li a:hover {
+	text-decoration: none;
+}							
+#tasks .next-task {
+	font-weight: bold;
+	/*background-color: #33E9FF;*/
+	background-color: rgb(141,196,72);
+	color: black;
+}	
+#tasks .done-task {
+	color: white;
+}	
+#tasks li span.task-number {
+	font-family: 'Open Sans Condensed', 'Arial', sans-serif;
+	display: inline-block;
+	color: white;
+}
+.tick {
+	height: 22px;
+	width: 22px;
+	padding: 3px;
+	background-color: #333;
+	border-radius: 50%;
+	margin-top: -4px;
+	position: relative;
+}
+.tick span {
+	position: absolute;
+	left: 8px;
+	top: 4px;
+}
+.blink {
+  animation: blinker 1s linear infinite;
 }
 
-label {
-  display: inline-block;
-  width: 100px;
+@keyframes blinker {  
+  30% { opacity: 0.3; }
 }
 
-input {
-  width: 500px;
-  padding: 5px;
-  font-size: 16px;
+#dashboard {
+	width: 573px;				
+	float: right;			
 }
-
-button {
-  font-size: 16px;
-  padding: 5px;
+#eth-forwarding-address, #genesis-dfinities {
+	text-align: center;
+	padding-bottom: 40px;
 }
-
-h1, h2 {
-  display: inline-block;
-  vertical-align: middle;
-  margin-top: 0px;
-  margin-bottom: 10px;
+.eth-address, .eth-address *, .ip-address {
+	font-family: "Courier New", Courier, monospace;
 }
-
-h2 {
-  color: #AAA;
-  font-size: 32px;
+#eth-forwarding-address .eth-address, #eth-forwarding-address .eth-address * {
+	font-size: 20px;
 }
-
-h3 {
-  font-weight: normal;
-  color: #AAA;
-  font-size: 24px;
+#eth-forwarding-address .eth-address a {
+	text-decoration: none;
 }
-
-.black {
-  color: black;
+#eth-forwarding-address .eth-address a:hover {
+	text-decoration: underline;
 }
+#genesis-dfinities .amount {
+	font-size: 30px;
+	font-family: 'Open Sans Condensed', 'Arial', sans-serif;
+}			
+#eth-forwarding-address .eth-address, #genesis-dfinities .amount {
+	/*color: #75DB3C;*/
+	/*color: #33E9FF;*/
+	/*color: rgb(52,171,226);*/
+	color: white;
+}
+#eth-forwarding-address .legend, #genesis-dfinities .legend {
+	font-size: 18px;
+	padding-top: 10px;
+	/*color: #33E9FF;*/
+	/*color: white;*/
+	color: rgb(52,171,226);
+}
+#dashboard li.dim *, .dim {
+	color: #797979;
+}
+.box-header {
+	border-bottom: 1px solid #666;
+	margin-left: 10px;
+	margin-right: 10px;
+	/*background-color: black;*/
+	color: rgb(52,171,226);				
+	font-family: 'Open Sans Condensed', 'Arial', sans-serif;
+	text-shadow: 2px 2px #222;
+	text-align: center;
+	padding: 10px 0px 10px 0px;
+	font-size: 17px;
+}		
+.box-content {
+	padding: 35 25 20 26px;
+}	
+#tasks .box-content, #dashboard .box-content {
+/*				box-shadow: inset 0 0 10px #000;*/
+}
+#tasks .box-content {
+	padding-top: 45px;
+}
+#progress {
+	/*background-color: black;*/
+	/*box-shadow: inset 0 0 10px 3px #33E9FF;*/
+/*				margin-bottom: 5px;*/
+}
+#progress .box-content {
+	padding: 15 0 50 0px;
+}	
+#info .box-content {
+	padding: 15 40 20 40px;
+	line-height: 26px;
+}	
+.progress-bar-dashboard {
+	position: relative;
+	height: 37px;
+	padding-bottom: 0px;
+}			
+.progress-bar {
+	top: 13px;
+	position: absolute;				
+	width: 617px;
+	display: flex;
+	justify-content: space-between;
+	left: 50%;
+	transform: translate(-50%, 0);
+	-webkit-transform: translate(-50%, 0); /* Safari */
+}
+.progress-bar div {
+	float: left;
+	background-color: #666;
+	height: 5px;
+	width: 59px;
+}
+.progress-bar div.complete {
+	background-color: #33E9FF;
+}
+.progress-bar-dashboard .lower, .progress-bar-dashboard .upper {
+	position: absolute;
+	font-family: 'Open Sans Condensed', 'Arial', sans-serif;
+	font-size: 20px;
+}			
+.progress-bar-dashboard .lower {
+	right: 805px;
+}
+.progress-bar-dashboard .upper {
+	left: 805px;
+}	
+#total-received {
+	font-size: 20px;
+	color: #FFF;
+	font-family: 'Open Sans Condensed', 'Arial', sans-serif;
+	padding-bottom: 7px;
+}		
+.clearfix {
+	clear: both;
+}
+.hidden {
+	display: none;
+}
+#terms, #create-dfn-seed, #verify-dfn-seed, #explain-eth-forwarding, #select-full-node, #withdraw-eth {
+	display: none;	
+	position: fixed;
+	overflow: scroll;				
+	top: 20px;
+	bottom: 20px;
+	left: 20px;
+	right: 20px;					
+	border: 3px solid #333;	
+	padding: 75px;
+}
+.dialog {
+	background-color: white;
+}
+.dialog, .dialog * {
+	color: black !important;							
+}	
+.dialog h1, .dialog h2 {
+	font-size: 18px;
+}	
+.dialog h3 {
+	font-size: 16px;
+}	
+#terms {
+}
+#select-full-node {
 
-#balance {
-  color: black;
+}			
+#console {
+	border-top: 3px solid #666;
+	padding: 5 0 5 20px;
+	margin-bottom: 20px;
+	text-align: left;
+	height: 150px;
+	overflow: scroll;
+	overflow-x: hidden;
+	box-shadow: inset 10px 10px 20px 0px rgba(0,0,0,0.75);
+	background-color: #1A1A1A;
+}
+#console div {
+	color: white;
+	height: 35px;
+}
+p.seed {
+	color: white !important;
+	/*border: 1px solid #33E9FF;*/
+	background-color: #333;
+	padding: 10px;
+}
+/*			#explain-eth-forwarding {
+	display: block;
+}*/
+div.important-notes {
+	border: 1px solid #999 !important;
+	background-color: #EEE;
+	padding: 10 20 10 20px;
 }

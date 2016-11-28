@@ -1,22 +1,207 @@
-<!DOCTYPE html>
 <html>
-<head>
-  <title>MetaCoin - Default Truffle App</title>
-  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-  <link href="./app.css" rel='stylesheet' type='text/css'>
-  <script src="./app.js"></script>
-</head>
-<body>
-  <h1>MetaCoin</h1>
-  <h2>Example Truffle Dapp</h2>
-  <h3>You have <span class="black"><span id="balance"></span> META</span></h3>
+	<head>
+		<title>DFINTIY Foundation Funding Widget</title>
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans+Condensed:700|Open+Sans:400,700" rel="stylesheet">
+		<link rel="stylesheet" href="./app.css" type="text/css" />
+	</head>
+	<body>
+		<div id="content">
 
-  <br>
-  <h1>Send</h1>
-  <br><label for="amount">Amount:</label><input type="text" id="amount" placeholder="e.g., 95"></input>
-  <br><label for="receiver">To Address:</label><input type="text" id="receiver" placeholder="e.g., 0x93e66d9baea28c17d9fc393b53e3fbdd76899dae"></input>
-  <br><br><button id="send" onclick="sendCoin()">Send MetaCoin</button>
-  <br><br>
-  <span id="status"></span>
-</body>
+			<!-- Logo -->
+
+			<div id="logo">
+				<img src="images/dfinity-logo-large.png" />
+			</div>		
+
+			<!-- Progress -->
+
+			<div id="progress">
+				<!-- <div class="box-header">Donate to Stiftung DFINITY. 1M Seed Round</div> -->
+				<div class="box-content">	
+					<div class="progress-bar-dashboard">
+						<div class="lower">? % Done</div>
+						<div class="upper">1M CHF Target</div>						
+						<div class="progress-bar" id="main-progress-bar">
+							<div class="complete"></div>
+							<div class="complete"></div>
+							<div class="complete"></div>
+							<div class="complete"></div>
+							<div class="complete"></div>
+							<div class="complete"></div>
+							<div class="complete"></div>
+							<div class="complete"></div>
+							<div class="complete"></div>
+							<div></div>
+						</div>					
+					</div>
+					<div id="total-received">? CHF Received.</div>
+					<div class="dim">Total value of seed funding received in ETH and fiat (recorded in Swiss Francs)</div>				
+				</div>
+			</div>						
+			<div class="clearfix"></div>	
+
+			<!-- Tasks List -->
+
+			<div id="tasks">
+				<div class="box-header">MAKE DONATIONS</div>
+				<div class="box-content">
+					<ul>
+						<li onclick="ui.showTerms()"><div id="task-agree"><span class="task-number">1</span> &nbsp; Agree the process &amp; terms<span class="tick"><span style="visibility:hidden">&#10004</span></span></div></li>
+						<li onclick="ui.showCreateSeed()"><div id="task-create-seed"><span class="task-number">2</span> &nbsp; Create &amp; save your DFN address<span class="tick"><span style="visibility:hidden">&#10004</span></span></div></li>
+						<li onclick="ui.showExplainForwarding()"><div id="task-understand-fwd-eth"><span class="task-number">3</span> &nbsp; Understand ETH forwarding<span class="tick"><span style="visibility:hidden">&#10004</span></span></div></li>
+						<li onclick="ui.showExplainForwarding()"><div id="task-donate"><span class="task-number">4</span> &nbsp; Make donations<span class="tick"><span style="visibility:hidden">&#10004</span></span></div></li>
+					</ul>
+					<br/>
+					<br/>
+					<br/>
+				</div>
+			</div>			
+
+			<!-- Dashboard -->
+
+			<div id="dashboard">
+				<div class="box-header">YOUR STATUS</div>
+				<div class="box-content">
+					<!-- <div class="error">The foundation collection seed phase is over.<br/><a class="blink" href="">Please withdraw remaining ETH that could not be forwarded.</a></div> -->
+					<!-- <div class="error">There was a forwarding error (the connection was reset).<br/><a class="blink" href="javascript:ui.showWithdrawEth()">Please withdraw remaining ETH</a> or <a class="blink" href="">retry forwarding</a></div> -->
+
+					<div id="genesis-dfinities">
+						<div class="amount">? DFN</div>
+						<div class="legend">Genesis Dfinities <a class="tip-link" href="">?</a></div>
+					</div>					
+					<div id="eth-forwarding-address">
+						<div class="eth-address">?</div>
+						<div class="legend">ETH Forwarding Address <a class="tip-link" href="">?</a></div>
+					</div>
+					<ul>							
+						<li class="dim"><div>Ethereum full node <a class="tip-link" href="">?</a><span><a id="btn-ethereum-node" href="javascript:ui.showSelectEthereumNode()">...</a>&nbsp; | &nbsp;<span id="eth-client-status">?</span></span></div></li>
+						<li class="dim"><div>ETH donations <a class="tip-link" href="">?</a><span><span id="donated-eth">?</span> ETH donated (<span id="waiting-eth">?</span> ETH <a href="javascript:ui.showWithdrawEth()">waiting</a>)</span></div></li>
+					</ul>					
+				</div>
+			</div>		
+			<div class="clearfix"></div>	
+
+			<!-- Console/event log -->
+
+			<div id="console">
+			</div>
+
+			<div id="info">
+				<div class="box-header" >Seed Funding Overview</div>
+				<div class="box-content">						
+					DFINITY is a decentralized "world compute platform" with numerous advanced features. Donations for Stiftung DFINITY, a
+					supporting Swiss not-for-profit &amp; tax exempt foundation, are being collected in two rounds. Stiftung DFINITY will
+					recommend genesis allocations of dfinities in return for donations. Donations made in this first "seed" round will be
+					double counted.<br/>
+					<i>Note: this Chrome extension must be open to forward ETH you are donating.</i>
+				</div>
+			</div>	
+
+			<!-- Disclaimer -->
+
+			<div id="disclaimer">
+				<div class="box-header">Software Disclaimer</div>
+				<div class="box-content">
+THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+				</div>
+			</div>
+			<div class="clearfix"></div>		
+		</div>
+
+		<!-- Popup Dialog Windows -->
+
+		<div id="withdraw-eth" class="dialog">
+			<h2>Withdraw unsent ETH in your forwarding account</h2>
+			<p>If there is ETH in your forwarding account that has not already been forwarded to the Foundation Collection Contract,
+				you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a private wallet).</p>
+			<p>Withdraw to address:
+				<input type="text" width='400' />
+				<input onclick="" type="button" value="Withdraw" />
+				<input onclick="ui.hideWithdrawEth()" type="button" value="Cancel" />
+			</p>
+		</div>
+
+		<div id="create-dfn-seed" class="dialog">
+			<h2>Create your DFN address seed, and store it very safely</h2>
+			<p><i>This application does not store your DFN seed. <b>You must securely maintain this yourself</b>.</i>
+			<p>Your DFN seed is a string of random words and is show below. You must have this seed to access your DFN later. 
+				This application does not store the seed for security reasons, and only keeps the derived keys it needs.
+				Therefore, it is ESSENTIAL that you take a copy of your seed <i>right now</i> and store it safely or
+				YOU WILL LOSE ALL ACCES TO YOUR DFN.</p>
+			<p>We recommend that you create physical, printed copies of your seed. For example, print out the seed onto paper and put it into a
+				fireproof safe. If you keep electronic copies of your seed, make sure they are secure and nobody else can access them. For
+				example, store an electronic seed inside a Mac OS X encrypted file.
+			<p class="seed">tiger house random words dominic bonkers porsche swim starship billy goat twenty devil cloud pin circuit wood road sun petrol light</p>
+			<p><a href="data:application/octet-stream;charset=utf-16le;base64,//5mAG8AbwAgAGIAYQByAAoA">Optionally, download your seed as a file</a></p>
+			<p><input type="button" value="OK, I have now saved my seed and will never lose it" onclick="javascript:ui.afterCreateSeed()" /></p>
+		</div>		
+
+		<div id="verify-dfn-seed" class="dialog">
+			<h2>Check you have your DFN seed in your possession!</h2>
+			<p>This is your last chance to make sure you have your own copy of your seed. Please prove you have it.</p>
+			<p><i>Note: After you have completed this step this application will erase its copy of the seed !!!</i></p>
+			<p>My DFN seed:
+				<input type="text" width='400' />
+				<input onclick="ui.doValidateSeed()" type="button" value="Validate Seed and ERASE" />
+				<input onclick="ui.beforeValidateSeed()" type="button" value="Back" /></p>
+		</div>
+
+		<div id="explain-eth-forwarding" class="dialog">
+			<h2>You are ready to make ETH donations</h2>
+			<p>Send ETH donations to...</p>
+			<p><span class="eth-address">1ES2uBmbXP1pn1KBjPMwwUMbhDHiRuiRkf</span></p>
+			<p>You can use any method you like to send ETH to this forwarding address. For example, you could send it directly from a cryptocurrency
+				exchange, or from a wallet application such as Mist.</p>
+			<p><i>KEEP THIS APPLICATION OPEN to allow it to forward donated ETH, and to monitor progress.</i></p>
+
+			<div class="important-notes">
+				<h3>Important Notes</h3>
+				<p>This special "ETH forwarding address" was created from your DFN seed.</p>
+				<p>Whenever this application detects that the "ETH forwarding address" has received ETH, it forwards the ETH to the Stiftung DFINITY smart
+					contracts that are collecting donations.</p>
+				<p>Stiftung DFINITY records the value donated in Swiss Francs (CHF) and uses this to calculate recommendations
+					for genesis dfinities. Its systems are regularly updated with the CHF to ETH exchange rate for this purpose.</p>
+				<p>When a total of 1M CHF in value has been received, Stiftung DFINITY will stop accepting further ETH donations. The application
+					will allow you to withdraw any ETH you sent to the forwarding address after the limit was reached.</p>
+				<p>Note that there is a small Ethereum gas cost associated with each donation, and this is deducted from the amount.</p>
+			</div>
+
+			<p><input onclick="ui.doneExplainForwarding()" type="button" value="OK I'm Ready!" /></p>
+
+			<div class="important-notes">
+				<h3>If You Have Made A Direct Donation in CHF...</h3>
+				<a id="fiat-donation-information-expand" href="javascript:(function(){document.getElementById('fiat-donation-information').style.display = 'block'; document.getElementById('fiat-donation-information-expand').style.display = 'none';})()">expand...</a>
+				<div id="fiat-donation-information" style="display:none;">
+					<p>This ONLY applies if you have made a wire transfer of fiat money directly to DFINITY Stiftung (and made appropriate agreements with DFINITY Stiftung)</p>
+					<p>In this case, DFINITY Stiftung needs the public key of your future DFINITY account before it can record your donation.</p>
+					<p>Please notify an appropriate representative at DFINITY Stiftung that this is your address (do NOT send ETH to this address):</p>
+					<p><span class="eth-address">1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX</span></p>
+					<p>Once DFINITY Stiftung has reported your donation this extension will report the genesis DFN it will recommend you receive. Please report this address before the start of the funder period. Thank you.</p>
+				</div>
+			</div>
+		</div>
+
+		<div id="select-full-node" class="dialog">
+			<h2>Select Ethereum full node</h2>
+			<p>Please select a full node this application will use to connect to the Ethereum network.</p>
+			<p>Connect to a full node on your computer:</p>
+			<p><a class="ip-address" href="javascript:ui.onSelectEthereumNode('127.0.0.1')">127.0.0.1</a> (e.g. geth running on your computer)</p>
+			<p>Choose a pre-approved full node:</p>
+			<p><a class="ip-address" href="javascript:ui.onSelectEthereumNode('293.12.123.1')">293.12.123.1</a> (Stiftung DFINITY)</p>
+			<p><a class="ip-address" href="javascript:ui.onSelectEthereumNode('163.321.1.33')">163.321.1.33</a> (Stiftung DFINITY)</p>
+			<p><a class="ip-address" href="javascript:ui.onSelectEthereumNode('201.92.59.1')">201.92.59.1</a> (Stiftung DFINITY)</p>
+			<p>Or enter a full node that you fully trust, for example a full node that your company runs, or which Stiftung DFINITY 
+			   announced on their Twitter feed:</p>
+			<p><input id='custom-full-node-address' type='text' width='100' /><input
+				type='button' value='Assign' onclick="ui.onSelectEthereumNode(document.getElementById('custom-full-node-address').value)" /></p>
+		</div>
+
+		<div id="terms" class="dialog">
+			<h2>Terms &amp; Conditions</h2>
+			<p><input id="i-am-not-usa-resident" type="checkbox" />I agree I am not resident in the USA</p>
+			<p>Blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah blah blah Blah blah blah</p>
+			<p><input type="button" value="I Agree Terms &amp; Conditions" onclick="javascript:ui.readTerms()" /></p>
+		</div>
+		<script type="text/javascript" src="./app.js"></script>
+	</body>
 </html>
