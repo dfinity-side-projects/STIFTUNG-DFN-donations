@@ -5,7 +5,8 @@ var account;
 // *** Application logic ***
 // *
 
-var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem for new data
+var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
+var ETHEREUM_CONN_MAX_RETRIES = 10; // max number of retries to automatically selected Ethereum provider
 var queryCount = 0;	// keep track of total number of queries performed for debugging
 
 // Constructor
@@ -41,20 +42,34 @@ var App = function(testUI) {
 	this.setEthereumNode(lastEthereumNode);
 }
 
-var ethPollTimeout;
+var ethPollTimeout;             // handle to current timer for Ethereum polling
+var ethConnectionRetries = 0;   // number consecutive provider connection fails
 
 // Polls Ethereum for updates
 App.prototype.pollStatus = function() {
-  console.log("Polling Ethereum for status (query "+ ++queryCount +")");
-	if (ethPollTimeout) clearTimeout(ethPollTimeout);
+  if (ethPollTimeout) clearTimeout(ethPollTimeout);
+  	
+  //
+  // Are we connected...?
+  //
+  if (!web3.isConnected()) {
+    ui.logger("Not connected to Ethereum...");
+    // adjust connection if too many fails and appropriate
+    app.adjustConnection(++ethConnectionRetries);
+    // reschedule next polling
+    app.schedulePollStatus(); // bail, try later...
+    return;
+  }
+  ethConnectionRetries = 0;
+  console.log("Ethereum provider: "+JSON.stringify(web3.currentProvider));
 
-  var fdc = FDC.deployed();
-	
   //
   // Retrieve all relevant status in a single call to the FDC
-  //
+  //  
+  console.log("Polling Ethereum for status (query "+ ++queryCount +")");
+  // retrieve data from FDC contract
+  var fdc = FDC.deployed();
   fdc.donationCount.call({from: account}).then(function(value) {
-    var thisApp = this;
     try {
       // Update user interface
       ui.logger("Retrieved funder status: Received=" + value + "CHF, ...");
@@ -80,6 +95,12 @@ App.prototype.updateUI = function(totalCHF) {
 
 App.prototype.schedulePollStatus = function() {
 		ethPollTimeout = setTimeout(function() { app.pollStatus(); }, ETHEREUM_POLLING_INTERVAL);
+}
+
+App.prototype.adjustConnection = function(retries) {
+  if (retries > ETHEREUM_CONN_MAX_RETRIES) {
+    // TODO try another provider?
+  }
 }
 
 App.prototype.setCurrentTask = function(tId) {
