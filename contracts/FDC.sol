@@ -43,6 +43,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   // see Caps for status of donation caps 
   uint public weiPerCHF;       // exchange rate between Eth and CHF 
   uint public totalWeiDonated; // total number of wei donated on-chain so far 
+  mapping(address => uint) public weiDonated; // Wei donated per address
 
   //
   // Access control 
@@ -186,6 +187,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
 
     // Accept donation, defer forwarding to the end of this function
     totalWeiDonated += msg.value;
+    weiDonated[addr] += msg.value;
 
     // Convert Wei to CHF cents
     uint chfCents = (msg.value * 100) / weiPerCHF;
@@ -307,16 +309,17 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   function getStatus(uint donationPhase, address dfnAddr, address fwdAddr)
     public constant
     returns (
-    	state currentState,     // current state (an enum)
-    	uint fxRate,            // exchange rate of CHF -> ETH (Wei/CHF)
-    	uint donationCount,     // total individual donations made (a count)
-    	uint totalTokenAmount,  // total DFN planned allocated to donors
-    	uint startTime,         // expected start time of specified donation phase
-    	uint endTime,           // expected end time of specified donation phase
-    	bool isCapReached,      // whether target cap specified phase reached
-    	uint chfCentsDonated,   // total value donated in specified phase as CHF
-    	uint tokenAmount,       // total DFN planned allocted to donor (user)
-    	uint fwdBalance)        // total ETH (in Wei) waiting in fowarding address
+      state currentState,     // current state (an enum)
+      uint fxRate,            // exchange rate of CHF -> ETH (Wei/CHF)
+      uint donationCount,     // total individual donations made (a count)
+      uint totalTokenAmount,  // total DFN planned allocated to donors
+      uint startTime,         // expected start time of specified donation phase
+      uint endTime,           // expected end time of specified donation phase
+      bool isCapReached,      // whether target cap specified phase reached
+      uint chfCentsDonated,   // total value donated in specified phase as CHF
+      uint tokenAmount,       // total DFN planned allocted to donor (user)
+      uint fwdBalance,        // total ETH (in Wei) waiting in fowarding address
+      uint donated)           // total ETH (in Wei) donated by DFN address 
   {
     // global state
     currentState = getState();
@@ -339,6 +342,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     // addr dependent state
     tokenAmount = balanceOf(dfnAddr);
     fwdBalance = fwdAddr.balance;
+    donated = weiDonated[dfnAddr];
   }
 
   function getCurrentMultiplier() public constant returns (uint) {

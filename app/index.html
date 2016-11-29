@@ -62,8 +62,14 @@
 			<div id="dashboard">
 				<div class="box-header">YOUR STATUS</div>
 				<div class="box-content">
-					<!-- <div class="error">The foundation collection seed phase is over.<br/><a class="blink" href="">Please withdraw remaining ETH that could not be forwarded.</a></div> -->
-					<!-- <div class="error">There was a forwarding error (the connection was reset).<br/><a class="blink" href="javascript:ui.showWithdrawEth()">Please withdraw remaining ETH</a> or <a class="blink" href="">retry forwarding</a></div> -->
+					<div id="error-phase-over" class="error" style="display: none">
+						The foundation collection seed phase is over.<br/>
+						<a class="blink" href="">Please withdraw remaining ETH that could not be forwarded.</a>
+					</div>
+					<div id="error-eth-forwarding" class="error" style="display: none">
+						There was a forwarding error (the connection was reset).<br/>
+						<a class="blink" href="javascript:ui.showWithdrawEth()">Please withdraw remaining ETH</a> or <a class="blink" href="javascript:app.retryForwarding()">try forwarding again</a>
+					</div>
 
 					<div id="genesis-dfinities">
 						<div class="amount">? DFN</div>
