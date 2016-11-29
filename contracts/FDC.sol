@@ -301,7 +301,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
 
   // Not used internally. Utility function that retrieves general status of the
   // funder and information specific to a donor.
-  //  donationPhase - phase of the funder
+  //  donationPhase - phase of the funder. 0=seed, 1=main
   //  dfnAddr       - public key address of donor's DFN proposed account
   //  fwdAddr       - public key address of donor's donation forwarding app
   function getStatus(uint donationPhase, address dfnAddr, address fwdAddr)
