@@ -5,6 +5,14 @@
 
 // Constructor
 var UI = function() {
+	this.wireUpDOM();
+}
+
+// Wire up event handlers of UI.
+// This is necessary because Google Chrome extension will not allow inline
+// Javascript at highest manifest security setting.
+UI.prototype.wireUpDOM = function() {
+	// TODO
 }
 
 // Set Ethereum node client IP
@@ -229,13 +237,18 @@ UI.prototype.hideWithdrawEth = function() {
 }
 
 function formatCurrency(n, symbol, d) {
-	var s = Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-	if (d)
-		s += "." + Math.pow(10,d) * (Math.round(n * Math.pow(10,d)) / Math.pow(10,d) % 1);
-	s += " " + symbol;
-	return s;
+	if (d == undefined || d <= 0)
+		return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+	var whole = Math.floor(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	var pad = "";
+	for (var i=0; i<d; i++) pad += "0";
+	var decs  = padNumber(pad, Math.round(n*Math.pow(10, d)) % Math.pow(10, d));
+		
+	return whole + "." + decs;
 }
 
+// pad is e.g. "000", 29 => "029"
 function padNumber(pad, n) {
 	str = ""+n;
 	return pad.substring(0, pad.length - str.length) + str;

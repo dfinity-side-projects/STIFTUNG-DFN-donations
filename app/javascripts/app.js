@@ -2,81 +2,78 @@ var accounts;
 var account;
 
 // *
-// *** Application logic ***
+// *** Constants ***
 // *
 
 var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
 var ETHEREUM_CONN_MAX_RETRIES = 10; // max number of retries to automatically selected Ethereum provider
 
+var GAS_PRICE;											// estimate price of gas
+var MIN_DONATION;										// minimum donation allowed
+var MAX_DONATE_GAS;									// maximum gas used making donation
+var MAX_DONATE_GAS_COST;						// estimate maximum cost of gas used
+var MIN_FORWARD_AMOUNT;							// minimum amount we will try to forward
+// TODO if there's congestion, the gas price might go up. We need to handle
+// this better or leave sufficent margin cannot fail
+
+// *
+// *** Application logic ***
+// *
+
 // Constructor
-var App = function(testUI) {
+var App = function(dfnAddr, fwdAddr, testUI) {
 	ui.logger("Initializing main extension application...");
 
-	// Bomb out if just testing HTML interface (config values in func)
 	if (testUI) {
 		this.setDummyDisplayValues(); 
-		this.pollStatus();
 		return;
 	}	
-
-	// Reload persistent state from storage.
-	// - last task stage
-	// - last Ethereum node IP used
-	// - last forwarding address key pair
-	var lastTask = 'task-agree';
-	var lastEthereumNode = "127.0.0.1";
-	var lastForwardingPubKeyEth = undefined;
-	var lastForwardingPrivKeyETH = undefined;
-	// TODO actually try to read values from storage	
-	// ...
 	
-	// Intialize task and keys...
-	this.setCurrentTask(lastTask);
-	this.setFowardingKeysETH(lastForwardingPubKeyEth, lastForwardingPrivKeyETH);
-
-	// Intialize "on chain" values...
-	// - once the Ethereum node is set, on chain values will be updated on successful connection
+	this.ethPollTimeout = undefined;	// handle to current timer for Ethereum polling
+	this.ethConnectionRetries = 0;		// number consecutive provider connection fails
+	this.donationPhase = 0;						// seed funder
+	this.dfnAddr = dfnAddr;
+	this.fwdAddr = fwdAddr;
+	this.lastTask = 'task-agree';
+	this.lastEthereumNode = "127.0.0.1";
+	
+	this.setCurrentTask(this.lastTask);
+	this.setFowardingKeysETH(this.fwdAddr, this.fwdAddr); // TODO
 	this.setGenesisDFN(undefined);	
 	this.setFunderChfReceived(undefined);
-	this.setEthereumNode(lastEthereumNode);
+	this.setEthereumNode(this.lastEthereumNode);
 	
-	setTimeout(function() { app.pollStatus(); }, 1000);
+	ui.logger("Retrieving status from Ethereum...");
+	// setTimeout(function() { app.pollStatus(); }, 0);
+	this.pollStatus();
 }
-
-var ethPollTimeout;             // handle to current timer for Ethereum polling
-var ethConnectionRetries = 0;   // number consecutive provider connection fails
-
-var donationPhase = 0;					// seed funder
-var dfnAddr;
-var fwdAddr;
 
 // Polls Ethereum for updates
 App.prototype.pollStatus = function() {
-  if (ethPollTimeout) clearTimeout(ethPollTimeout);
-  	
-  //
-  // Are we connected...?
-  //
+  if (this.ethPollTimeout) clearTimeout(this.ethPollTimeout);
+	var self = this;
+  		
+  // Connected?
+  
   if (!web3.isConnected()) {
     ui.logger("Not connected to Ethereum...");
     // adjust connection if too many fails and appropriate
-    app.adjustConnection(++ethConnectionRetries);
+    app.adjustConnection(++this.ethConnectionRetries);
     // reschedule next polling
     app.schedulePollStatus(); // bail, try later...
     return;
   }
-  ethConnectionRetries = 0;
+  this.ethConnectionRetries = 0;
   console.log("Ethereum provider: "+JSON.stringify(web3.currentProvider));
 
-  //
-  // Retrieve all relevant status in a single call to the FDC
-  //  
-  // retrieve data from FDC contract
+ 
+  // Retrieve status information from the FDC...
+
   var fdc = FDC.deployed();
-  fdc.getStatus.call(donationPhase, dfnAddr, fwdAddr, {from: account}).then(function(res) {
+  fdc.getStatus.call(this.donationPhase, this.dfnAddr, this.fwdAddr, {from: account}).then(function(res) {
 	    try {
-	    	console.log("FDC.getStatus: "+JSON.stringify(res));
-	    	
+	    	// Got status info...
+	    	console.log("Got FDC.getStatus: "+JSON.stringify(res));
 				var currentState = res[0];   // current state (an enum)
 				var fxRate = res[1];         // exchange rate of CHF -> ETH (Wei/CHF)
 				var donationCount = res[2];  // total individual donations made (a count)
@@ -88,12 +85,13 @@ App.prototype.pollStatus = function() {
 				var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
 				var fwdBalance = res[9];     // total ETH (in Wei) waiting in fowarding address	    	
 	    	
-	      // Update user interface
-	      app.updateUI(currentState, fxRate, donationCount, totalTokenAmount,
+	      // update user interface with status info
+	      self.updateUI(currentState, fxRate, donationCount, totalTokenAmount,
 	      	startTime, endTime, isCapReached, chfCentsDonated, tokenAmount, fwdBalance);
 	      
-	      // If ETH has been received, forward it!
-	      // TODO if (fwdAddrValue > FWDING_ADDRESS_CHANGE) { ...
+	      // has ETH been received in the forwarding address?? Hooray. Forward it!
+	      if (self.fwdAddr)
+	      	return self.forwardETHbalanceToFDC(fwdBalance);
     } finally {
       app.schedulePollStatus();
     }
@@ -116,8 +114,30 @@ App.prototype.updateUI = function(currentState, fxRate, donationCount, totalToke
 	 ui.setRemainingETH(web3.fromWei(fwdBalance, 'ether'));
 }
 
+App.prototype.forwardETHbalanceToFDC = function(balance) {
+	var self = this;	
+	var fdc = FDC.deployed();
+	
+  if (web3.toBigNumber(balance).lt(MIN_FORWARD_AMOUNT)) {
+  	// not enough ETH to forward
+  	ui.logger("Remaining balance at forwarding address too small to donate");
+  } else {
+  	ui.logger("Forwarding " + web3.fromWei(balance, 'ether') + " ETH...");
+  	// forward as donation...
+    return fdc.donateAs(this.dfnAddr, {
+    	from: self.fwdAddr,
+    	value: balance.sub(MAX_DONATE_GAS_COST),
+    	gasPrice: GAS_PRICE,
+    	gas: MAX_DONATE_GAS}).then(function(txID) {
+    		console.log("Sent forwarding tx with txid: " + txID);
+    }).catch(function(e) {
+      	ui.logger("Error forwarding balance as donation: "+e+" "+JSON.stringify(e));
+    });
+  }	
+}
+
 App.prototype.schedulePollStatus = function() {
-		ethPollTimeout = setTimeout(function() { app.pollStatus(); }, ETHEREUM_POLLING_INTERVAL);
+		this.ethPollTimeout = setTimeout(function() { app.pollStatus(); }, ETHEREUM_POLLING_INTERVAL);
 }
 
 App.prototype.adjustConnection = function(retries) {
@@ -227,13 +247,28 @@ window.onload = function() {
   web3.eth.getAccounts(function(err, accs) {
     
     // First initialize UI wrapper so we can report errors to user
+    console.log("Wiring up HTML DOM...");
     ui = new UI();
-    ui.logger("Initilizing extension, inc. reading storage");
-    
+    console.log("User interface ready.");
+
+		// Initialize constants
+		GAS_PRICE						= web3.toBigNumber(20000000000); // 20 Shannon
+		MIN_DONATION				= web3.toWei('1', 'ether');
+		MAX_DONATE_GAS			= 200000; // highest measured gas cost: 138048
+		MAX_DONATE_GAS_COST = web3.toBigNumber(MAX_DONATE_GAS).mul(GAS_PRICE);
+		MIN_FORWARD_AMOUNT	= web3.toBigNumber(MIN_DONATION).plus(MAX_DONATE_GAS_COST);
+
     //
     // Load current account details from Storage
     //
     
+    ui.logger("Restoring defaults from storage");
+    
+    //
+    // Initialize our Ethereum accounts, and DFN private key
+    // (if they exist already)
+    //
+       
     if (err != null) {
       alert("There was an error fetching your accounts.");
       return;
@@ -256,7 +291,7 @@ window.onload = function() {
     
     ui.setETHForwardingAddress(account);
     
-    app = new App();
-    //app = new App(true); 
+    app = new App(account, account);
+    //app = new App(account, account, true); 
   });
 }

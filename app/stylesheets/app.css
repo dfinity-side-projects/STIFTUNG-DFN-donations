@@ -297,7 +297,7 @@ input, button {
 	padding: 5 0 5 20px;
 	margin-bottom: 20px;
 	text-align: left;
-	height: 150px;
+	height: 250px;
 	overflow: scroll;
 	overflow-x: hidden;
 	box-shadow: inset 10px 10px 20px 0px rgba(0,0,0,0.75);
@@ -305,7 +305,7 @@ input, button {
 }
 #console div {
 	color: white;
-	height: 35px;
+	padding-bottom: 15px;
 }
 p.seed {
 	color: white !important;
