@@ -7,7 +7,6 @@ var account;
 
 var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
 var ETHEREUM_CONN_MAX_RETRIES = 10; // max number of retries to automatically selected Ethereum provider
-var queryCount = 0;	// keep track of total number of queries performed for debugging
 
 // Constructor
 var App = function(testUI) {
@@ -44,6 +43,11 @@ var App = function(testUI) {
 
 var ethPollTimeout;             // handle to current timer for Ethereum polling
 var ethConnectionRetries = 0;   // number consecutive provider connection fails
+var queryCount = 0;							// keep track of total number of queries performed for debugging
+
+var donationPhase = 0;					// seed funder
+var dfnAddr = "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2";
+var fwdAddr = "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2";
 
 // Polls Ethereum for updates
 App.prototype.pollStatus = function() {
@@ -69,14 +73,25 @@ App.prototype.pollStatus = function() {
   console.log("Polling Ethereum for status (query "+ ++queryCount +")");
   // retrieve data from FDC contract
   var fdc = FDC.deployed();
-  fdc.donationCount.call({from: account}).then(function(value) {
-    try {
-      // Update user interface
-      ui.logger("Retrieved funder status: Received=" + value + "CHF, ...");
-      app.updateUI(value); // TODO this should receive *all* values
-      
-      // If ETH has been received, forward it!
-      // TODO if (fwdAddrValue > FWDING_ADDRESS_CHANGE) { ...
+  fdc.getStatus.call(donationPhase, dfnAddr, fwdAddr, {from: account}).then(function(res) {
+	    try {
+				var currentState = res[0];   // current state (an enum)
+				var fxRate = res[1];         // exchange rate of CHF -> ETH (Wei/CHF)
+				var donationCount = res[2];  // total individual donations made (a count)
+				var totalTokenAmount = res[3];// total DFN planned allocated to donors
+				var startTime = res[4];      // expected start time of specified donation phase
+				var endTime = res[5];        // expected end time of specified donation phase
+				var isCapReached = res[6];   // whether target cap specified phase reached
+				var chfCentsDonated = res[7];// total value donated in specified phase as CHF
+				var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
+				var fwdBalance = res[9];     // total ETH (in Wei) waiting in fowarding address	    	
+	    	
+	      // Update user interface
+	      ui.logger("Retrieved funder status: Received=" + chfCentsDonated + "CHF, ...");
+	      // app.updateUI(value); // TODO this should receive *all* values
+	      
+	      // If ETH has been received, forward it!
+	      // TODO if (fwdAddrValue > FWDING_ADDRESS_CHANGE) { ...
     } finally {
       app.schedulePollStatus();
     }

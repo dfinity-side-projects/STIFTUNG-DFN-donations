@@ -331,7 +331,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     } else {
       i = 4;
     }
-    startTime = phaseEndTime[i=1];
+    startTime = phaseEndTime[i-1];
     endTime = phaseEndTime[i];
     isCapReached = capReached(i);
     chfCentsDonated = counter[i];
