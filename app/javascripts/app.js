@@ -39,15 +39,16 @@ var App = function(testUI) {
 	this.setGenesisDFN(undefined);	
 	this.setFunderChfReceived(undefined);
 	this.setEthereumNode(lastEthereumNode);
+	
+	setTimeout(function() { app.pollStatus(); }, 1000);
 }
 
 var ethPollTimeout;             // handle to current timer for Ethereum polling
 var ethConnectionRetries = 0;   // number consecutive provider connection fails
-var queryCount = 0;							// keep track of total number of queries performed for debugging
 
 var donationPhase = 0;					// seed funder
-var dfnAddr = "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2";
-var fwdAddr = "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2";
+var dfnAddr;
+var fwdAddr;
 
 // Polls Ethereum for updates
 App.prototype.pollStatus = function() {
@@ -70,11 +71,12 @@ App.prototype.pollStatus = function() {
   //
   // Retrieve all relevant status in a single call to the FDC
   //  
-  console.log("Polling Ethereum for status (query "+ ++queryCount +")");
   // retrieve data from FDC contract
   var fdc = FDC.deployed();
   fdc.getStatus.call(donationPhase, dfnAddr, fwdAddr, {from: account}).then(function(res) {
 	    try {
+	    	console.log("FDC.getStatus: "+JSON.stringify(res));
+	    	
 				var currentState = res[0];   // current state (an enum)
 				var fxRate = res[1];         // exchange rate of CHF -> ETH (Wei/CHF)
 				var donationCount = res[2];  // total individual donations made (a count)
@@ -87,8 +89,8 @@ App.prototype.pollStatus = function() {
 				var fwdBalance = res[9];     // total ETH (in Wei) waiting in fowarding address	    	
 	    	
 	      // Update user interface
-	      ui.logger("Retrieved funder status: Received=" + chfCentsDonated + "CHF, ...");
-	      // app.updateUI(value); // TODO this should receive *all* values
+	      app.updateUI(currentState, fxRate, donationCount, totalTokenAmount,
+	      	startTime, endTime, isCapReached, chfCentsDonated, tokenAmount, fwdBalance);
 	      
 	      // If ETH has been received, forward it!
 	      // TODO if (fwdAddrValue > FWDING_ADDRESS_CHANGE) { ...
@@ -97,15 +99,21 @@ App.prototype.pollStatus = function() {
     }
   }).catch(function(e) {
     try {
-      ui.logger("Error querying Ethereum: "+e);
+      ui.logger("Error querying Ethereum: "+e+" "+JSON.stringify(e));
     } finally {
       app.schedulePollStatus();
     }
   });
 }
 
-App.prototype.updateUI = function(totalCHF) {
-  // TODO
+App.prototype.updateUI = function(currentState, fxRate, donationCount, totalTokenAmount,
+	      	startTime, endTime, isCapReached, chfCentsDonated, tokenAmount, fwdBalance) {
+	 
+	 ui.setETHForwardingAddress(fwdAddr);
+	 ui.setGenesisDFN(totalTokenAmount);
+	 ui.setFunderTotalReceived(chfCentsDonated/100);
+	 ui.setForwardedETH(web3.fromWei(fwdBalance, 'ether'));
+	 ui.setRemainingETH(web3.fromWei(fwdBalance, 'ether'));
 }
 
 App.prototype.schedulePollStatus = function() {
@@ -243,7 +251,12 @@ window.onload = function() {
     // Bootstrap our app...
     //
     
-    //app = new App();
-    app = new App(true); 
+    dfnAddr = account;
+		fwdAddr = account;
+    
+    ui.setETHForwardingAddress(account);
+    
+    app = new App();
+    //app = new App(true); 
   });
 }
