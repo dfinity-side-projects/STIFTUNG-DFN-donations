@@ -5,7 +5,7 @@ contract('FDC', function(accounts) {
            assert.equal(count.valueOf(), 0, "Donation count wasn't initialized to zero");
        });
    });
-   
+
    it("We should get some stats back", function() {
        var fdc = FDC.deployed();
        var donationPhase=0;
@@ -22,13 +22,71 @@ contract('FDC', function(accounts) {
            var chfCentsDonated = res[7];// total value donated in specified phase as CHF
            var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
            var fwdBalance = res[9];     // total ETH (in Wei) waiting in fowarding address
-           
+
            console.log("Received from getStatus(): "+JSON.stringify(res));
            assert.equal(chfCentsDonated.valueOf(), 0, "Donation count wasn't initialized to zero");
        }).catch(function(e) {
-          console.log("Test exception: "+e); 
+          console.log("Test exception: "+e);
           throw e;
        });
    });
-   
+
+  it("ETH Forwarding from test account", function() {
+    FDC.new(accounts[0], accounts[1], accounts[2]).then(function(fdc) {
+      console.log("New FDC instance addr: " + fdc.address);
+
+      // setWeiPerCHF equal to 10 CHF per ETH
+      fdc.setWeiPerCHF(web3.toWei('0.1', 'ether'), {gas:300000, from: accounts[2]}).then(function(txID) {
+        console.log("fdc.setWeiPerCHF tx id: " + txID);
+
+        // calculate gas & amount to forward
+        var gasPrice            = web3.toBigNumber(20000000000); // 20 Shannon
+        var FDCMinDonation      = web3.toWei('1', 'ether');
+        var FDCDonateGasMaxCost = 200000; // highest measured gas cost: 138048
+        var gas                 = web3.toBigNumber(FDCDonateGasMaxCost).mul(gasPrice);
+        var minBalance          = web3.toBigNumber(FDCMinDonation).plus(gas);
+
+        var ETHForwardAddr      = accounts[4];
+        var DFNAddr             = accounts[5];
+        var balance             = web3.eth.getBalance(ETHForwardAddr);
+
+        if (ETHForwardAddr == null || web3.toBigNumber(balance).lt(minBalance)) {
+          assert.isOk(false, 'not enough balance to forward');
+        } else {
+          console.log("enough balance for forwarding: " + web3.fromWei(balance, 'ether') + " ETH");
+
+          var accNonce   = web3.eth.getTransactionCount(ETHForwardAddr);
+          var gasCost    = FDCDonateGasMaxCost;
+          var bigGasCost = web3.toBigNumber(gasCost);
+          var txFee      = web3.toBigNumber(gasPrice).mul(bigGasCost);
+          var value      = web3.toBigNumber(web3.toWei('2', 'ether')).sub(txFee); // TODO: all ether: balance.sub(txFee);
+          console.log("txFee: " + txFee);
+          console.log("amount: " + value);
+          //var txData     = "0x" + packArg(donateAs, app.DFNAcc.addr);
+          fdc.donateAs(DFNAddr,
+                       {from: ETHForwardAddr,
+                        value: value,
+                        gasPrice: gasPrice,
+                        gas: FDCDonateGasMaxCost}).then(function(txID) {
+              console.log("Forwarding tx id: " + txID);
+              // verify donation was registered
+              fdc.donationCount.call().then(function(count) {
+                assert.equal(count.valueOf(), 1, "Donation count not 1");
+              });
+            }).catch(function(e) {
+              console.log("Error sending ETH forwarding tx: " + e);
+            });
+        }
+
+      }).catch(function(e) {
+        console.log("Error fdc.setWeiPerCHF tx: " + e);
+        //throw e;
+      });
+
+    }).catch(function(e) {
+      console.log("Error deploying new FDC: " + e);
+      //throw e;
+    });
+
+  });
 });
