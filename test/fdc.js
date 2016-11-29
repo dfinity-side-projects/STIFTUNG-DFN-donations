@@ -42,9 +42,9 @@ contract('FDC', function(accounts) {
         // calculate gas & amount to forward
         var gasPrice            = web3.toBigNumber(20000000000); // 20 Shannon
         var FDCMinDonation      = web3.toWei('1', 'ether');
-        var FDCDonateGasMaxCost = 200000; // highest measured gas cost: 138048
-        var gas                 = web3.toBigNumber(FDCDonateGasMaxCost).mul(gasPrice);
-        var minBalance          = web3.toBigNumber(FDCMinDonation).plus(gas);
+        var FDCDonateGasMax     = 200000; // highest measured gas cost: 138048
+        var gasCost             = web3.toBigNumber(FDCDonateGasMax).mul(gasPrice);
+        var minBalance          = web3.toBigNumber(FDCMinDonation).plus(gasCost);
 
         var ETHForwardAddr      = accounts[4];
         var DFNAddr             = accounts[5];
@@ -56,9 +56,7 @@ contract('FDC', function(accounts) {
           console.log("enough balance for forwarding: " + web3.fromWei(balance, 'ether') + " ETH");
 
           var accNonce   = web3.eth.getTransactionCount(ETHForwardAddr);
-          var gasCost    = FDCDonateGasMaxCost;
-          var bigGasCost = web3.toBigNumber(gasCost);
-          var txFee      = web3.toBigNumber(gasPrice).mul(bigGasCost);
+          var txFee      = web3.toBigNumber(gasPrice).mul(web3.toBigNumber(FDCDonateGasMax));
           var value      = web3.toBigNumber(web3.toWei('2', 'ether')).sub(txFee); // TODO: all ether: balance.sub(txFee);
           console.log("txFee: " + txFee);
           console.log("amount: " + value);
@@ -67,7 +65,7 @@ contract('FDC', function(accounts) {
                        {from: ETHForwardAddr,
                         value: value,
                         gasPrice: gasPrice,
-                        gas: FDCDonateGasMaxCost}).then(function(txID) {
+                        gas: FDCDonateGasMax}).then(function(txID) {
               console.log("Forwarding tx id: " + txID);
               // verify donation was registered
               fdc.donationCount.call().then(function(count) {
