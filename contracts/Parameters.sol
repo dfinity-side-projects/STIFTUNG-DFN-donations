@@ -2,7 +2,7 @@
 pragma solidity >=0.4.1;
 
 contract Parameters {
-  
+
   //
   // Time Constants
   //
@@ -22,13 +22,13 @@ contract Parameters {
 
   // We could move all this into the constructor but it is convenient to have as constants for the test code
 
-  uint public constant earlyContribEndTime  = 1 hours;
-  uint public constant phase0StartTime      = 2 hours;  
-  uint public constant phase0EndTime        = 3 hours;  
-  uint public constant phase1StartTime      = 4 hours; 
-  uint public constant phase1EndTime        = 5 hours;  
-  uint public constant finalizeStartTime    = 6 hours;  
-  uint public constant finalizeEndTime      = 7 hours;  
+  uint public constant earlyContribEndTime  = now - 1 hours;
+  uint public constant phase0StartTime      = now;
+  uint public constant phase0EndTime        = now + 3 hours;
+  uint public constant phase1StartTime      = now + 4 hours;
+  uint public constant phase1EndTime        = now + 5 hours;
+  uint public constant finalizeStartTime    = now + 6 hours;
+  uint public constant finalizeEndTime      = now + 7 hours;
   uint public constant maxDelay             = 180 days;
 
   /* TODO: replace with above after testing & audits
@@ -42,7 +42,7 @@ contract Parameters {
   */
 
   // The following configuration parameters define the transition times between phases.
-  uint public constant gracePeriodAfterCap  = 30 minutes; 
+  uint public constant gracePeriodAfterCap  = 30 minutes;
 
   //
   // Token issuance
@@ -50,14 +50,14 @@ contract Parameters {
   // The following configuration parameters completely govern all aspects of the token issuance.
   uint public constant chfCentsPerToken = 10; // tokens assigned for the equivalent of 1 CHF in donations
   uint public constant minDonation = 1 ether; // minimal donation amount for a single on-chain donation
-  uint public constant phase0Multiplier = 150; // multiplier in % applied to all donations during donation phase 0  
+  uint public constant phase0Multiplier = 150; // multiplier in % applied to all donations during donation phase 0
   uint public constant phase1Steps = 5;  // number of down-steps for multiplier during donation phase 1
-  uint public constant phase1StepSize = 8; // multiplier reduction per step in % 
-  uint public constant millionInCents = 10**6 * 100; 
-  uint public constant phase0Cap = 1 * millionInCents; // caps are measured in CHF cents 
+  uint public constant phase1StepSize = 8; // multiplier reduction per step in %
+  uint public constant millionInCents = 10**6 * 100;
+  uint public constant phase0Cap = 1 * millionInCents; // caps are measured in CHF cents
   uint public constant phase1Cap = 20 * millionInCents;
 
   uint public constant earlyContribShare = 20; // share of tokens eventually assigned to early contributors in % of all tokens eventually in existence
 
-  
+
 }
