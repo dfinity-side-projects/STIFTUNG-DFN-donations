@@ -33,7 +33,7 @@ UI.prototype.setForwardedETH = function(fe) {
 	if (fe == undefined) 
 		e.innerHTML = "?";
 	else
-		e.innerHTML = fe;
+		e.innerHTML = formatCurrency(fe, "ETH", 2);
 }
 
 // Set amount of ETH remaining in client
@@ -42,7 +42,7 @@ UI.prototype.setRemainingETH = function(re) {
 	if (re == undefined)
 		e.innerHTML = "?";
 	else
-		e.innerHTML = re;
+		e.innerHTML = formatCurrency(re, "ETH", 2);
 }
 
 // Set the forwarding address the user should send ETH donations to
@@ -228,8 +228,12 @@ UI.prototype.hideWithdrawEth = function() {
 	document.getElementById('withdraw-eth').style.display = 'none';
 }
 
-function formatCurrency(n, symbol) {
-	return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " " + symbol;
+function formatCurrency(n, symbol, d) {
+	var s = Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	if (d)
+		s += "." + Math.pow(10,d) * (Math.round(n * Math.pow(10,d)) / Math.pow(10,d) % 1);
+	s += " " + symbol;
+	return s;
 }
 
 function padNumber(pad, n) {
