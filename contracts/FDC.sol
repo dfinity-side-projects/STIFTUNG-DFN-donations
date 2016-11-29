@@ -298,19 +298,25 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   //
   // External getters
   //
-  // Only provided for public use, not used internally
 
-  function getStatus(uint donationPhase, address dfnAddr, address fwdAddr) public constant returns (
-	state currentState,
-	uint fxRate,
-	uint donationCount,
-	uint totalTokenAmount,
-	uint startTime,
-	uint endTime,
-	bool isCapReached,
-	uint chfCentsDonated,
-	uint tokenAmount,
-	uint fwdBalance)
+  // Not used internally. Utility function that retrieves general status of the
+  // funder and information specific to a donor.
+  //  donationPhase - phase of the funder
+  //  dfnAddr       - public key address of donor's DFN proposed account
+  //  fwdAddr       - public key address of donor's donation forwarding app
+  function getStatus(uint donationPhase, address dfnAddr, address fwdAddr)
+    public constant
+    returns (
+    	state currentState,     // current state (an enum)
+    	uint fxRate,            // exchange rate of CHF -> ETH (Wei/CHF)
+    	uint donationCount,     // total individual donations made (a count)
+    	uint totalTokenAmount,  // total DFN planned allocated to donors
+    	uint startTime,         // expected start time of specified donation phase
+    	uint endTime,           // expected end time of specified donation phase
+    	bool isCapReached,      // whether target cap specified phase reached
+    	uint chfCentsDonated,   // total value donated in specified phase as CHF
+    	uint tokenAmount,       // total DFN planned allocted to donor (user)
+    	uint fwdBalance)        // total ETH (in Wei) waiting in fowarding address
   {
     // global state
     currentState = getState();
