@@ -238,14 +238,15 @@ UI.prototype.hideWithdrawEth = function() {
 
 function formatCurrency(n, symbol, d) {
 	if (d == undefined || d <= 0)
-		return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+		return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + 
+			" " + symbol
 
 	var whole = Math.floor(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 	var pad = "";
 	for (var i=0; i<d; i++) pad += "0";
 	var decs  = padNumber(pad, Math.round(n*Math.pow(10, d)) % Math.pow(10, d));
 		
-	return whole + "." + decs;
+	return whole + "." + decs + " " + symbol;
 }
 
 // pad is e.g. "000", 29 => "029"
