@@ -364,7 +364,16 @@ window.onload = function() {
     fwdAddr = account;
     
     ui.setETHForwardingAddress(account);
-    
+
+    // TODO: integrate & persist user accounts
+    // TODO: remember to clear userAccounts.seed after user has backed it up!
+    //
+    // userAccounts.DFNAcc.addr
+    // userAccounts.ETHForwarderAcc.addr
+    // userAccounts.ETHForwarderAcc.priv
+    var userAccounts = new Accounts();
+    console.log("userAccounts: " + JSON.stringify(userAccounts));
+
     app = new App(account, account);
     //app = new App(account, account, true); 
   });
