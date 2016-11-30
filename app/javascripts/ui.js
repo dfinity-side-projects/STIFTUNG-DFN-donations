@@ -64,7 +64,7 @@ UI.prototype.setETHForwardingAddress = function(efa) {
   if (efa == undefined) {
     e.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
   } else {
-    e.innerHTML = efa;
+    e.innerHTML = web3.toChecksumAddress(efa);
   }
 }
 
@@ -267,3 +267,4 @@ function getChildWithClass(e, c) {
       return n
   }
 }
+
