@@ -45,6 +45,18 @@ var Accounts = function(seedStr) {
 // expects the 32 bytes without the leading compression-indicating
 // byte (see YP eq 213)
 Accounts.prototype.HDPrivKeyToAddr = function(hdPrivKey) {
+  /* TODO: verify padding, sometimes we get:
+
+     ethereumjs-util.js:16925 Uncaught RangeError: private key length is invalid(…)
+     exports.isBufferLength	@	ethereumjs-util.js:16925
+     publicKeyCreate	@	ethereumjs-util.js:17454
+     exports.privateToPublic	@	ethereumjs-util.js:6400
+     exports.privateToAddress	@	ethereumjs-util.js:6501
+     Accounts.HDPrivKeyToAddr	@	app.js:57286
+     Accounts	@	app.js:57263
+
+     which likely is the common padding bug of privkey being less than 32 bytes
+  */
   var priv = new bitcore.PrivateKey(hdPrivKey.toObject().privateKey);
   return EthJSUtil.bufferToHex(EthJSUtil.privateToAddress(priv.toBuffer()));
 }
