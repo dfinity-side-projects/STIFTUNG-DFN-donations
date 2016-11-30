@@ -37,6 +37,7 @@ var App = function(dfnAddr, fwdAddr, testUI) {
   this.ethPollTimeout = undefined;	// handle to current timer for Ethereum polling
   this.ethConnectionRetries = 0;		// number consecutive provider connection fails
   this.saidBalanceTooSmall = false; // told user balance too small?
+  this.lastBalanceSeen;             // last balance we saw
   this.donationPhase = 0;						// seed funder
   this.ethBalance = undefined;      // balance of ETH forwarding wallet
   this.dfnAddr = dfnAddr;
@@ -50,7 +51,7 @@ var App = function(dfnAddr, fwdAddr, testUI) {
   this.setFunderChfReceived(undefined);
   this.setEthereumNode(this.lastEthereumNode);
   
-  ui.logger("Retrieving status from Ethereum...");
+  ui.logger("Retrieving status from FDC contract: "+FDC.deployed().address);
   
   // start polling the FDC for stats
   this.pollStatus();
@@ -75,8 +76,10 @@ App.prototype.tryForwardETH = function() {
   if (web3.toBigNumber(this.ethBalance).lt(MIN_FORWARD_AMOUNT)) {
     if (!this.saidBalanceTooSmall) {
       this.saidBalanceTooSmall = true;      
-      ui.logger("Remaining balance at forwarding address too small to donate");
+      ui.logger("Waiting balance at forwarding address too small to donate (" +
+        web3.fromWei(this.ethBalance, 'ether') + " ETH)");
     }
+    this.scheduleTryForwardETH();
   } else {
     // yes...
     var self = this;
@@ -154,8 +157,14 @@ App.prototype.pollStatus = function() {
         var isCapReached = res[6];   // whether target cap specified phase reached
         var chfCentsDonated = res[7];// total value donated in specified phase as CHF
         var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
-        self.ethBalance = res[9];    // total ETH (in Wei) waiting in fowarding address	 
+        var ethFwdBalance = res[9];  // total ETH (in Wei) waiting in fowarding address	 
         var donated = res[10];       // total ETH (in Wei) donated so far 
+        
+        // if the fowarding balance has changed, then we may have to inform the user
+        // that it is "still" too small
+        if (self.ethBalance != undefined && !self.ethBalance.equals(ethFwdBalance))
+          self.saidBalanceTooSmall = false;
+        self.ethBalance = ethFwdBalance;
         
         // new data means we can restart forwarding... 
         // - we do this b/c if the user has just failed to forward due to an
@@ -345,7 +354,7 @@ window.onload = function() {
     }
     
     accounts = accs;
-    account = accounts[0];
+      account = accounts[4];
     
     //
     // Bootstrap our app...
