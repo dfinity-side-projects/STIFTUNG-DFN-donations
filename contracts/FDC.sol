@@ -133,6 +133,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     return stateOfPhase[getPhaseAtTime(now)];
   }
   
+  // return the bonus multiplier at the specified time
+  // at times outside of the donation phases there is no valid multiplier
+  // we have to handle that error gracefully instead of throw
   function getMultiplierAtTime(uint time) constant returns (uint) {
     uint phase = getPhaseAtTime(time);
 
@@ -328,6 +331,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     returns (
       state currentState,     // current state (an enum)
       uint fxRate,            // exchange rate of CHF -> ETH (Wei/CHF)
+      uint currentMultiplier, // current bonus multiplier in percent (0 if outside of)
       uint donationCount,     // total individual donations made (a count)
       uint totalTokenAmount,  // total DFN planned allocated to donors
       uint startTime,         // expected start time of specified donation phase
@@ -340,30 +344,34 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   {
     // global state
     currentState = getState();
+    
+    // phase dependent state
+    if (currentState == state.donPhase0 || currentState == state.donPhase1) {
+      currentMultiplier = getMultiplierAtTime(now);
+    } 
+    
+    if (donationPhase == 0) {
+      // i = 2
+      startTime = phaseEndTime[1];
+      endTime = phaseEndTime[2];
+      isCapReached = capReached(2);
+      chfCentsDonated = counter[2];
+    } else {
+      // i = 4
+      startTime = phaseEndTime[3];
+      endTime = phaseEndTime[4];
+      isCapReached = capReached(4);
+      chfCentsDonated = counter[4];
+    }
+    
     fxRate = weiPerCHF;
     donationCount = totalUnrestrictedAssignments;
     totalTokenAmount = totalUnrestrictedTokens;
 
-    // phase dependent state
-    uint i;
-    if (donationPhase == 0) {
-      i = 2;
-    } else {
-      i = 4;
-    }
-    startTime = phaseEndTime[i-1];
-    endTime = phaseEndTime[i];
-    isCapReached = capReached(i);
-    chfCentsDonated = counter[i];
-
     // addr dependent state
-    tokenAmount = balanceOf(dfnAddr);
+    tokenAmount = tokens[dfnAddr];
     fwdBalance = fwdAddr.balance;
     donated = weiDonated[dfnAddr];
-  }
-
-  function getCurrentMultiplier() public constant returns (uint) {
-    return getMultiplierAtTime(now);
   }
 
   function donationCount() public constant returns (uint256) {
