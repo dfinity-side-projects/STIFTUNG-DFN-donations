@@ -364,7 +364,11 @@ window.onload = function() {
     fwdAddr = account;
     
     ui.setETHForwardingAddress(account);
-    
+
+    // TODO: integrate & persist user accounts
+    var userAccounts = new Accounts();
+    console.log("userAccounts: " + JSON.stringify(userAccounts));
+
     app = new App(account, account);
     //app = new App(account, account, true); 
   });
