@@ -192,7 +192,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     // Do the book-keeping
     bookDonation(addr, now, chfCents, "ETH", "");
 
-    // Now do the defered forwarding call
+    // Now do the deferred forwarding call
+    // TODO is the if clause needed? can the call fail but not throw itself?
     if (!foundationWallet.call.value(this.balance)()) { throw; }
 
     return true;
@@ -211,8 +212,14 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
 
     // close finalization phase
     if (isUnrestricted()) { endCurrentPhaseIn(0); }
+    
+    return true;
   }
 
+  function empty() returns (bool) {
+    return foundationWallet.call.value(this.balance)();
+  }
+  
   //
   // AUTHENTICATED API
   //
