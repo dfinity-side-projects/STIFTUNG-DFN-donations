@@ -251,7 +251,7 @@ UI.prototype.hideErrorEthForwarding = function() {
 
 function formatCurrency(n, symbol, d) {
   // source for the regexp: http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
-  return n.toFixed(d).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + " " + symbol;
+  return n.toFixed(d).replace(/(\d)(?=(\d{3})+(?:\.\d+)?$)/g, "$1,") + " " + symbol;
 }
 
 // pad is e.g. "000", 29 => "029"
