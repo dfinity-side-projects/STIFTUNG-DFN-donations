@@ -49,8 +49,13 @@ UI.prototype.setRemainingETH = function(re) {
   var e = document.getElementById('waiting-eth');
   if (re == undefined)
     e.innerHTML = "?";
-  else
+  else {
     e.innerHTML = formatCurrency(re, "ETH", 2);
+    // if (re < 1)
+    //   e.innerHTML = ""+re+" ETH";
+    // else
+    //   e.innerHTML = formatCurrency(re, "ETH", 2);
+  }
 }
 
 // Set the forwarding address the user should send ETH donations to
