@@ -134,19 +134,16 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   }
   
   function getMultiplierAtTime(uint time) constant returns (uint) {
-    // If time lies in the future then throw
-    if (time > now) { throw; }
-    
-    state st = stateOfPhase[getPhaseAtTime(time)];
+    uint phase = getPhaseAtTime(time);
 
     // If time lies in donation phase 0 we return the constant multiplier 
-    if (st == state.donPhase0) {
+    if (stateOfPhase[phase] == state.donPhase0) {
       return phase0Multiplier;
     }
 
     // If time lies in donation phase 1 we return the step function
-    if (st == state.donPhase1) {
-      return 100 + getStepFunction(getElapsedTimeInCurrentPhase());
+    if (stateOfPhase[phase] == state.donPhase1) {
+      return 100 + getStepFunction(time - getPhaseStartTime(phase));
     }
 
     // Throw outside of donation phases
@@ -253,12 +250,25 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     // Require permission
     if (msg.sender != registrarAuth) { throw; }
 
-    // If timestamp lies in the future then throw
+    // We need the current phase and state
+    uint currentPhase = getPhaseAtTime(now);
+    state currentState = stateOfPhase[currentPhase];
+    
+    // Reject registrations outside the two donation phases (incl. their extended registration periods for off-chain donations)
+    if (currentState != state.donPhase0 && currentState != state.donPhase1 && currentState != state.offChainReg) { throw; }
+   
+    // The timestamp defines the donation phase and the multiplier.
+    // It can't be in the future because future phase times might still change
     if (timestamp > now) { throw; }
-
-    // Reject registrations outside donation phases or the grace period after donation phases
-    state st = getState();
-    if (st != state.donPhase0 && st != state.donPhase1 && st != state.offChainReg) { throw; }
+   
+    // We need phase and state of the timestamp  
+    uint timestampPhase = getPhaseAtTime(timestamp);
+    state timestampState = stateOfPhase[timestampPhase];
+   
+    // Reject timestamps outside (the correct) donation phase 
+    if (currentState == state.donPhase0 && timestampState != currentState) { throw; }
+    if (currentState == state.donPhase1 && timestampState != currentState) { throw; }
+    if (currentState == state.offChainReg && timestampPhase != currentPhase - 1) { throw; }
 
     // Do the book-keeping
     bookDonation(addr, timestamp, chfCents, currency, memo);
