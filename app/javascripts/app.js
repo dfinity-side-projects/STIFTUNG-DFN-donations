@@ -150,15 +150,16 @@ App.prototype.pollStatus = function() {
         // parse status data
         var currentState = res[0];   // current state (an enum)
         var fxRate = res[1];         // exchange rate of CHF -> ETH (Wei/CHF)
-        var donationCount = res[2];  // total individual donations made (a count)
-        var totalTokenAmount = res[3];// total DFN planned allocated to donors
-        var startTime = res[4];      // expected start time of specified donation phase
-        var endTime = res[5];        // expected end time of specified donation phase
-        var isCapReached = res[6];   // whether target cap specified phase reached
-        var chfCentsDonated = res[7];// total value donated in specified phase as CHF
-        var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
-        var ethFwdBalance = res[9];  // total ETH (in Wei) waiting in fowarding address	 
-        var donated = res[10];       // total ETH (in Wei) donated so far 
+        var currentMultiplier = res[2]; // current bonus multiplier in percent (0 if outside of ) 
+        var donationCount = res[3];  // total individual donations made (a count)
+        var totalTokenAmount = res[4];// total DFN planned allocated to donors
+        var startTime = res[5];      // expected start time of specified donation phase
+        var endTime = res[6];        // expected end time of specified donation phase
+        var isCapReached = res[7];   // whether target cap specified phase reached
+        var chfCentsDonated = res[8];// total value donated in specified phase as CHF
+        var tokenAmount = res[9];    // total DFN planned allocted to donor (user)
+        var ethFwdBalance = res[10];  // total ETH (in Wei) waiting in fowarding address	 
+        var donated = res[11];       // total ETH (in Wei) donated so far 
         
         // if the fowarding balance has changed, then we may have to inform the user
         // that it is "still" too small
