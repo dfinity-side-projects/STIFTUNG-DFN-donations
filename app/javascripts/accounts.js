@@ -16,6 +16,8 @@ var Accounts = function(seedStr) {
     seedStr = code.toString();
   }
 
+  this.seed = seedStr;
+
   this.DFNAcc                    = {};
   this.ETHForwarderAcc           = {};
   this.BTCForwarderAcc           = {};
@@ -26,7 +28,6 @@ var Accounts = function(seedStr) {
   var ETHPriv                    = masterKey.derive(this.HDPathETHForwarder);
   this.ETHForwarderAcc.priv      = ETHPriv.toString();
   this.ETHForwarderAcc.addr      = this.HDPrivKeyToAddr(ETHPriv);
-  this.ETHForwarderAcc.pendingTx = false;
 
   var BTCPriv                    = masterKey.derive(this.HDPathBTCForwarder);
   this.BTCForwarderAcc.priv      = BTCPriv.toString();
