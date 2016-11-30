@@ -117,13 +117,8 @@ contract Phased {
   // Getters
   //
 
-  function getElapsedTimeInCurrentPhase() constant returns (uint) {
-    uint phase = getPhaseAtTime(now);
-
-    // Calls before the first transitions are not allowed.
-    if (phase == 0) { throw; }
-
-    return now - phaseEndTime[phase-1];
+  function getPhaseStartTime(uint phase) constant returns (uint) {
+    return phaseEndTime[phase - 1];
   }
     
 }
