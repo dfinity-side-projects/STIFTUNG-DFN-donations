@@ -7,13 +7,13 @@ var account;
 
 var ETHEREUM_CHK_FWD_INTERVAL = 1000; // not actual... pauses
 var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
-var ETHEREUM_CONN_MAX_RETRIES = 10; // max number of retries to automatically selected Ethereum provider
+var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically selected Ethereum provider
 
-var GAS_PRICE;											// estimate price of gas
-var MIN_DONATION;										// minimum donation allowed
-var MAX_DONATE_GAS;									// maximum gas used making donation
-var MAX_DONATE_GAS_COST;						// estimate maximum cost of gas used
-var MIN_FORWARD_AMOUNT;							// minimum amount we will try to forward
+var GAS_PRICE;                      // estimate price of gas
+var MIN_DONATION;                   // minimum donation allowed
+var MAX_DONATE_GAS;                 // maximum gas used making donation
+var MAX_DONATE_GAS_COST;            // estimate maximum cost of gas used
+var MIN_FORWARD_AMOUNT;             // minimum amount we will try to forward
 // TODO if there's congestion, the gas price might go up. We need to handle
 // this better or leave sufficent margin cannot fail
 
@@ -34,11 +34,11 @@ var App = function(dfnAddr, fwdAddr, testUI) {
   this.contFwdingOnNewData = false; // used to indicate set fwding on new poll data
   
   this.ethFwdTimeout = undefined;   // handle to current timer for Etheruem forwarding
-  this.ethPollTimeout = undefined;	// handle to current timer for Ethereum polling
-  this.ethConnectionRetries = 0;		// number consecutive provider connection fails
+  this.ethPollTimeout = undefined;  // handle to current timer for Ethereum polling
+  this.ethConnectionRetries = 0;    // number consecutive provider connection fails
   this.saidBalanceTooSmall = false; // told user balance too small?
   this.lastBalanceSeen;             // last balance we saw
-  this.donationPhase = 0;						// seed funder
+  this.donationPhase = 0;           // seed funder
   this.ethBalance = undefined;      // balance of ETH forwarding wallet
   this.dfnAddr = dfnAddr;
   this.fwdAddr = fwdAddr;
@@ -326,11 +326,11 @@ window.onload = function() {
     console.log("User interface ready.");
 
     // Initialize constants
-    GAS_PRICE						= web3.toBigNumber(20000000000); // 20 Shannon
-    MIN_DONATION				= web3.toWei('1', 'ether');
-    MAX_DONATE_GAS			= 200000; // highest measured gas cost: 138048
+    GAS_PRICE           = web3.toBigNumber(20000000000); // 20 Shannon
+    MIN_DONATION        = web3.toWei('1', 'ether');
+    MAX_DONATE_GAS      = 200000; // highest measured gas cost: 138048
     MAX_DONATE_GAS_COST = web3.toBigNumber(MAX_DONATE_GAS).mul(GAS_PRICE);
-    MIN_FORWARD_AMOUNT	= web3.toBigNumber(MIN_DONATION).plus(MAX_DONATE_GAS_COST);
+    MIN_FORWARD_AMOUNT  = web3.toBigNumber(MIN_DONATION).plus(MAX_DONATE_GAS_COST);
 
     //
     // Load current account details from Storage
