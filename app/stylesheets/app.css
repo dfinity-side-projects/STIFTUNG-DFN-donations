@@ -324,3 +324,6 @@ div.important-notes {
 #withdraw-eth-addr {
     width: 400px;
 }
+.eth-host {
+    cursor: pointer;
+}

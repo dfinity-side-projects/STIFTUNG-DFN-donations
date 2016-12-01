@@ -187,19 +187,17 @@ THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLU
 			</div>
 		</div>
 
-		<div id="select-full-node" class="dialog">
+    <div id="select-full-node" class="dialog">
 			<h2>Select Ethereum full node</h2>
 			<p>Please select a full node this application will use to connect to the Ethereum network.</p>
-			<p>Connect to a full node on your computer:</p>
-			<p><a class="ip-address" href="javascript:ui.onSelectEthereumNode('127.0.0.1')">127.0.0.1</a> (e.g. geth running on your computer)</p>
-			<p>Choose a pre-approved full node:</p>
-			<p><a class="ip-address" href="javascript:ui.onSelectEthereumNode('293.12.123.1')">293.12.123.1</a> (Stiftung DFINITY)</p>
-			<p><a class="ip-address" href="javascript:ui.onSelectEthereumNode('163.321.1.33')">163.321.1.33</a> (Stiftung DFINITY)</p>
-			<p><a class="ip-address" href="javascript:ui.onSelectEthereumNode('201.92.59.1')">201.92.59.1</a> (Stiftung DFINITY)</p>
-			<p>Or enter a full node that you fully trust, for example a full node that your company runs, or which Stiftung DFINITY 
+			<p>Connect to local node: <a id="connect-localhost" class="eth-host" href="javascript:ui.onSelectEthereumNode('http://localhost:8545')">localhost:8545</a></p>
+			<p>Connect to hosted node: <a id="connect-hosted" class="eth-host" href="javascript:ui.onSelectEthereumNode('hosted')">Hosted Node (Stiftung DFINITY)</a></p>
+			<p>Or enter a full node that you fully trust, for example a full node that your company runs, or which Stiftung DFINITY
 			   announced on their Twitter feed:</p>
-			<p><input id='custom-full-node-address' type='text' width='100' /><input
-				type='button' value='Assign' onclick="ui.onSelectEthereumNode(document.getElementById('custom-full-node-address').value)" /></p>
+			<p>
+        <input id='custom-full-node-address' type='text' width='100' />
+        <input id='btn-custom-full-node' type='button' value='Connect' onclick="javascript:ui.onSelectEthereumNode(document.getElementById('custom-full-node-address').value)"/>
+      </p>
 		</div>
 
 		<div id="terms" class="dialog">

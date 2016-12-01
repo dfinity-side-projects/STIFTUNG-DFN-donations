@@ -8,6 +8,8 @@ var account;
 var ETHEREUM_CHK_FWD_INTERVAL = 1000; // not actual... pauses
 var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
 var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically selected Ethereum provider
+var ETHEREUM_HOSTED_NODES = ["TODO"];
+var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
 
 var GAS_PRICE;                      // estimate price of gas
 var MIN_DONATION;                   // minimum donation allowed
@@ -47,12 +49,12 @@ var App = function(userAccounts, testUI) {
   this.ethBalance = undefined;      // balance of ETH forwarding wallet
   this.accs = userAccounts;
   this.lastTask = 'task-agree';
-  this.lastEthereumNode = "127.0.0.1";
+  this.lastEthereumNode = ETHEREUM_LOCAL_NODE;
 
   this.setCurrentTask(this.lastTask);
   this.setGenesisDFN(undefined);
-  this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr); 
-  ui.setUserSeed(this.accs.seed); 
+  this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr);
+  ui.setUserSeed(this.accs.seed);
   this.setFunderChfReceived(undefined);
   this.setEthereumNode(this.lastEthereumNode);
 
@@ -226,6 +228,7 @@ App.prototype.pollStatus = function() {
     this.schedulePollStatus(); // bail, try later...
     return;
   }
+  this.onEthereumConnect();
   this.ethConnectionRetries = 0;
   console.log("Ethereum provider: "+JSON.stringify(web3.currentProvider));
 
@@ -318,14 +321,38 @@ App.prototype.setCurrentTask = function(tId) {
 }
 
 // Set the Etheruem full node we are connecting to
-App.prototype.setEthereumNode = function(ip) {
-  console.log("Set Ethereum node: "+ip);
-  this.setEthereumClientStatus('connecting...');
-  this.ethereumNode = ip;
-  ui.setEthereumNode(ip);
-  if (this.ethereumNode != undefined) {
-    this.reconnectEthereumClient();
+App.prototype.setEthereumNode = function(host) {
+  console.log("Set Ethereum node: " + host);
+
+  if (host == "hosted") {
+    // TODO: add logic to randomly choose which hosted node to connect to
+    // TODO: add fallback logic if one hosted node is down
+    this.setETHNodeInternal(ETHEREUM_HOSTED_NODES[0]);
+  } else {
+    host = host.replace(/(\r\n|\n|\r)/gm,""); // line breaks
+    host = host.replace(/\s/g,'') // all whitespace chars
+    if (!host.startsWith('http://') && !host.startsWith('https://')) {
+      ui.logger("Ethereum full node host must start with http:// or https://");
+      return;
+    }
+    var splits = host.split(':');
+    var port = splits[splits.length-1];
+    if ((port.length != 4 && port.length != 5) || port.match(/^[0-9]+$/) == null) {
+      ui.logger("Host string must end with valid port, e.g. \":8545\"");
+      return;
+    }
+    this.setETHNodeInternal(host);
   }
+}
+
+App.prototype.setETHNodeInternal = function(host) {
+  ui.logger("Connecting to: " + host + "...");
+  this.setEthereumClientStatus('connecting...');
+  this.ethereumNode = host;
+  ui.setEthereumNode(host);
+
+  web3.setProvider(new web3.providers.HttpProvider(this.ethereumNode));
+  // TODO: reconnect immediately instead of waiting for next poll
   // TODO save node to storage
 }
 
@@ -370,12 +397,6 @@ App.prototype.setEthereumClientStatus = function(status) {
     // this.pollStatus();
   } else
     ui.setEthereumClientStatus("not connected ("+status+")");
-}
-
-App.prototype.reconnectEthereumClient = function() {
-  // Configure the IP address into the Ethereum client object
-  // Make it connect/reconnect...
-  ui.logger("Connecting to Ethereum node "+this.ethereumNode+"...");
 }
 
 App.prototype.onEthereumConnect = function() {
