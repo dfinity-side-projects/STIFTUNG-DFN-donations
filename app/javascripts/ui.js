@@ -59,12 +59,19 @@ UI.prototype.setRemainingETH = function(re) {
 }
 
 // Set the forwarding address the user should send ETH donations to
-UI.prototype.setETHForwardingAddress = function(efa) {
+// Set the DFN address the user might want ot communicate to Stiftung Dfinity
+UI.prototype.setUserAddresses = function(efa, dfa) {
   var e = getChildWithClass(document.getElementById("eth-forwarding-address"), "eth-address");
+  var f = document.getElementById("eth-forwarding-address-explained");
+  var d = document.getElementById("dfn-address");
   if (efa == undefined) {
     e.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
+    f.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
+    d.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
   } else {
     e.innerHTML = web3.toChecksumAddress(efa);
+    f.innerHTML = web3.toChecksumAddress(efa);
+    d.innerHTML = web3.toChecksumAddress(dfa);
   }
 }
 

@@ -279,7 +279,7 @@ App.prototype.setUserAddresses = function(ETHAddr, DFNAddr) {
   console.log("Set DFN addr: " + DFNAddr);
   this.ETHForwardingAddr = ETHAddr;
   this.DFNAddr = DFNAddr;
-  ui.setETHForwardingAddress(EthJSUtil.toChecksumAddress(this.ETHForwardingAddr));
+  ui.setUserAddresses(EthJSUtil.toChecksumAddress(this.ETHForwardingAddr), EthJSUtil.toChecksumAddress(this.DFNAddr));
 }
 
 App.prototype.setFunderChfReceived = function(chf) {
