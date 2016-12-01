@@ -51,6 +51,7 @@ var App = function(userAccounts, testUI) {
 
   this.setCurrentTask(this.lastTask);
   this.setGenesisDFN(undefined);
+  this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr); 
   this.setFunderChfReceived(undefined);
   this.setEthereumNode(this.lastEthereumNode);
 
