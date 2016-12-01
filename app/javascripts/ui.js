@@ -75,6 +75,16 @@ UI.prototype.setUserAddresses = function(efa, dfa) {
   }
 }
 
+// Set the user seed
+UI.prototype.setUserSeed = function(seed) {
+  var s = getChildWithClass(document.getElementById("create-dfn-seed"), "seed");
+  if (seed == undefined) {
+    s.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
+  } else {
+    s.innerHTML = seed;
+  }
+}
+
 // Set the total amount of donations received so far, in CHF
 // -1 indicates "unknown"
 UI.prototype.setFunderTotalReceived = function(chf) {
@@ -203,6 +213,8 @@ UI.prototype.beforeValidateSeed = function() {
 
 UI.prototype.doValidateSeed = function() {
   this.hideValidateSeed();
+  // insert validation here
+  this.setUserSeed("not stored")  
   this.setCurrentTask('task-understand-fwd-eth');
   this.makeTaskDone('task-create-seed');
 }
