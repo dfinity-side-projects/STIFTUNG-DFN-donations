@@ -321,3 +321,6 @@ div.important-notes {
 	background-color: #EEE;
 	padding: 10 20 10 20px;
 }
+#withdraw-eth-addr {
+    width: 400px;
+}
