@@ -8,6 +8,7 @@ var Accounts = function(seedStr) {
   this.HDPathETHForwarder = "m/44'/60'/0'/0/0";  // ETH key forwarding donation for HDPathDFN key
   this.HDPathBTCForwarder = "m/44'/0'/0'/0/0";   // BTC key forwarding donation for HDPathDFN key
 
+  // seed string and mnemonic code
   var code;
   if (seedStr != null) {
     code = new Mnemonic(seedStr);
@@ -21,18 +22,29 @@ var Accounts = function(seedStr) {
   this.DFNAcc                    = {};
   this.ETHForwarderAcc           = {};
   this.BTCForwarderAcc           = {};
+ 
+  // convert mnemonic code to master privkey 
   var masterKey                  = code.toHDPrivateKey();
+  
+  // derive extended priv keys
   var DFNPriv                    = masterKey.derive(this.HDPathDFN);
-  var DFNAddr                    = this.HDPrivKeyToAddr(DFNPriv);
-  this.DFNAcc.addr               = DFNAddr;
   var ETHPriv                    = masterKey.derive(this.HDPathETHForwarder);
-  this.ETHForwarderAcc.priv      = ETHPriv.toString();
-  this.ETHForwarderAcc.addr      = this.HDPrivKeyToAddr(ETHPriv);
-
   var BTCPriv                    = masterKey.derive(this.HDPathBTCForwarder);
-  this.BTCForwarderAcc.priv      = BTCPriv.toString();
+ 
+  // convert privkey to address 
+//  var DFNAddr                    = this.HDPrivKeyToAddr(DFNPriv);
   var BTCAddr                    = new bitcore.Address(BTCPriv.publicKey, bitcore.Networks.livenet);
+  // EthAddr ?
+ 
+  // enter address into account structure 
+  this.ETHForwarderAcc.addr      = this.HDPrivKeyToAddr(ETHPriv);
   this.BTCForwarderAcc.addr      = BTCAddr.toString();
+  this.DFNAcc.addr               = this.HDPrivKeyToAddr(DFNPriv);
+  
+  // enter privkey into account structure 
+  this.ETHForwarderAcc.priv      = ETHPriv.toString();
+  this.BTCForwarderAcc.priv      = BTCPriv.toString();
+  
 
   console.log("this.DFNAcc: "          + JSON.stringify(this.DFNAcc));
   console.log("this.ETHForwarderAcc: " + JSON.stringify(this.ETHForwarderAcc));
