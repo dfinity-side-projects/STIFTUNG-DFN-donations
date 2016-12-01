@@ -241,6 +241,19 @@ UI.prototype.hideWithdrawEth = function() {
   document.getElementById('withdraw-eth').style.display = 'none';
 }
 
+UI.prototype.withdrawETH = function() {
+  var addr = document.getElementById('withdraw-eth-addr').value;
+  if (!EthJSUtil.isValidChecksumAddress(addr)) {
+    // TODO: UI error feedback in withdraw popup
+    ui.logger("Invalid ETH withdraw address, please try again.");
+    this.hideWithdrawEth();
+    return;
+  }
+  app.withdrawETH(addr);
+  this.hideWithdrawEth();
+  this.hideErrorEthForwarding();
+}
+
 UI.prototype.showErrorEthForwarding = function() {
   document.getElementById('error-eth-forwarding').style.display = 'block';
 }

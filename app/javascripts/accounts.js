@@ -1,3 +1,5 @@
+// if seedStr == null then a new seed is generated, otherwise
+// keys are derived deterministically from the passed seed if it's valid
 var Accounts = function(seedStr) {
   var Mnemonic = BitcoreMnemonic;
   var dummyCode = new Mnemonic(Mnemonic.Words.ENGLISH);
@@ -18,25 +20,23 @@ var Accounts = function(seedStr) {
 
   this.seed = seedStr;
 
-  this.DFNAcc                    = {};
-  this.ETHForwarderAcc           = {};
-  this.BTCForwarderAcc           = {};
-  var masterKey                  = code.toHDPrivateKey();
-  var DFNPriv                    = masterKey.derive(this.HDPathDFN);
-  var DFNAddr                    = this.HDPrivKeyToAddr(DFNPriv);
-  this.DFNAcc.addr               = DFNAddr;
-  var ETHPriv                    = masterKey.derive(this.HDPathETHForwarder);
-  this.ETHForwarderAcc.priv      = ETHPriv.toString();
-  this.ETHForwarderAcc.addr      = this.HDPrivKeyToAddr(ETHPriv);
+  this.DFN      = {};
+  this.ETH      = {};
+  this.BTC      = {};
+  var masterKey = code.toHDPrivateKey();
+  var DFNPriv   = masterKey.derive(this.HDPathDFN);
+  var ETHPriv   = masterKey.derive(this.HDPathETHForwarder);
+  var BTCPriv   = masterKey.derive(this.HDPathBTCForwarder);
 
-  var BTCPriv                    = masterKey.derive(this.HDPathBTCForwarder);
-  this.BTCForwarderAcc.priv      = BTCPriv.toString();
-  var BTCAddr                    = new bitcore.Address(BTCPriv.publicKey, bitcore.Networks.livenet);
-  this.BTCForwarderAcc.addr      = BTCAddr.toString();
+  var DFNAddr   = this.HDPrivKeyToAddr(DFNPriv);
+  this.DFN.addr = DFNAddr;
 
-  console.log("this.DFNAcc: "          + JSON.stringify(this.DFNAcc));
-  console.log("this.ETHForwarderAcc: " + JSON.stringify(this.ETHForwarderAcc));
-  console.log("this.BTCForwarderAcc: " + JSON.stringify(this.BTCForwarderAcc));
+  this.ETH.priv = "0x" + ETHPriv.toObject().privateKey;
+  this.ETH.addr = this.HDPrivKeyToAddr(ETHPriv);
+
+  var BTCAddr   = new bitcore.Address(BTCPriv.publicKey, bitcore.Networks.livenet);
+  this.BTC.addr = BTCAddr.toString();
+  this.BTC.priv = "0x" + BTCPriv.toObject().privateKey;
 }
 
 // https://github.com/bitpay/bitcore-lib/blob/master/docs/hierarchical.md
