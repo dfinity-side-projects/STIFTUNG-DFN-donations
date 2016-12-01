@@ -7,6 +7,7 @@ bitcore = dummyCode.getBitcore();
 
 // generate accounts from seed
 var seed = "shoulder ahead fitness canvas plate turtle field humor sugar broken juice planet";
+// TODO: try loop to get padding bug
 var userAccounts = new Accounts(seed);
 console.log("userAccounts: " + JSON.stringify(userAccounts));
 
