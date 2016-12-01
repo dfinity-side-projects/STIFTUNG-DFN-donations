@@ -52,6 +52,7 @@ var App = function(userAccounts, testUI) {
   this.setCurrentTask(this.lastTask);
   this.setGenesisDFN(undefined);
   this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr); 
+  ui.setUserSeed(this.accs.seed); 
   this.setFunderChfReceived(undefined);
   this.setEthereumNode(this.lastEthereumNode);
 
@@ -334,7 +335,7 @@ App.prototype.setUserAddresses = function(ETHAddr, DFNAddr) {
   console.log("Set DFN addr: " + DFNAddr);
   this.ETHForwardingAddr = ETHAddr;
   this.DFNAddr = DFNAddr;
-  ui.setUserAddresses(EthJSUtil.toChecksumAddress(this.ETHForwardingAddr), EthJSUtil.toChecksumAddress(this.DFNAddr));
+  ui.setUserAddresses(EthJSUtil.toChecksumAddress(ETHAddr), EthJSUtil.toChecksumAddress(DFNAddr));
 }
 
 App.prototype.setFunderChfReceived = function(chf) {
