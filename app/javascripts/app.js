@@ -14,6 +14,8 @@ var MIN_DONATION;                   // minimum donation allowed
 var MAX_DONATE_GAS;                 // maximum gas used making donation
 var MAX_DONATE_GAS_COST;            // estimate maximum cost of gas used
 var MIN_FORWARD_AMOUNT;             // minimum amount we will try to forward
+var VALUE_TRANSFER_GAS = 21000;
+var VALUE_TRANSFER_GAS_COST;
 // TODO if there's congestion, the gas price might go up. We need to handle
 // this better or leave sufficent margin cannot fail
 
@@ -25,7 +27,7 @@ var donateAs =  "0d9543c5";
 // *
 
 // Constructor
-var App = function(dfnAddr, fwdAddr, fwdPrivkey, testUI) {
+var App = function(userAccounts, testUI) {
   ui.logger("Initializing main extension application...");
 
   if (testUI) {
@@ -43,14 +45,11 @@ var App = function(dfnAddr, fwdAddr, fwdPrivkey, testUI) {
   this.lastBalanceSeen;             // last balance we saw
   this.donationPhase = 0;           // seed funder
   this.ethBalance = undefined;      // balance of ETH forwarding wallet
-  this.dfnAddr = dfnAddr;
-  this.fwdAddr = fwdAddr;
-  this.fwdPrivkey = fwdPrivkey;
+  this.accs = userAccounts;
   this.lastTask = 'task-agree';
   this.lastEthereumNode = "127.0.0.1";
 
   this.setCurrentTask(this.lastTask);
-  this.setUserAddresses(this.fwdAddr, this.dfnAddr);
   this.setGenesisDFN(undefined);
   this.setFunderChfReceived(undefined);
   this.setEthereumNode(this.lastEthereumNode);
@@ -115,7 +114,7 @@ App.prototype.tryForwardETH = function() {
 
       var FDCAddr = FDC.deployed().address;
       var value = self.ethBalance.sub(MAX_DONATE_GAS_COST);
-      var txData = "0x" + packArg(donateAs, self.dfnAddr);
+      var txData = "0x" + packArg(donateAs, self.accs.DFN.addr);
       var dataBuf = EthJSUtil.toBuffer(txData);
 
       var txObj      = {};
@@ -127,8 +126,7 @@ App.prototype.tryForwardETH = function() {
       txObj.value    = web3.toHex(value);
 
       var tx = new EthJS(txObj);
-      var priv0 = new bitcore.HDPrivateKey(self.fwdPrivkey);
-      var privBuf = priv0.privateKey.toBuffer();
+      var privBuf = EthJSUtil.toBuffer(self.accs.ETH.priv);
       tx.sign(privBuf)
       var signedTx = EthJSUtil.bufferToHex(tx.serialize());
 
@@ -160,6 +158,59 @@ App.prototype.retryForwarding = function() {
   this.contFwdingOnNewData = true;
 }
 
+// TODO: merge common parts of tx handling for forwarding and withdrawal
+App.prototype.withdrawETH = function(toAddr) {
+  var self = this;
+  web3.eth.getTransactionCount(this.ETHForwardAddr, function(err, accNonce) {
+    if (err) {
+      // TODO: error handling
+      console.log("could not get tx count: " + err);
+      return;
+    }
+
+    // TODO: remove web3.eth.getBalance call once self.ethBalance works (currently buggy
+    // as not immediately updated after failed forwarding tx)
+    // https://github.com/dfinity/STIFTUNG-DFN-donations/issues/1
+    var bal = web3.eth.getBalance(self.accs.ETH.addr);
+    var value = bal.sub(VALUE_TRANSFER_GAS_COST);
+    // TODO: move this validation to before showing withdraw option
+    if (value.isNegative() || value.isZero()) {
+      ui.logger("Not enough balance to withdraw");
+      return;
+    }
+
+    var txObj      = {};
+    txObj.to       = toAddr;
+    txObj.gasPrice = web3.toHex(GAS_PRICE);
+    txObj.gasLimit = web3.toHex(VALUE_TRANSFER_GAS);
+    txObj.nonce    = accNonce;
+    txObj.data     = EthJSUtil.toBuffer("");
+    txObj.value    = web3.toHex(value);
+
+    var tx = new EthJS(txObj);
+    var privBuf = EthJSUtil.toBuffer(self.accs.ETH.priv);
+    tx.sign(privBuf)
+    var signedTx = EthJSUtil.bufferToHex(tx.serialize());
+
+    web3.eth.sendRawTransaction(signedTx, function(err, txID) {
+      if (err) {
+        // TODO: error handling
+        console.log("could not send raw tx: " + err);
+        return;
+      }
+
+      try {
+        console.log("Sent withdraw tx: " + value + " ETH (txID=" + txID + ")");
+        ui.logger("Sent withdraw tx: " + value + " ETH (txID=" + txID + ")");
+        self.contFwdingOnNewData = true; // start fowarding again on new data
+        // TODO: track state of withdraw tx
+      } finally {
+        // TODO: track state of withdraw tx
+      }
+    });
+  });
+}
+
 // Poll Ethereum for status information from FDC and wallet
 App.prototype.pollStatus = function() {
   if (this.ethPollTimeout) clearTimeout(this.ethPollTimeout);
@@ -179,14 +230,16 @@ App.prototype.pollStatus = function() {
   // retrieve status information from the FDC...
   var self = this;
   var fdc = FDC.deployed();
-  fdc.getStatus.call(this.donationPhase, this.dfnAddr, this.fwdAddr).then(function(res) {
+  fdc.getStatus.call(this.donationPhase,
+                     this.accs.DFN.addr,
+                     this.accs.ETH.addr).then(function(res) {
       try {
         console.log("FDC.getStatus: "+JSON.stringify(res));
 
         // parse status data
         var currentState = res[0];   // current state (an enum)
         var fxRate = res[1];         // exchange rate of CHF -> ETH (Wei/CHF)
-        var currentMultiplier = res[2]; // current bonus multiplier in percent (0 if outside of ) 
+        var currentMultiplier = res[2]; // current bonus multiplier in percent (0 if outside of )
         var donationCount = res[3];  // total individual donations made (a count)
         var totalTokenAmount = res[4];// total DFN planned allocated to donors
         var startTime = res[5];      // expected start time of specified donation phase
@@ -194,13 +247,14 @@ App.prototype.pollStatus = function() {
         var isCapReached = res[7];   // whether target cap specified phase reached
         var chfCentsDonated = res[8];// total value donated in specified phase as CHF
         var tokenAmount = res[9];    // total DFN planned allocted to donor (user)
-        var ethFwdBalance = res[10];  // total ETH (in Wei) waiting in fowarding address	 
-        var donated = res[11];       // total ETH (in Wei) donated so far 
-        
+        var ethFwdBalance = res[10];  // total ETH (in Wei) waiting in fowarding address
+        var donated = res[11];       // total ETH (in Wei) donated so far
+
         // if the fowarding balance has changed, then we may have to inform the user
         // that it is "still" too small
-        if (self.ethBalance != undefined && !self.ethBalance.equals(ethFwdBalance))
+        if (self.ethBalance != undefined && !self.ethBalance.equals(ethFwdBalance)) {
           self.saidBalanceTooSmall = false;
+        }
         self.ethBalance = ethFwdBalance;
 
         // new data means we can restart forwarding...
@@ -209,8 +263,9 @@ App.prototype.pollStatus = function() {
         // We need to refresh their balance before trying to forward again or
         // we will try to send more than we have. There is a race condition here
         // but unlikely to trigger and doesn't cost user money just error msg.
-        if (self.contFwdingOnNewData)
+        if (self.contFwdingOnNewData) {
           self.tryForwardBalance = true;
+        }
 
         // update user interface with status info
         self.updateUI(currentState, fxRate, donationCount, totalTokenAmount,
@@ -329,6 +384,7 @@ App.prototype.onEthereumDisconnect = function(errCode) {
   this.setEthereumClientStatus(errCode);
 }
 
+// TODO: can be removed now as truffle is integrated for development?
 // HTML testing function
 // 1 in main.js, uncomment
 //	var app = new App(true);
@@ -339,7 +395,7 @@ App.prototype.setDummyDisplayValues = function() {
   this.setGenesisDFN(282819);
   this.setForwardedETH(000);
   this.setRemainingETH(100);
-  this.setUserAddresses("1ES2uBmbXP1pn1KBjPMwwUMbhDHiRuiRkf", undefined);
+  //this.setUserAddresses("1ES2uBmbXP1pn1KBjPMwwUMbhDHiRuiRkf", undefined);
   this.setFunderChfReceived(762521);
   this.setEthereumClientStatus("OK");
   this.setEthereumNode("127.0.0.1");
@@ -362,12 +418,14 @@ window.onload = function() {
     console.log("User interface ready.");
 
     // Initialize constants
+    // TODO: dynamic gas price
     GAS_PRICE           = web3.toBigNumber(20000000000); // 20 Shannon
     MIN_DONATION        = web3.toWei('1', 'ether');
     MAX_DONATE_GAS      = 200000; // highest measured gas cost: 138048
     MAX_DONATE_GAS_COST = web3.toBigNumber(MAX_DONATE_GAS).mul(GAS_PRICE);
     MIN_FORWARD_AMOUNT  = web3.toBigNumber(MIN_DONATION).plus(MAX_DONATE_GAS_COST);
 
+    VALUE_TRANSFER_GAS_COST = web3.toBigNumber(VALUE_TRANSFER_GAS).mul(GAS_PRICE);
     //
     // Load current account details from Storage
     //
@@ -381,10 +439,6 @@ window.onload = function() {
 
     // TODO: persistence of accounts. for now, for testing, we generate new accounts on each load.
     // TODO: remember to clear userAccounts.seed after user has backed it up!
-    //
-    // userAccounts.DFNAcc.addr
-    // userAccounts.ETHForwarderAcc.addr
-    // userAccounts.ETHForwarderAcc.priv
     var userAccounts = new Accounts();
     console.log("userAccounts: " + JSON.stringify(userAccounts));
 
@@ -392,9 +446,7 @@ window.onload = function() {
     // Bootstrap our app...
     //
 
-    app = new App(userAccounts.DFNAcc.addr,
-                  userAccounts.ETHForwarderAcc.addr,
-                  userAccounts.ETHForwarderAcc.priv);
+    app = new App(userAccounts);
     //app = new App(account, account, true);
   });
 }
