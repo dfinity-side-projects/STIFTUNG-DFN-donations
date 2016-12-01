@@ -240,7 +240,6 @@ App.prototype.updateUI = function(currentState, fxRate, donationCount,
     totalTokenAmount, startTime, endTime, isCapReached, chfCentsDonated,
     tokenAmount, fwdBalance, donated) {
 
-   ui.setETHForwardingAddress(EthJSUtil.toChecksumAddress(this.fwdAddr));
    ui.setGenesisDFN(tokenAmount);
    ui.setFunderTotalReceived(chfCentsDonated/100);
    ui.setForwardedETH(web3.fromWei(donated, 'ether'));
