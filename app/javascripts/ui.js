@@ -15,7 +15,7 @@ UI.prototype.wireUpDOM = function() {
   // TODO
 }
 
-// Set Ethereum node client IP
+// Set Ethereum node client host
 UI.prototype.setEthereumNode = function(fn) {
   document.getElementById('btn-ethereum-node').innerHTML = fn;
 }
@@ -235,11 +235,18 @@ UI.prototype.readTerms = function() {
 
 UI.prototype.showSelectEthereumNode = function() {
   document.getElementById('select-full-node').style.display = 'block';
+  onKeys(ui.hideSelectEthereumNode, function() {
+    ui.onSelectEthereumNode(document.getElementById('custom-full-node-address').value);
+  });
+}
+
+UI.prototype.hideSelectEthereumNode = function(en) {
+  document.getElementById('select-full-node').style.display = 'none';
 }
 
 UI.prototype.onSelectEthereumNode = function(en) {
-  document.getElementById('select-full-node').style.display = 'none';
-  app.setEthereumNode(en);	
+  this.hideSelectEthereumNode();
+  app.setEthereumNode(en);
 }
 
 UI.prototype.showExplainForwarding = function() {
