@@ -93,28 +93,35 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     exchangeRateAuth  = _exchangeRateAuth;
 
     // initialize phased base contract
-    stateOfPhase[0] = state.earlyContrib;
+      stateOfPhase[0] = state.earlyContrib;
 
     addPhase(earlyContribEndTime); // transition 0
-    stateOfPhase[1] = state.pause;
+    
+      stateOfPhase[1] = state.pause;
 
     addPhase(phase0StartTime); // transition 1
-    stateOfPhase[2] = state.donPhase0;
+    
+      stateOfPhase[2] = state.donPhase0;
 
     addPhase(phase0EndTime); // transition 2
-    stateOfPhase[3] = state.offChainReg;
+    
+      stateOfPhase[3] = state.offChainReg;
 
     addPhase(phase1StartTime); // transition 3
-    stateOfPhase[4] = state.donPhase1;
+    
+      stateOfPhase[4] = state.donPhase1;
 
     addPhase(phase1EndTime); // transition 4
-    stateOfPhase[5] = state.offChainReg;
+    
+      stateOfPhase[5] = state.offChainReg;
 
     addPhase(finalizeStartTime); // transition 5
-    stateOfPhase[6] = state.finalization;
+    
+      stateOfPhase[6] = state.finalization;
 
     addPhase(finalizeEndTime); // transition 6
-    stateOfPhase[7] = state.done;
+    
+      stateOfPhase[7] = state.done;
 
     // set max delay for start of donation phase 1
     setMaxDelay(3, maxDelay);
@@ -309,6 +316,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
 
     // Convert chfCents into tokens
     uint tokenAmount = chfCents / chfCentsPerToken;
+//    uint tokenAmount = (chfCents * tokensPerCHF) / 100;
 
     // assign unrestricted tokens in TokenTracker
     assign(addr,tokenAmount,false);

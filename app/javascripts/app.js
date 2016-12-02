@@ -21,8 +21,13 @@ var VALUE_TRANSFER_GAS_COST;
 // TODO if there's congestion, the gas price might go up. We need to handle
 // this better or leave sufficent margin cannot fail
 
+// FDC address
+// for PRODUCTION version: place hard-coded constant here
+var FDCAddr = FDC.deployed().address;
+
 // FDC ABI signatures
 var donateAs =  "0d9543c5";
+var donateAsWithChecksum =  "ceadd9c8";
 
 // *
 // *** Application logic ***
@@ -116,10 +121,19 @@ App.prototype.tryForwardETH = function() {
         return;
       }
 
-      var FDCAddr = FDC.deployed().address;
       var value = self.ethBalance.sub(MAX_DONATE_GAS_COST);
-      var txData = "0x" + packArg(donateAs, self.accs.DFN.addr);
-      var dataBuf = EthJSUtil.toBuffer(txData);
+      console.log("addr:" + self.accs.DFN.addr);
+      var addrBuf = EthJSUtil.toBuffer(self.accs.DFN.addr);
+      console.log("addrBuf:" + EthJSUtil.bufferToHex(addrBuf));
+      var checksumBuf = EthJSUtil.sha256(addrBuf).slice(0,4); // first 4 bytes
+      console.log("checksumBuf:" + EthJSUtil.bufferToHex(checksumBuf));
+      var checksum = EthJSUtil.bufferToHex(checksumBuf)
+      console.log("checksum:" + checksum);
+      var txData = "0x" + packArg(donateAs, self.accs.DFN.addr);  
+      var txData2 = "0x" + packArg2(donateAsWithChecksum, self.accs.DFN.addr, checksum);  
+//      console.log("txData:" + txData2);
+      var dataBuf = EthJSUtil.toBuffer(txData2);
+      console.log("txData:" + EthJSUtil.bufferToHex(dataBuf));
 
       var txObj      = {};
       txObj.to       = FDCAddr;
@@ -242,18 +256,18 @@ App.prototype.pollStatus = function() {
         console.log("FDC.getStatus: "+JSON.stringify(res));
 
         // parse status data
-        var currentState = res[0];   // current state (an enum)
-        var fxRate = res[1];         // exchange rate of CHF -> ETH (Wei/CHF)
+        var currentState = res[0];      // current state (an enum)
+        var fxRate = res[1];            // exchange rate of CHF -> ETH (Wei/CHF)
         var currentMultiplier = res[2]; // current bonus multiplier in percent (0 if outside of )
-        var donationCount = res[3];  // total individual donations made (a count)
-        var totalTokenAmount = res[4];// total DFN planned allocated to donors
-        var startTime = res[5];      // expected start time of specified donation phase
-        var endTime = res[6];        // expected end time of specified donation phase
-        var isCapReached = res[7];   // whether target cap specified phase reached
-        var chfCentsDonated = res[8];// total value donated in specified phase as CHF
-        var tokenAmount = res[9];    // total DFN planned allocted to donor (user)
-        var ethFwdBalance = res[10];  // total ETH (in Wei) waiting in fowarding address
-        var donated = res[11];       // total ETH (in Wei) donated so far
+        var donationCount = res[3];     // total individual donations made (a count)
+        var totalTokenAmount = res[4];  // total DFN planned allocated to donors
+        var startTime = res[5];         // expected start time of specified donation phase
+        var endTime = res[6];           // expected end time of specified donation phase
+        var isCapReached = res[7];      // whether target cap specified phase reached
+        var chfCentsDonated = res[8];   // total value donated in specified phase as CHF
+        var tokenAmount = res[9];       // total DFN planned allocted to donor (user)
+        var ethFwdBalance = res[10];    // total ETH (in Wei) waiting in forwarding address
+        var donated = res[11];          // total ETH (in Wei) donated so far
 
         // if the fowarding balance has changed, then we may have to inform the user
         // that it is "still" too small
@@ -360,7 +374,7 @@ App.prototype.setETHNodeInternal = function(host) {
 App.prototype.setUserAddresses = function(ETHAddr, DFNAddr) {
   console.log("Set Ethereum forwarding addr: " + ETHAddr);
   console.log("Set DFN addr: " + DFNAddr);
-  this.ETHForwardingAddr = ETHAddr;
+  this.ETHForwardAddr = ETHAddr;
   this.DFNAddr = DFNAddr;
   ui.setUserAddresses(EthJSUtil.toChecksumAddress(ETHAddr), EthJSUtil.toChecksumAddress(DFNAddr));
 }
@@ -480,4 +494,8 @@ window.onload = function() {
 // https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
 function packArg(ABISig, arg) {
   return ABISig + "000000000000000000000000" + arg.replace("0x", "");
+}
+
+function packArg2(ABISig, arg20, arg4) {
+  return ABISig + "000000000000000000000000" + arg20.replace("0x", "") + arg4.replace("0x", "");
 }
