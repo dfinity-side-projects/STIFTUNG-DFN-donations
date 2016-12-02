@@ -122,18 +122,17 @@ App.prototype.tryForwardETH = function() {
       }
 
       var value = self.ethBalance.sub(MAX_DONATE_GAS_COST);
-      console.log("addr:" + self.accs.DFN.addr);
+      // console.log("addr:" + self.accs.DFN.addr);
       var addrBuf = EthJSUtil.toBuffer(self.accs.DFN.addr);
-      console.log("addrBuf:" + EthJSUtil.bufferToHex(addrBuf));
+      // console.log("addrBuf:" + EthJSUtil.bufferToHex(addrBuf));
       var checksumBuf = EthJSUtil.sha256(addrBuf).slice(0,4); // first 4 bytes
-      console.log("checksumBuf:" + EthJSUtil.bufferToHex(checksumBuf));
+      // console.log("checksumBuf:" + EthJSUtil.bufferToHex(checksumBuf));
       var checksum = EthJSUtil.bufferToHex(checksumBuf)
-      console.log("checksum:" + checksum);
-      var txData = "0x" + packArg(donateAs, self.accs.DFN.addr);  
+      // console.log("checksum:" + checksum);
       var txData2 = "0x" + packArg2(donateAsWithChecksum, self.accs.DFN.addr, checksum);  
-//      console.log("txData:" + txData2);
+      // console.log("txData:" + txData2);
       var dataBuf = EthJSUtil.toBuffer(txData2);
-      console.log("txData:" + EthJSUtil.bufferToHex(dataBuf));
+      // console.log("txData:" + EthJSUtil.bufferToHex(dataBuf));
 
       var txObj      = {};
       txObj.to       = FDCAddr;
