@@ -373,7 +373,6 @@ App.prototype.setETHNodeInternal = function(host) {
 App.prototype.setUserAddresses = function(ETHAddr, DFNAddr) {
   console.log("Set Ethereum forwarding addr: " + ETHAddr);
   console.log("Set DFN addr: " + DFNAddr);
-  this.ETHForwardAddr = ETHAddr;
   this.DFNAddr = DFNAddr;
   ui.setUserAddresses(EthJSUtil.toChecksumAddress(ETHAddr), EthJSUtil.toChecksumAddress(DFNAddr));
 }
@@ -476,7 +475,9 @@ window.onload = function() {
     // TODO: persistence of accounts. for now, for testing, we generate new accounts on each load.
     // TODO: remember to clear userAccounts.seed after user has backed it up!
     var userAccounts = new Accounts();
-    console.log("userAccounts: " + JSON.stringify(userAccounts));
+    ui.logger("user accounts created");
+//    console.log("userAccounts: " + JSON.stringify(userAccounts));
+    ui.logger("now starting App");
 
     //
     // Bootstrap our app...
