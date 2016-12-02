@@ -115,7 +115,7 @@ App.prototype.tryForwardETH = function() {
       }
     }
 
-    web3.eth.getTransactionCount(this.ETHForwardAddr, function(err, accNonce) {
+    web3.eth.getTransactionCount(self.accs.ETH.addr, function(err, accNonce) {
       if (err) {
         handleConnErr(err);
         return;
@@ -179,7 +179,7 @@ App.prototype.retryForwarding = function() {
 // TODO: merge common parts of tx handling for forwarding and withdrawal
 App.prototype.withdrawETH = function(toAddr) {
   var self = this;
-  web3.eth.getTransactionCount(this.ETHForwardAddr, function(err, accNonce) {
+  web3.eth.getTransactionCount(self.accs.ETH.addr, function(err, accNonce) {
     if (err) {
       // TODO: error handling
       console.log("could not get tx count: " + err);
