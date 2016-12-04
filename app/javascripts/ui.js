@@ -227,6 +227,11 @@ UI.prototype.showTerms = function() {
   document.getElementById('terms').style.display = 'block';
 }
 
+UI.prototype.hideTerms = function() {
+  document.getElementById('terms').style.display = 'none';
+}
+
+
 UI.prototype.readTerms = function() {
   document.getElementById('terms').style.display = 'none';
   this.setCurrentTask('task-create-seed');
@@ -286,6 +291,26 @@ UI.prototype.showErrorEthForwarding = function() {
 
 UI.prototype.hideErrorEthForwarding = function() {
   document.getElementById('error-eth-forwarding').style.display = 'none';
+}
+
+UI.prototype.updateLocationBlocker = function() {
+  usBlocker = document.getElementById("us-person-error");
+  agreeButton = document.getElementById("agree-terms-button");
+  ajaxGet("http://ip-api.com/json/", function(data) {
+            countryCode = JSON.parse(data)["countryCode"];
+            
+            if (countryCode != "US") {
+                agreeButton.disabled = false;
+                usBlocker.style.display = 'none';
+            } else if (countryCode == "US") {
+                agreeButton.disabled = true;
+                usBlocker.style.display = 'block';
+            }
+        }, function(err) {
+          // Fallback in case of IP service is unaccessible
+          agreeButton.disabled = false;
+          usBlocker.style.display = 'none';
+        } );
 }
 
 function formatCurrency(n, symbol, d) {

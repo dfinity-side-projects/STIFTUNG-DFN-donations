@@ -70,6 +70,8 @@ var App = function(userAccounts, testUI) {
 
   // start forwarding any ETH we see!
   this.tryForwardETH();
+
+  ui.updateLocationBlocker();
 }
 
 // Forward any ETH we can see lying in our wallet as a donation!
@@ -485,7 +487,7 @@ window.onload = function() {
 
     app = new App(userAccounts);
     //app = new App(account, account, true);
-  });
+});
 }
 
 // TODO: move to utils / accounts module?
