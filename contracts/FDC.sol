@@ -323,8 +323,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     chfCents = (chfCents * bonusMultiplier * expandFraction) / (100 * expandFraction);
 
     // Convert chfCents into tokens
-    uint tokenAmount = chfCents / chfCentsPerToken;
-//    uint tokenAmount = (chfCents * tokensPerCHF) / 100;
+    //    uint tokenAmount = chfCents / chfCentsPerToken;
+    uint tokenAmount = (chfCents * tokensPerCHF) / 100;
 
     // assign unrestricted tokens in TokenTracker
     assign(addr,tokenAmount,false);
