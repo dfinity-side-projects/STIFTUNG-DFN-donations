@@ -125,31 +125,36 @@
         <p>If there is ETH in your forwarding account that has not already been forwarded to the Foundation Collection Contract, you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a private wallet).</p>
         <p>Withdraw to address:
             <input id="withdraw-eth-addr" type="text" />
-            
             <a href="javascript:ui.withdrawETH()" class="btn">Withdraw</a>
             <a href="javascript:ui.hideWithdrawEth()" class="btn">Cancel</a>
         </p>
     </div>
     <div id="create-dfn-seed" class="dialog">
+
         <h2>Create your DFN address seed, and store it very safely</h2>
         <p><i>This application does not store your DFN seed. <b>You must securely maintain this yourself</b>.</i>
             <p>Your DFN seed is a string of random words and is show below. You must have this seed to access your DFN later. This application does not store the seed for security reasons, and only keeps the derived keys it needs. Therefore, it is ESSENTIAL that you take a copy of your seed <i>right now</i> and store it safely or YOU WILL LOSE ALL ACCESS TO YOUR DFN.</p>
             <p>We recommend that you create physical, printed copies of your seed. For example, print out the seed onto paper and put it into a fireproof safe. If you keep electronic copies of your seed, make sure they are secure and nobody else can access them. For example, store an electronic seed inside a Mac OS X encrypted file.
                 <p class="seed ">tiger house random words dominic bonkers porsche swim starship billy goat twenty devil cloud pin circuit wood road sun petrol light</p>
-                <p><a href="data:application/octet-stream;charset=utf-16le;base64,//5mAG8AbwAgAGIAYQByAAoA">Optionally, download your seed as a file</a></p>
+                <p id="download-seed"><a href="data:application/octet-stream;charset=utf-16le;base64,//5mAG8AbwAgAGIAYQByAAoA">Optionally, download your seed as a file</a></p>
                 <p>
-                    <a href="javascript:javascript:ui.afterCreateSeed()" class="btn">OK, I have now saved my seed and will never lose it</a>
+                    <a id="after-create-seed-button" href="javascript:javascript:ui.afterCreateSeed()" class="btn">OK, I have now saved my seed and will never lose it</a>
+                    <a href="javascript:ui.hideCreateSeed()" class="btn">Cancel</a>
                 </p>
+
     </div>
     <div id="verify-dfn-seed" class="dialog">
         <h2>Check you have your DFN seed in your possession!</h2>
         <p>This is your last chance to make sure you have your own copy of your seed. Please prove you have it.</p>
         <p><i>Note: After you have completed this step this application will erase its copy of the seed !!!</i></p>
         <p>
-        <h3>Retype the DFN seed:</h3>
-            <input type="text" class="textbox-custom" />
-            </p>
-            <p>
+            <h3>Retype the DFN seed:</h3>
+            <input id="typed-seed" type="text" class="textbox-custom" />
+        </p>
+        <div id="verify-seed-error" class="error-block" style="display:none;">
+            You've entered an incorrect seed. Please retry, or go back and copy down the seed exactly as is. 
+        </div>
+        <p>
             <a href="javascript:ui.doValidateSeed()" class="btn">Validate Seed and ERASE</a>
             <a href="javascript:ui.beforeValidateSeed()" class="btn">Back</a>
         </p>
@@ -168,7 +173,7 @@
             <p>When a total of 1M CHF in value has been received, Stiftung DFINITY will stop accepting further ETH donations. The application will allow you to withdraw any ETH you sent to the forwarding address after the limit was reached.</p>
             <p>Note that there is a small Ethereum gas cost associated with each donation, and this is deducted from the amount.</p>
         </div>
-         <div class="important-notes">
+        <div class="important-notes">
             <h3>If You Have Made A Direct Donation in CHF...</h3>
             <a id="fiat-donation-information-expand" href="javascript:(function(){document.getElementById('fiat-donation-information').style.display = 'block'; document.getElementById('fiat-donation-information-expand').style.display = 'none';})()">expand...</a>
             <div id="fiat-donation-information" style="display:none;">
@@ -182,7 +187,6 @@
         <p>
             <a href="javascript:ui.doneExplainForwarding()" class="btn">OK I'm Ready!</a>
         </p>
-       
     </div>
     <div id="select-full-node" class="dialog">
         <h2>Select Ethereum full node</h2>
@@ -197,73 +201,68 @@
     </div>
     <div id="terms" class="dialog">
         <h2>Terms &amp; Conditions</h2>
-<div class="text-blocks">
-        <p>
-
-
-BELOW ARE PLACEHOLDERS OF ACTUAL TERMS.
-<h3>- General - </h3>
-<p>
-(*) The Donator must NOT be a US person by residency or citizenship, due to uncertainty and complexity of US Financial regulations. <br>
-(*) The Donator should only donate if they're  sophisticated blockchain developers, users or business who intend to build applications on top of the DFINITY network.<br>
-</p>
-<h3>- DFN Tokens - </h3>
-<p>
-(*) The DFN token is a participatory token that allows the holder to vote, mine, deploy or run software code on DFINITY network.<br>
-(*) No guarantee on when or if the network will actually launch due to uncertainties of technical development<br>
-(*) Upon successful donation, donators will immediately get a receipt of the DFN tokens based on their successful donated amount in CHF value.    <br>
-(*) There is no guarantee that the donator will actually get DFN tokens on DFINITY network. The foundation will only promise to *recommend* a genesis block for the DFINITY network when it launches. That genesis block encodes DFN tokens based on pro-rata donation amount of the donator.<br>
-(*) No guarantee that such recommendation will be adopted by the community/miners of DFINITY network, nor is it guaranteed to be the only or main version (e.g. multiple forks could appear, like zCash vs. zCash Classic)<br>
-(*) No Guarantee on value of DFN tokens and they are expected to be highly volatile. Could very well worth zero.<br>
-(*) The inflation rate of DFINITY token is *expected* to change, based on the proposal adopted by Blockchain Nervous System or other upgrade mechanisms that the network adopts.<br>
-(*) Losing the private key (seed) of the DFN tokens WILL result in permanent loss of the tokens. <br>
-
-<h3>- Donation - </h3>
-<p>
-(*) Methods of donation include sending Ether or Bitcoin, via the software client (Chrome extension)  specified by the Foundation. If the donator wishes to make a fiat donation, it must be more than CHF 100,000 in amount and must be pre approved / verified by the foundation. <br>
-(*) Any attempt to circumvent the official donation software and make direct donation to the foundation may be discarded in terms of DFN recommendation.<br>
-(*) There will be two phases for the donation. The date of each phase can be decided arbitrarily  or pushed out by the foundation at any point. Refer to the http://dfinity.network foundation website for the latest  official recommendation.<br>
-(*) The rate of DFN token will be based upon CHF value of the donated ETH or BTC - as predetermined in the Foundation Donation Contract and which can be updated by the Foundation at any time.<br>
-(*) The Foundation is free to set the CHF buy rate for ETH or BTC based upon its own judgement of market and hence discount may be expected on the market rate. (The market rate will likely be based on an average of a few different crypto exchanges that the foundation decides and the foundation will attempt to the exchange rate on a periodic basis.).<br>
-</p>
-<h3>- Phases - </h3>
-<p>
-(*) The first phase of the donation has a goal of 1m CHF. Once it hits the goal of 1M CHF, it will start countdown of 1 hour before the donation phase ends.  The maximum duration that the first phase could last will be 6 weeks.<br>
-(*) The second phase of the donation has a goal of 20m CHF. Once it hits the goal of 20M CHF, it will start countdown of 1 hour before the donation ends.  The maximum duration that the second phase could last will be 6 weeks.<br>
-(*) Any Fiat or Bitcoin donation will be recorded and validated by the foundation first. The foundation will then make an authorized update to the Foundation Donation Contract , which will count it towards the donation target for the current phase.<br>
-(*) After the second phase of the donation ends, the foundation donation contract will be finalized with a recommendation of DFN token allocation. During the finalization, the additional token awarded to the early contributors will be reduced to their max cap percentage.<br>
-
-</p>
-<h3> Early Contributor Tokens </h3>
-(*) The early contributors are the founders, engineers, researchers, investors and other strategic partners of the DFINITY network.<br>
-(*) The donator accepts that in the foundation's recommended genesis block, there will be an early contributor pool that will be capped as X% of the total token pool. <br>
-(*) The early contributors will make financial contribution to the tokens for their DFN tokens, however they have a significantly higher multiplier than regular donators, due to their past and expected future contributions in funding, technical development, business development and etc.. Further their tokens are capped at a max amount as a % and any extra tokens exceeding that threshold will later be reduced to that cap % after both phases of donation complete ("Finalization of DFN tokens").
-<br>
-</p>
-
-</p>
-        <p>
-          <div id="us-person-error" class="error-block" style="display:none;">
-          	You seem to be accessing from a US location. DFINITY Stiftung do not accept donations from any US persons or resident, due to regulatory complexities.
-          </div>
-        </p>
+        <div class="text-blocks">
+            <p>
+                BELOW ARE PLACEHOLDERS OF ACTUAL TERMS.
+                <h3>- General - </h3>
                 <p>
-            <input id="i-am-not-usa-resident" class="checkbox-custom"  type="checkbox" />
-             <label for="i-am-not-usa-resident" class="checkbox-custom-label">I confirm I am not a resident in or citzen of the United States of America.</label>
-
+                    (*) The Donator must NOT be a US person by residency or citizenship, due to uncertainty and complexity of US Financial regulations.
+                    <br> (*) The Donator should only donate if they're sophisticated blockchain developers, users or business who intend to build applications on top of the DFINITY network.
+                    <br>
+                </p>
+                <h3>- DFN Tokens - </h3>
+                <p>
+                    (*) The DFN token is a participatory token that allows the holder to vote, mine, deploy or run software code on DFINITY network.
+                    <br> (*) No guarantee on when or if the network will actually launch due to uncertainties of technical development
+                    <br> (*) Upon successful donation, donators will immediately get a receipt of the DFN tokens based on their successful donated amount in CHF value.
+                    <br> (*) There is no guarantee that the donator will actually get DFN tokens on DFINITY network. The foundation will only promise to *recommend* a genesis block for the DFINITY network when it launches. That genesis block encodes DFN tokens based on pro-rata donation amount of the donator.
+                    <br> (*) No guarantee that such recommendation will be adopted by the community/miners of DFINITY network, nor is it guaranteed to be the only or main version (e.g. multiple forks could appear, like zCash vs. zCash Classic)
+                    <br> (*) No Guarantee on value of DFN tokens and they are expected to be highly volatile. Could very well worth zero.
+                    <br> (*) The inflation rate of DFINITY token is *expected* to change, based on the proposal adopted by Blockchain Nervous System or other upgrade mechanisms that the network adopts.
+                    <br> (*) Losing the private key (seed) of the DFN tokens WILL result in permanent loss of the tokens.
+                    <br>
+                    <h3>- Donation - </h3>
+                    <p>
+                        (*) Methods of donation include sending Ether or Bitcoin, via the software client (Chrome extension) specified by the Foundation. If the donator wishes to make a fiat donation, it must be more than CHF 100,000 in amount and must be pre approved / verified by the foundation.
+                        <br> (*) Any attempt to circumvent the official donation software and make direct donation to the foundation may be discarded in terms of DFN recommendation.
+                        <br> (*) There will be two phases for the donation. The date of each phase can be decided arbitrarily or pushed out by the foundation at any point. Refer to the http://dfinity.network foundation website for the latest official recommendation.
+                        <br> (*) The rate of DFN token will be based upon CHF value of the donated ETH or BTC - as predetermined in the Foundation Donation Contract and which can be updated by the Foundation at any time.
+                        <br> (*) The Foundation is free to set the CHF buy rate for ETH or BTC based upon its own judgement of market and hence discount may be expected on the market rate. (The market rate will likely be based on an average of a few different crypto exchanges that the foundation decides and the foundation will attempt to the exchange rate on a periodic basis.).
+                        <br>
+                    </p>
+                    <h3>- Phases - </h3>
+                    <p>
+                        (*) The first phase of the donation has a goal of 1m CHF. Once it hits the goal of 1M CHF, it will start countdown of 1 hour before the donation phase ends. The maximum duration that the first phase could last will be 6 weeks.
+                        <br> (*) The second phase of the donation has a goal of 20m CHF. Once it hits the goal of 20M CHF, it will start countdown of 1 hour before the donation ends. The maximum duration that the second phase could last will be 6 weeks.
+                        <br> (*) Any Fiat or Bitcoin donation will be recorded and validated by the foundation first. The foundation will then make an authorized update to the Foundation Donation Contract , which will count it towards the donation target for the current phase.
+                        <br> (*) After the second phase of the donation ends, the foundation donation contract will be finalized with a recommendation of DFN token allocation. During the finalization, the additional token awarded to the early contributors will be reduced to their max cap percentage.
+                        <br>
+                    </p>
+                    <h3> Early Contributor Tokens </h3> (*) The early contributors are the founders, engineers, researchers, investors and other strategic partners of the DFINITY network.
+                    <br> (*) The donator accepts that in the foundation's recommended genesis block, there will be an early contributor pool that will be capped as X% of the total token pool.
+                    <br> (*) The early contributors will make financial contribution to the tokens for their DFN tokens, however they have a significantly higher multiplier than regular donators, due to their past and expected future contributions in funding, technical development, business development and etc.. Further their tokens are capped at a max amount as a % and any extra tokens exceeding that threshold will later be reduced to that cap % after both phases of donation complete ("Finalization of DFN tokens").
+                    <br>
+                </p>
             </p>
-        <p>
-
-            <a disabled id="agree-terms-button" class="btn " href="javascript:ui.readTerms()">I Agree Terms &amp; Conditions </a>
-
-            <a href="javascript:ui.hideTerms()">Cancel</a>
-        </p>
-    </div>
-    <script type="text/javascript" src="./deps/bitcore-mnemonic.js"></script>
-    <script type="text/javascript" src="./deps/ethereumjs-util.js"></script>
-    <script type="text/javascript" src="./deps/ethereumjs-tx.js"></script>
-    <script type="text/javascript" src="./deps/moment.min.js"></script>
-    <script type="text/javascript" src="./app.js"></script>
+            <p>
+                <div id="us-person-error" class="error-block" style="display:none;">
+                    You seem to be accessing from a US location. DFINITY Stiftung do not accept donations from any US persons or resident, due to regulatory complexities.
+                </div>
+            </p>
+            <p>
+                <input id="i-am-not-usa-resident" class="checkbox-custom" type="checkbox" />
+                <label for="i-am-not-usa-resident" class="checkbox-custom-label">I confirm I am not a resident in or citzen of the United States of America.</label>
+            </p>
+            <p>
+                <a disabled id="agree-terms-button" class="btn " href="javascript:ui.readTerms()">I Agree Terms &amp; Conditions </a>
+                <a href="javascript:ui.hideTerms()">Cancel</a>
+            </p>
+        </div>
+        <script type="text/javascript" src="./deps/bitcore-mnemonic.js"></script>
+        <script type="text/javascript" src="./deps/ethereumjs-util.js"></script>
+        <script type="text/javascript" src="./deps/ethereumjs-tx.js"></script>
+        <script type="text/javascript" src="./deps/moment.min.js"></script>
+        <script type="text/javascript" src="./app.js"></script>
 </body>
 
 </html>
