@@ -13,3 +13,5 @@ shippable
 **/*.sol.js
 build/
 dist/
+app/javascripts/fdc_test_addr.js
+

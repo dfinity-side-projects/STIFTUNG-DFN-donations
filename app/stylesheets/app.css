@@ -154,6 +154,19 @@ input, button {
 }
 .eth-address, .eth-address *, .ip-address {
 	font-family: "Courier New", Courier, monospace;
+	font-size:20px;
+}
+.eth-address-block {
+	text-align:center;
+	padding-left:15px;
+	padding-right:15px;
+	background-color: white;
+	border: 4px solid rgb(52,171,226);
+	color: black;
+	font-weight: bold;
+	
+	/*font-weight: normal;*/
+	margin: 5px;
 }
 #eth-forwarding-address .eth-address, #eth-forwarding-address .eth-address * {
 	font-size: 20px;
@@ -268,25 +281,42 @@ input, button {
 	display: none;	
 	position: fixed;
 	overflow: scroll;				
-	top: 20px;
+	top: 40px;
 	bottom: 20px;
 	left: 20px;
 	right: 20px;					
-	border: 3px solid #333;	
-	padding: 75px;
+	/*border: 3px solid #333;	*/
+	padding: 60px;
 }
 .dialog {
-	background-color: white;
+	background-color: rgb(55,55,55);
+	color: white;
 }
 .dialog, .dialog * {
-	color: black !important;							
+	color: white /*!important;							*/
+	line-height: 1.5;
+	letter-spacing: 0.05em;
 }	
 .dialog h1, .dialog h2 {
-	font-size: 18px;
+	font-size: 26px;
+	/*color: rgb(52,171,226);*/
 }	
 .dialog h3 {
 	font-size: 16px;
 }	
+
+/* Error block within dialogs */
+.dialog .error-block {
+	color: #333;
+	background-color: white;
+	border: 4px solid red;
+	color: rgb(55,55,55);
+	font-weight: bold;
+	padding: 5px;
+	/*font-weight: normal;*/
+	margin: 5px;
+}
+
 #terms {
 }
 #select-full-node {
@@ -309,17 +339,25 @@ input, button {
 }
 p.seed {
 	color: white !important;
-	/*border: 1px solid #33E9FF;*/
-	background-color: #333;
+	background-color: black;
 	padding: 10px;
+	font-family: "Courier New", Courier, monospace;
+	font-size:18px;
+	text-align:center;
+    letter-spacing: 0.1em;
+	padding-left:15px;
+	padding-right:15px;
+	border: 4px solid rgb(52,171,226);	
+	margin: 5px;
 }
 /*			#explain-eth-forwarding {
 	display: block;
 }*/
 div.important-notes {
 	border: 1px solid #999 !important;
-	background-color: #EEE;
+	background-color: #4e4e4e;
 	padding: 10 20 10 20px;
+	margin-bottom:10px;
 }
 #withdraw-eth-addr {
     width: 400px;
@@ -327,3 +365,271 @@ div.important-notes {
 .eth-host {
     cursor: pointer;
 }
+
+
+.text-blocks {
+	padding-right:10%;
+
+}
+
+
+
+.textbox-custom {
+	color: white !important;
+	background-color: black;
+	padding: 10px;
+	font-family: "Courier New", Courier, monospace;
+	font-size:18px;
+	text-align:center;
+    letter-spacing: 0.1em;
+	padding-left:15px;
+	padding-right:15px;
+	border: 4px solid rgb(52,171,226);	
+	margin: 5px;
+
+  display: inline-block;
+  width: 100%;
+  -webkit-transition: color 0.4s, background-color 0.4s, border 0.4s;
+  transition: color 0.4s, background-color 0.4s, border 0.4s; 
+}
+/** checkbox **/
+
+
+.checkbox-custom, .radio-custom {
+    opacity: 0;
+    position: absolute;   
+}
+
+.checkbox-custom, .checkbox-custom-label, .radio-custom, .radio-custom-label {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.checkbox-custom-label, .radio-custom-label {
+    position: relative;
+}
+
+.checkbox-custom + .checkbox-custom-label:before, .radio-custom + .radio-custom-label:before {
+    content: '';
+    background: #fff;
+    border: 2px solid #ddd;
+    display: inline-block;
+    vertical-align: middle;
+    width: 20px;
+    height: 20px;
+    padding: 2px;
+    margin-right: 10px;
+    text-align: center;
+}
+
+.checkbox-custom:checked + .checkbox-custom-label:before {
+    background: rgb(52,171,226);
+}
+
+.radio-custom + .radio-custom-label:before {
+    border-radius: 50%;
+}
+
+
+.checkbox-custom:focus + .checkbox-custom-label, .radio-custom:focus + .radio-custom-label {
+  outline: 1px solid #ddd; /* focus style */
+}
+
+/** buttons **/
+
+
+/*
+ *
+ * btns.css
+ * Simple css utilities for building responsive buttons
+ * Author: mrmrs
+ * License: MIT
+ *
+ *                */
+/*
+  Base .btn class
+  Code:
+  <a href="#" class="btn">Default button</a>
+*/
+.btn, .btn:link, .btn:visited {
+  border-radius: 0.25em;
+  border-style: solid;
+  border-width: 1px;
+  /*color: #111;*/
+  display: inline-block;
+  font-family: avenir, helvetica, roboto, arial, sans-serif;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.5em;
+  /*margin-left: 1em;*/
+  margin-right: 1em;
+
+  padding: .8em 1.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+  -webkit-transition: color 0.4s, background-color 0.4s, border 0.4s;
+  transition: color 0.4s, background-color 0.4s, border 0.4s; 
+}
+.btn.disabled {
+  opacity: 0.65; 
+  cursor: not-allowed;
+  pointer-events:none;
+
+}
+
+.btn:hover, .btn:focus {
+  color: rgb(52,171,226);
+
+  border: 1px solid #7FDBFF;
+  -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s;
+  transition: background-color 0.3s, color 0.3s, border 0.3s; }
+
+.btn:active {
+  color: #0074D9;
+  border: 1px solid #0074D9;
+  -webkit-transition: background-color 0.3s, color 0.3s, border 0.3s;
+  transition: background-color 0.3s, color 0.3s, border 0.3s; }
+
+/*
+  Sizes
+  Small  = .btn--s
+  Medium = .btn--m
+  Large  = .btn--l
+  Code:
+  <a href="#" class="btn btn--s">
+  <a href="#" class="btn btn--m">
+  <a href="#" class="btn btn--l">
+*/
+.btn--s {
+  font-size: 14px; }
+
+.btn--m {
+  font-size: 16px; }
+
+.btn--l {
+  font-size: 20px;
+  border-radius: 0.25em !important; }
+
+/*
+  Layout utility for responsive buttons
+  Code:
+  <a href="#" class="btn btn--full">
+*/
+.btn--full, .btn--full:link {
+  border-radius: 0.25em;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  width: 100%; }
+
+/*
+  Skins
+  * Black & White
+  * Grays
+  * Colors
+  Code:
+  <a href="#" class="btn btn--black">
+  <a href="#" class="btn btn--white">
+  <a href="#" class="btn btn--gray">
+  <a href="#" class="btn btn--gray-dark">
+  <a href="#" class="btn btn--gray-border">
+  <a href="#" class="btn btn--blue">
+*/
+/* BLACK & WHITE */
+.btn--black, .btn--black:link, .btn--black:visited {
+  color: #fff;
+  background-color: #111; }
+
+.btn--black:hover, .btn--black:focus {
+  color: #fff;
+  background-color: #444;
+  border-color: #444; }
+
+.btn--black:active {
+  color: #fff;
+  background-color: #999;
+  border-color: #999; }
+
+.btn--white, .btn--white:link, .btn--white:visited {
+  color: #111;
+  background-color: #fff; }
+
+.btn--white:hover, .btn--white:focus {
+  color: #111;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.7); }
+
+.btn--white:active {
+  color: #111;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.9); }
+
+/* Gray */
+.btn--gray:link, .btn--gray:visited {
+  background-color: #f0f0f0;
+  border-color: #f0f0f0;
+  color: #555; }
+
+.btn--gray:hover, .btn--gray:focus {
+  background-color: #ddd;
+  border-color: #ddd;
+  color: #444; }
+
+.btn--gray:active {
+  background-color: #ccc;
+  border-color: #ccc;
+  color: #444; }
+
+.btn--gray-border:link, .btn--gray-border:visited {
+  background-color: #fff;
+  border-color: #555;
+  border-width: 2px;
+  color: #555; }
+
+.btn--gray-border:hover, .btn--gray-border:focus {
+  background-color: #fff;
+  border-color: #ddd;
+  color: #777; }
+
+.btn--gray-border:active {
+  background-color: #ccc;
+  border-color: #ccc;
+  color: #444; }
+
+.btn--gray-dark:link, .btn--gray-dark:visited {
+  background-color: #555;
+  color: #eee; }
+
+.btn--gray-dark:hover, .btn--gray-dark:focus {
+  background-color: #333;
+  border-color: #333;
+  color: #eee; }
+
+.btn--gray-dark:active {
+  background-color: #777;
+  border-color: #777;
+  color: #eee; }
+
+/* BLUE */
+.btn--blue:link, .btn--blue:visited {
+  color: #fff;
+  background-color: #0074D9; }
+
+.btn--blue:hover, .btn--blue:focus {
+  color: #fff !important;
+  background-color: #0063aa;
+  border-color: #0063aa; }
+
+.btn--blue:active {
+  color: #fff;
+  background-color: #001F3F;
+  border-color: #001F3F; }
+
+/* Keep it mobile-first and responsive */
+@media screen and (min-width: 32em) {
+  .btn--full {
+    max-width: 16em !important; } }
+
+

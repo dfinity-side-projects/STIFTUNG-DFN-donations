@@ -25,7 +25,7 @@ var Accounts = function(seedStr) {
 // https://github.com/ethereumjs/ethereumjs-util/blob/master/docs/index.md#pubtoaddress
 // expects the 32 bytes without the leading compression-indicating
 // byte (see YP eq 213)
-Accounts.prototype.HDPrivKeyToAddr = function(hdPrivKey) {
+Accounts.prototype.HDPrivKeyToAddr = function(privHex) {
   /* TODO: verify padding, sometimes we get:
 
      ethereumjs-util.js:16925 Uncaught RangeError: private key length is invalid(…)
@@ -38,8 +38,8 @@ Accounts.prototype.HDPrivKeyToAddr = function(hdPrivKey) {
 
      which likely is the common padding bug of privkey being less than 32 bytes
   */
-  var priv = new this.bitcore.PrivateKey(hdPrivKey.toObject().privateKey);
-  return EthJSUtil.bufferToHex(EthJSUtil.privateToAddress(priv.toBuffer()));
+  var addrBuf = EthJSUtil.privateToAddress(EthJSUtil.toBuffer(privHex));
+  return EthJSUtil.bufferToHex(addrBuf);
 }
 
 //exports = module.exports = {Accounts};
@@ -64,10 +64,11 @@ Accounts.prototype.generateKeys = function(seedStr) {
   var ETHPriv   = masterKey.derive(this.HDPathETHForwarder);
   var BTCPriv   = masterKey.derive(this.HDPathBTCForwarder);
 
-  this.DFN.addr = this.HDPrivKeyToAddr(DFNPriv);
+  var DFNPrivPadded = "0x" + padPrivkey(ETHPriv.toObject().privateKey);
+  this.DFN.addr = this.HDPrivKeyToAddr(DFNPrivPadded);
 
-  this.ETH.priv = "0x" + ETHPriv.toObject().privateKey;
-  this.ETH.addr = this.HDPrivKeyToAddr(ETHPriv);
+  this.ETH.priv = "0x" + padPrivkey(ETHPriv.toObject().privateKey);
+  this.ETH.addr = this.HDPrivKeyToAddr(this.ETH.priv);
 
   var BTCAddr   = new this.bitcore.Address(BTCPriv.publicKey, this.bitcore.Networks.livenet);
   this.BTC.addr = BTCAddr.toString();
@@ -123,4 +124,8 @@ Accounts.prototype.loadKeys = function() {
     ui.logger("Simulating no keys in storage");
     return false;
   }
+}
+
+function padPrivkey(privHex) {
+  return ("0000000000000000" + privHex).slice(-64);
 }
