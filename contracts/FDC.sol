@@ -389,8 +389,4 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     fwdBalance = fwdAddr.balance;
     donated = weiDonated[dfnAddr];
   }
-
-  function donationCount() public constant returns (uint256) {
-    return totalUnrestrictedAssignments;
-  }
 }
