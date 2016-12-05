@@ -294,6 +294,8 @@ input, button {
 }
 .dialog, .dialog * {
 	color: white /*!important;							*/
+	line-height: 1.5;
+	letter-spacing: 0.05em;
 }	
 .dialog h1, .dialog h2 {
 	font-size: 26px;
@@ -468,6 +470,12 @@ div.important-notes {
   text-transform: uppercase;
   -webkit-transition: color 0.4s, background-color 0.4s, border 0.4s;
   transition: color 0.4s, background-color 0.4s, border 0.4s; 
+}
+.btn.disabled {
+  opacity: 0.65; 
+  cursor: not-allowed;
+  pointer-events:none;
+
 }
 
 .btn:hover, .btn:focus {

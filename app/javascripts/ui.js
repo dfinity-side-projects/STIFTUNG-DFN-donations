@@ -78,6 +78,7 @@ UI.prototype.setUserAddresses = function(efa, dfa) {
 
 UI.prototype.generateSeed = function() {
   app.useNewSeed();
+  enableButton("after-create-seed-button");
 }
 
 // Set the user seed
@@ -211,6 +212,10 @@ UI.prototype.isTaskReady =function (taskId) {
   return true;
 }
 
+UI.prototype.hideCreateSeed = function() {
+  document.getElementById('create-dfn-seed').style.display = 'none';
+}
+
 UI.prototype.showCreateSeed = function() {
   if (!this.isTaskReady("task-create-seed")) {
     return;
@@ -225,6 +230,7 @@ UI.prototype.afterCreateSeed = function() {
 }
 
 UI.prototype.showValidateSeed = function() {
+  this.hideValidateSeedError();
   document.getElementById('verify-dfn-seed').style.display = 'block';
 }
 
@@ -233,12 +239,42 @@ UI.prototype.beforeValidateSeed = function() {
   this.showCreateSeed();
 }
 
+UI.prototype.showValidateSeedError= function () {
+  document.getElementById('verify-seed-error').style.display = 'block';
+}
+UI.prototype.hideValidateSeedError= function () {
+  document.getElementById('verify-seed-error').style.display = 'none';
+}
+
 UI.prototype.doValidateSeed = function() {
+    document.getElementById('verify-dfn-seed').style.display = 'block';
+
+  var typedSeed = document.getElementById("typed-seed");  
+  var s = getChildWithClass(document.getElementById("create-dfn-seed"), "seed").innerText;
+  if (s == undefined || typedSeed === undefined) {
+    this.showValidateSeedError();
+    return;
+  }
+  typedSeed = typedSeed.value;
+  if (typedSeed != s && typedSeed.trim() != s.trim()) {
+    this.showValidateSeedError();
+    return;
+  }
+
+  // Validation passed
+
   this.hideValidateSeed();
-  // insert validation here
-  this.setUserSeed("not stored")  
+  // Make sure we completely wipe the seed.
+  this.wipeSeed();
   this.setCurrentTask('task-understand-fwd-eth');
   this.makeTaskDone('task-create-seed');
+}
+
+UI.prototype.wipeSeed = function () {
+   seedText ="Seed has already been generated and you should have safely copied it somewhere. Click cancel to proceed with the donation.  (if you lost the seed, you can";
+   seedText += "<a href='javascript:ui.generateSeed()'>generate new seed</a>, but all previous information will be lost.";
+    this.setUserSeed(seedText) ;
+    disableButton("after-create-seed-button");
 }
 
 UI.prototype.hideValidateSeed = function() {
@@ -318,24 +354,32 @@ UI.prototype.hideErrorEthForwarding = function() {
   document.getElementById('error-eth-forwarding').style.display = 'none';
 }
 
+disableButton= function(buttonId) {
+  button = document.getElementById(buttonId);
+    button.className += " disabled";
+}
+enableButton= function(buttonId) {
+    button = document.getElementById(buttonId);
+    button.className.replace('disabled','');
+}
+
 UI.prototype.updateLocationBlocker = function() {
   usBlocker = document.getElementById("us-person-error");
   agreeButton = document.getElementById("agree-terms-button");
   ajaxGet("http://ip-api.com/json/", function(data) {
             countryCode = JSON.parse(data)["countryCode"];
             if (countryCode != "US") {
-                agreeButton.disabled = false;
+                enableButton("agree-terms-button");
                 usBlocker.style.display = 'none';
             } else if (countryCode == "US") {
-                // IMPORTANT TODO: THIS need to be changed to "true". Only set to false for easy dev!!!
-                // agreeButton.disabled = true;
-                 agreeButton.disabled = false;
-
+                // IMPORTANT TODO: need to change to disable rather than enable. This is only for dev / debugging.
+                // disableButton("agree-terms-button");
+enableButton("agree-terms-button");
                 usBlocker.style.display = 'block';
             }
         }, function(err) {
           // Fallback in case of IP service is unaccessible
-          agreeButton.disabled = false;
+          enableButton("agree-terms-button");
           usBlocker.style.display = 'none';
         } );
 }
