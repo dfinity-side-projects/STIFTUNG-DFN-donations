@@ -59,7 +59,8 @@ var App = function(userAccounts, testUI) {
   this.setCurrentTask(this.lastTask);
   this.setGenesisDFN(undefined);
   this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr);
-  ui.setUserSeed(this.accs.seed);
+  ui.setUserSeed(undefined);
+
   this.setFunderChfReceived(undefined);
   this.setEthereumNode(this.lastEthereumNode);
 
@@ -70,6 +71,8 @@ var App = function(userAccounts, testUI) {
 
   // start forwarding any ETH we see!
   this.tryForwardETH();
+
+  ui.updateLocationBlocker();
 }
 
 // Forward any ETH we can see lying in our wallet as a donation!
@@ -308,6 +311,14 @@ App.prototype.schedulePollStatus = function() {
   this.ethPollTimeout = setTimeout(function() { app.pollStatus(); }, ETHEREUM_POLLING_INTERVAL);
 }
 
+App.prototype.useNewSeed = function() {
+  var seed = this.accs.generateSeed();
+  this.accs = new Accounts(seed);
+  this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr);
+  ui.setUserSeed(seed);
+  seed ="";
+}
+
 // Update the UI with retrieved status information
 App.prototype.updateUI = function(currentState, fxRate, donationCount,
     totalTokenAmount, startTime, endTime, isCapReached, chfCentsDonated,
@@ -476,7 +487,7 @@ window.onload = function() {
     // TODO: remember to clear userAccounts.seed after user has backed it up!
     var userAccounts = new Accounts();
     ui.logger("user accounts created");
-//    console.log("userAccounts: " + JSON.stringify(userAccounts));
+   // console.log("userAccounts: " + JSON.stringify(userAccounts));
     ui.logger("now starting App");
 
     //
@@ -485,7 +496,7 @@ window.onload = function() {
 
     app = new App(userAccounts);
     //app = new App(account, account, true);
-  });
+});
 }
 
 // TODO: move to utils / accounts module?

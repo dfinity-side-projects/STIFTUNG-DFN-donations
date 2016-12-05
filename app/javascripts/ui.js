@@ -6,6 +6,7 @@
 // Constructor
 var UI = function() {
   this.wireUpDOM();
+  this.tasks = ["task-agree","task-create-seed","task-understand-fwd-eth","task-donate"];
 }
 
 // Wire up event handlers of UI.
@@ -75,11 +76,16 @@ UI.prototype.setUserAddresses = function(efa, dfa) {
   }
 }
 
+UI.prototype.generateSeed = function() {
+  app.useNewSeed();
+  enableButton("after-create-seed-button");
+}
+
 // Set the user seed
 UI.prototype.setUserSeed = function(seed) {
   var s = getChildWithClass(document.getElementById("create-dfn-seed"), "seed");
   if (seed == undefined) {
-    s.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
+    s.innerHTML = "-- <a href='javascript:ui.generateSeed()'>create</a>, or <a href=''>restore from seed</a> --"
   } else {
     s.innerHTML = seed;
   }
@@ -193,7 +199,28 @@ UI.prototype.logger = function(text) {
   log.insertBefore(line, log.childNodes[0]);
 }
 
+
+// Tasks can only move forward if previous tasks completed. 
+UI.prototype.isTaskReady =function (taskId) {
+  k = this.tasks.indexOf(taskId);
+  console.log("taskId " + taskId + ": index " + k)
+  // Look for all previous steps to see if any one not completed
+  for (var i = 0; i < k; i++) {
+    if (document.getElementById(this.tasks[i]).className.indexOf("done-task") == -1)
+      return false;
+  }
+  return true;
+}
+
+UI.prototype.hideCreateSeed = function() {
+  document.getElementById('create-dfn-seed').style.display = 'none';
+}
+
 UI.prototype.showCreateSeed = function() {
+  if (!this.isTaskReady("task-create-seed")) {
+    return;
+  }
+  // app.generateSeed();
   document.getElementById('create-dfn-seed').style.display = 'block';
 }
 
@@ -203,6 +230,7 @@ UI.prototype.afterCreateSeed = function() {
 }
 
 UI.prototype.showValidateSeed = function() {
+  this.hideValidateSeedError();
   document.getElementById('verify-dfn-seed').style.display = 'block';
 }
 
@@ -211,12 +239,42 @@ UI.prototype.beforeValidateSeed = function() {
   this.showCreateSeed();
 }
 
+UI.prototype.showValidateSeedError= function () {
+  document.getElementById('verify-seed-error').style.display = 'block';
+}
+UI.prototype.hideValidateSeedError= function () {
+  document.getElementById('verify-seed-error').style.display = 'none';
+}
+
 UI.prototype.doValidateSeed = function() {
+    document.getElementById('verify-dfn-seed').style.display = 'block';
+
+  var typedSeed = document.getElementById("typed-seed");  
+  var s = getChildWithClass(document.getElementById("create-dfn-seed"), "seed").innerText;
+  if (s == undefined || typedSeed === undefined) {
+    this.showValidateSeedError();
+    return;
+  }
+  typedSeed = typedSeed.value;
+  if (typedSeed != s && typedSeed.trim() != s.trim()) {
+    this.showValidateSeedError();
+    return;
+  }
+
+  // Validation passed
+
   this.hideValidateSeed();
-  // insert validation here
-  this.setUserSeed("not stored")  
+  // Make sure we completely wipe the seed.
+  this.wipeSeed();
   this.setCurrentTask('task-understand-fwd-eth');
   this.makeTaskDone('task-create-seed');
+}
+
+UI.prototype.wipeSeed = function () {
+   seedText ="Seed has already been generated and you should have safely copied it somewhere. Click cancel to proceed with the donation.  (if you lost the seed, you can";
+   seedText += "<a href='javascript:ui.generateSeed()'>generate new seed</a>, but all previous information will be lost.";
+    this.setUserSeed(seedText) ;
+    disableButton("after-create-seed-button");
 }
 
 UI.prototype.hideValidateSeed = function() {
@@ -226,6 +284,11 @@ UI.prototype.hideValidateSeed = function() {
 UI.prototype.showTerms = function() {
   document.getElementById('terms').style.display = 'block';
 }
+
+UI.prototype.hideTerms = function() {
+  document.getElementById('terms').style.display = 'none';
+}
+
 
 UI.prototype.readTerms = function() {
   document.getElementById('terms').style.display = 'none';
@@ -250,6 +313,9 @@ UI.prototype.onSelectEthereumNode = function(en) {
 }
 
 UI.prototype.showExplainForwarding = function() {
+  if (!this.isTaskReady("task-understand-fwd-eth")) {
+    return;
+  }
   document.getElementById('explain-eth-forwarding').style.display = 'block';
 }
 
@@ -286,6 +352,36 @@ UI.prototype.showErrorEthForwarding = function() {
 
 UI.prototype.hideErrorEthForwarding = function() {
   document.getElementById('error-eth-forwarding').style.display = 'none';
+}
+
+disableButton= function(buttonId) {
+  button = document.getElementById(buttonId);
+    button.className += " disabled";
+}
+enableButton= function(buttonId) {
+    button = document.getElementById(buttonId);
+    button.className.replace('disabled','');
+}
+
+UI.prototype.updateLocationBlocker = function() {
+  usBlocker = document.getElementById("us-person-error");
+  agreeButton = document.getElementById("agree-terms-button");
+  ajaxGet("http://ip-api.com/json/", function(data) {
+            countryCode = JSON.parse(data)["countryCode"];
+            if (countryCode != "US") {
+                enableButton("agree-terms-button");
+                usBlocker.style.display = 'none';
+            } else if (countryCode == "US") {
+                // IMPORTANT TODO: need to change to disable rather than enable. This is only for dev / debugging.
+                // disableButton("agree-terms-button");
+enableButton("agree-terms-button");
+                usBlocker.style.display = 'block';
+            }
+        }, function(err) {
+          // Fallback in case of IP service is unaccessible
+          enableButton("agree-terms-button");
+          usBlocker.style.display = 'none';
+        } );
 }
 
 function formatCurrency(n, symbol, d) {
