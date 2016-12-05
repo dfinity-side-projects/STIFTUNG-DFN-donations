@@ -229,7 +229,15 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   function empty() returns (bool) {
     return foundationWallet.call.value(this.balance)();
   }
-  
+
+  // Delay donation phase 1
+  function delayDonPhase1(uint timedelta) returns (uint) {
+    // Require permission
+    if (msg.sender != registrarAuth) { throw; }
+
+    return delayPhaseEndBy(3, timedelta);
+  }
+ 
   //
   // AUTHENTICATED API
   //
