@@ -6,6 +6,7 @@
 // Constructor
 var UI = function() {
   this.wireUpDOM();
+  this.tasks = ["task-agree","task-create-seed","task-understand-fwd-eth","task-donate"];
 }
 
 // Wire up event handlers of UI.
@@ -75,11 +76,15 @@ UI.prototype.setUserAddresses = function(efa, dfa) {
   }
 }
 
+UI.prototype.generateSeed = function() {
+  app.useNewSeed();
+}
+
 // Set the user seed
 UI.prototype.setUserSeed = function(seed) {
   var s = getChildWithClass(document.getElementById("create-dfn-seed"), "seed");
   if (seed == undefined) {
-    s.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
+    s.innerHTML = "-- <a href='javascript:ui.generateSeed()'>create</a>, or <a href=''>restore from seed</a> --"
   } else {
     s.innerHTML = seed;
   }
@@ -193,7 +198,24 @@ UI.prototype.logger = function(text) {
   log.insertBefore(line, log.childNodes[0]);
 }
 
+
+// Tasks can only move forward if previous tasks completed. 
+UI.prototype.isTaskReady =function (taskId) {
+  k = this.tasks.indexOf(taskId);
+  console.log("taskId " + taskId + ": index " + k)
+  // Look for all previous steps to see if any one not completed
+  for (var i = 0; i < k; i++) {
+    if (document.getElementById(this.tasks[i]).className.indexOf("done-task") == -1)
+      return false;
+  }
+  return true;
+}
+
 UI.prototype.showCreateSeed = function() {
+  if (!this.isTaskReady("task-create-seed")) {
+    return;
+  }
+  // app.generateSeed();
   document.getElementById('create-dfn-seed').style.display = 'block';
 }
 
@@ -255,6 +277,9 @@ UI.prototype.onSelectEthereumNode = function(en) {
 }
 
 UI.prototype.showExplainForwarding = function() {
+  if (!this.isTaskReady("task-understand-fwd-eth")) {
+    return;
+  }
   document.getElementById('explain-eth-forwarding').style.display = 'block';
 }
 
@@ -298,12 +323,14 @@ UI.prototype.updateLocationBlocker = function() {
   agreeButton = document.getElementById("agree-terms-button");
   ajaxGet("http://ip-api.com/json/", function(data) {
             countryCode = JSON.parse(data)["countryCode"];
-            
             if (countryCode != "US") {
                 agreeButton.disabled = false;
                 usBlocker.style.display = 'none';
             } else if (countryCode == "US") {
-                agreeButton.disabled = true;
+                // IMPORTANT TODO: THIS need to be changed to "true". Only set to false for easy dev!!!
+                // agreeButton.disabled = true;
+                 agreeButton.disabled = false;
+
                 usBlocker.style.display = 'block';
             }
         }, function(err) {
