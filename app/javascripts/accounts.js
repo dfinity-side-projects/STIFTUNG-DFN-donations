@@ -64,7 +64,7 @@ Accounts.prototype.generateKeys = function(seedStr) {
   var ETHPriv   = masterKey.derive(this.HDPathETHForwarder);
   var BTCPriv   = masterKey.derive(this.HDPathBTCForwarder);
 
-  var DFNPrivPadded = "0x" + padPrivkey(ETHPriv.toObject().privateKey);
+  var DFNPrivPadded = "0x" + padPrivkey(DFNPriv.toObject().privateKey);
   this.DFN.addr = this.HDPrivKeyToAddr(DFNPrivPadded);
 
   this.ETH.priv = "0x" + padPrivkey(ETHPriv.toObject().privateKey);
