@@ -216,6 +216,30 @@ UI.prototype.hideCreateSeed = function() {
   document.getElementById('create-dfn-seed').style.display = 'none';
 }
 
+UI.prototype.doImportSeed = function() {
+  seed = document.getElementById('imported-seed').value;
+
+
+  try {
+  app.accs.generateKeys(seed);
+   } 
+  catch (e) {
+    showAndSetElement("import-seed-error","Error in importing seed: " + e);
+    return;
+  }
+  app.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
+  hideElement("import-dfn-seed");
+}
+
+UI.prototype.showImportSeed =function() {
+    document.getElementById('create-dfn-seed').style.display = 'none';
+    document.getElementById('import-dfn-seed').style.display = 'block';
+}
+
+UI.prototype.hideImportSeed =function() {
+    document.getElementById('import-dfn-seed').style.display = 'none';
+}
+
 UI.prototype.showCreateSeed = function() {
   if (!this.isTaskReady("task-create-seed")) {
     return;
@@ -247,6 +271,8 @@ UI.prototype.beforeValidateSeed = function() {
   this.hideValidateSeed();
   this.showCreateSeed();
 }
+
+
 
 UI.prototype.showValidateSeedError= function () {
   document.getElementById('verify-seed-error').style.display = 'block';
@@ -300,6 +326,10 @@ UI.prototype.hideTerms = function() {
 
 
 UI.prototype.readTerms = function() {
+  // Once agreed, it should be disabled to prevent confusion
+  disableButton("agree-terms-button");
+document.getElementById('agree-terms-button').innerText="You have already accepted the terms";
+
   document.getElementById('terms').style.display = 'none';
   this.setCurrentTask('task-create-seed');
   this.makeTaskDone('task-agree');
@@ -368,6 +398,19 @@ disableButton= function(buttonId) {
   button = document.getElementById(buttonId);
     button.className += " disabled";
 }
+
+showAndSetElement = function(element, s) {
+  document.getElementById(element).innerHTML = s;
+  document.getElementById(element).style.display = 'block';
+}
+
+showElement = function(element) {
+  document.getElementById(element).style.display = 'block';
+}
+hideElement = function(element) {
+  document.getElementById(element).style.display = 'none';
+}
+
 enableButton= function(buttonId) {
     button = document.getElementById(buttonId);
     button.className.replace('disabled','');
