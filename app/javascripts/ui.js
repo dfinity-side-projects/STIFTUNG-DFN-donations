@@ -394,15 +394,20 @@ UI.prototype.hideWithdrawEth = function() {
 
 UI.prototype.withdrawETH = function() {
   var addr = document.getElementById('withdraw-eth-addr').value;
-  if (!EthJSUtil.isValidChecksumAddress(addr)) {
+  console.log("addr",addr);
+  console.log("lower",addr.toLowerCase());
+  console.log("addr",addr.toUpperCase());
+  // We accept either all lower case or all upper case except the 'x' in '0x' or a valid checksum
+  if ((addr.length == 42) && 
+      (addr == addr.toLowerCase() || addr.slice(2) == addr.toUpperCase().slice(2) || EthJSUtil.isValidChecksumAddress(addr))
+      ) {
+    app.withdrawETH(addr);
+    this.hideErrorEthForwarding();
+  } else {
     // TODO: UI error feedback in withdraw popup
-    ui.logger("Invalid ETH withdraw address, please try again.");
-    this.hideWithdrawEth();
-    return;
+    ui.logger("Invalid ETH withdraw address, the checksum may be incorrect.");
   }
-  app.withdrawETH(addr);
   this.hideWithdrawEth();
-  this.hideErrorEthForwarding();
 }
 
 UI.prototype.showErrorEthForwarding = function() {
