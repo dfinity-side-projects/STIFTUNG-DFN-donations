@@ -79,20 +79,54 @@
                     <a class="blink" href="javascript:ui.showWithdrawEth()">Please withdraw remaining ETH</a> or <a class="blink" href="javascript:app.retryForwarding()">try forwarding again</a>
                 </div>
                 <div id="genesis-dfinities">
-                    <div class="amount">? DFN</div>
-                    <div class="legend">Genesis Dfinities <a class="tip-link" href="">?</a></div>
+                    <div class="amount">0 DFN</div>
+                    <div class="legend ">Genesis Dfinities <a class="tip-link tooltip" href="">
+                    
+                    <span>
+                    <strong>Genesis Dfinities</strong><br />
+<!--                     In return for your donation, DFINITY Stiftung, which is a Swiss-based non-profit foundation, will recommend a token allocation scheme for DFINITY network, which is based on the pro-rata amount of everyone's donation, adjusted for bonus multipliers. 
+ -->
+                    <p>This shows how many Dfinities are being recorded so far based on your successful donation. </p>
+
+                    <p>If you think this number is less than the correct amount, check the ETH donation stats below to see if there's any amount waiting to be forwarded (which should be zero when all Ether are successfully donated).</p>
+
+                    </span>
+                    </a></div>
                 </div>
                 <div id="eth-forwarding-address">
-                    <div class="eth-address">?</div>
-                    <div class="legend">ETH Forwarding Address <a class="tip-link" href="">?</a></div>
+                    <div class="eth-address">&lt;none&gt;</div>
+                    <div class="legend">ETH Forwarding Address 
+                    <a class="tip-link tooltip" href="">
+                    <span>
+                    <strong>ETH Forwarding Address</strong><br/>
+                    This is the address where you send your Ether donation to. This DFINITY donation software will forward the Ether further to an official Foundation Donation smart contract address. 
+
+                    </span>
+
+                    </a></div>
                 </div>
                 <ul>
                     <li class="dim">
-                        <div>Ethereum full node <a class="tip-link" href="">?</a><span><a id="btn-ethereum-node" href="javascript:ui.showSelectEthereumNode()">...</a>&nbsp; | &nbsp;<span id="eth-client-status">?</span></span>
+                        <div>Ethereum full node <a class="tip-link tooltip" href="">?
+                    <span>
+                    <strong>Ethereum full node</strong><br/>
+                    The Donation process requires connecting to a Ethereum full node. The recommended nodes are the nodes provided by DFINITY Stiftung. However, you can also connect to your own remote or local Ethereum node. Make sure the node you connect to is trustworthy.
+                    </span>
+                        </a>
+
+                        <span><a id="btn-ethereum-node" href="javascript:ui.showSelectEthereumNode()">...</a>&nbsp; | &nbsp;<span id="eth-client-status">?</span></span>
                         </div>
                     </li>
                     <li class="dim">
-                        <div>ETH donations <a class="tip-link" href="">?</a><span><span id="donated-eth">?</span> donated (<span id="waiting-eth">?</span> <a href="javascript:ui.showWithdrawEth()">waiting</a>)</span>
+                        <div>ETH donations <a class="tip-link tooltip" href="">?
+                    <span>
+                    <strong>ETH donations</strong><br/>
+                    This shows how much total ETH has been donated so far, including the amount succesfully donated to the DFINITY foundation, and the amount pending forwarding (balance in the temporary forwarding address). 
+
+                    Make sure you all 
+
+                    </span>
+                        </a><span><span id="donated-eth">0</span> donated (<span id="waiting-eth">0</span> <a href="javascript:ui.showWithdrawEth()">waiting</a>)</span>
                         </div>
                     </li>
                 </ul>
@@ -130,18 +164,22 @@
         </p>
     </div>
     <div id="create-dfn-seed" class="dialog">
-
         <h2>Create your DFN address seed, and store it very safely</h2>
         <p><i>This application does not store your DFN seed. <b>You must securely maintain this yourself</b>.</i>
             <p>Your DFN seed is a string of random words and is show below. You must have this seed to access your DFN later. This application does not store the seed for security reasons, and only keeps the derived keys it needs. Therefore, it is ESSENTIAL that you take a copy of your seed <i>right now</i> and store it safely or YOU WILL LOSE ALL ACCESS TO YOUR DFN.</p>
             <p>We recommend that you create physical, printed copies of your seed. For example, print out the seed onto paper and put it into a fireproof safe. If you keep electronic copies of your seed, make sure they are secure and nobody else can access them. For example, store an electronic seed inside a Mac OS X encrypted file.
-                <p class="seed ">tiger house random words dominic bonkers porsche swim starship billy goat twenty devil cloud pin circuit wood road sun petrol light</p>
-                <p id="download-seed"><a href="data:application/octet-stream;charset=utf-16le;base64,//5mAG8AbwAgAGIAYQByAAoA">Optionally, download your seed as a file</a></p>
+                <p class="seed"></p>
+                <p>
+                    <details>
+                        <summary>Advanced Function</summary>
+                        <p> <a href="#">Restore seed</a> </p>
+                    </details>
+                </p>
+                <!-- <p id="download-seed"><a href="data:application/octet-stream;charset=utf-16le;base64,//5mAG8AbwAgAGIAYQByAAoA">Optionally, download your seed as a file</a></p> -->
                 <p>
                     <a id="after-create-seed-button" href="javascript:javascript:ui.afterCreateSeed()" class="btn">OK, I have now saved my seed and will never lose it</a>
                     <a href="javascript:ui.hideCreateSeed()" class="btn">Cancel</a>
                 </p>
-
     </div>
     <div id="verify-dfn-seed" class="dialog">
         <h2>Check you have your DFN seed in your possession!</h2>
@@ -152,7 +190,7 @@
             <input id="typed-seed" type="text" class="textbox-custom" />
         </p>
         <div id="verify-seed-error" class="error-block" style="display:none;">
-            You've entered an incorrect seed. Please retry, or go back and copy down the seed exactly as is. 
+            You've entered an incorrect seed. Please retry, or go back and copy down the seed exactly as is.
         </div>
         <p>
             <a href="javascript:ui.doValidateSeed()" class="btn">Validate Seed and ERASE</a>
@@ -174,15 +212,18 @@
             <p>Note that there is a small Ethereum gas cost associated with each donation, and this is deducted from the amount.</p>
         </div>
         <div class="important-notes">
-            <h3>If You Have Made A Direct Donation in CHF...</h3>
-            <a id="fiat-donation-information-expand" href="javascript:(function(){document.getElementById('fiat-donation-information').style.display = 'block'; document.getElementById('fiat-donation-information-expand').style.display = 'none';})()">expand...</a>
-            <div id="fiat-donation-information" style="display:none;">
-                <p>This ONLY applies if you have made a wire transfer of fiat money directly to DFINITY Stiftung (and made appropriate agreements with DFINITY Stiftung)</p>
-                <p>In this case, DFINITY Stiftung needs the public key of your future DFINITY account before it can record your donation.</p>
-                <p>Please notify an appropriate representative at DFINITY Stiftung that this is your DFINITY address (do NOT send ETH to this address):</p>
-                <p><span id="dfn-address" class="eth-address">1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX</span></p>
-                <p>Once DFINITY Stiftung has reported your donation this extension will report the genesis DFN it will recommend you receive. Please report this address before the start of the funder period. Thank you.</p>
-            </div>
+            <details>
+                <summary>
+                    <h3>If You Have Made A Direct Donation in CHF...</h3>
+                </summary>
+                <p>
+                    <p>This ONLY applies if you have made a wire transfer of fiat money directly to DFINITY Stiftung (and made appropriate agreements with DFINITY Stiftung)</p>
+                    <p>In this case, DFINITY Stiftung needs the public key of your future DFINITY account before it can record your donation.</p>
+                    <p>Please notify an appropriate representative at DFINITY Stiftung that this is your DFINITY address (do NOT send ETH to this address):</p>
+                    <p><span id="dfn-address" class="eth-address">1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX</span></p>
+                    <p>Once DFINITY Stiftung has reported your donation this extension will report the genesis DFN it will recommend you receive. Please report this address before the start of the funder period. Thank you.</p>
+                </p>
+            </details>
         </div>
         <p>
             <a href="javascript:ui.doneExplainForwarding()" class="btn">OK I'm Ready!</a>
@@ -255,7 +296,7 @@
             </p>
             <p>
                 <a disabled id="agree-terms-button" class="btn " href="javascript:ui.readTerms()">I Agree Terms &amp; Conditions </a>
-                <a href="javascript:ui.hideTerms()">Cancel</a>
+                <a id="disagree-terms-button" class="btn " href="javascript:ui.hideTerms()">Cancel</a>
             </p>
         </div>
         <script type="text/javascript" src="./deps/bitcore-mnemonic.js"></script>
