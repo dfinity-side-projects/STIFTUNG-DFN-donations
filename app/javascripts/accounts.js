@@ -14,7 +14,7 @@ var Accounts = function(seedStr) {
   this.HDPathBTCForwarder = "m/44'/0'/0'/0/0";   // BTC key forwarding donation for HDPathDFN key
 
   // this.seed = seedStr;
-  this.DFN      = {addr: "hi"};
+  this.DFN      = {};
   this.ETH      = {};
   this.BTC      = {};
   

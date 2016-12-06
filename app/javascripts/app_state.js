@@ -1,8 +1,10 @@
 "use strict";
 
 /**
- * AppState maintains simple model for all public consume state objects
+ * AppState maintains simple model for all public consumable state objects and simpler logger.
  * e.g. DFN Forwarded, ETH forwarding address, Client status, and etc.
+ *
+ * It maintains a "dirty" object list so that a View could selective refresh.
  */
 var AppState = function() {
     this.currentTask = undefined;

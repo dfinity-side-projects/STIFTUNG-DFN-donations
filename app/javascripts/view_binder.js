@@ -1,6 +1,11 @@
-/*
-   A simple View Binder that allows UI to reflect underlying state changes
-   This allows cleaner separation of view and underlying model.
+/**
+   A simple View Binder that allows UI to reflect underlying state changes, which allows cleaner separation
+   of view and underlying model.
+
+   Call bindElement or bindFunction to bind a function or html element name to a target state object.
+
+   Use startUpdate to begin continous watch / update of all objects.
+
  */
 "use strict";
 var UI_UPDATE_INTERVAL = 1500;
