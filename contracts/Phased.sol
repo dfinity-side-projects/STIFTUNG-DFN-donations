@@ -9,7 +9,7 @@ contract Phased {
   // Transitions are numbered 0,..,N-1
   // N+1 = number of phases 
   // Phases are numbered 0,..,N
-  // phaseEndTime[i] means: end of phase i, beginning of phase i+1
+  // phaseEndTime[i] means: end of phase i (exclusive), beginning of phase i+1 (inclusive)
   uint public N; 
 
   // forward adjustability of phase end times
@@ -74,10 +74,12 @@ contract Phased {
   // adjust transition time forward
   // this can be called multiple times throughout the lifetime of the contract
   // function returns the transition time after the adjustment was made
-  // TODO: only allow current or future phases to be delayed!
   function delayPhaseEndBy(uint i, uint timeDelta) internal returns (uint) {
     // index out of range
     if (i >= N) { throw; }
+
+    // phase has already ended
+    if (phaseEndTime[i] >= now) { throw; }
 
     // limit forwarding to allowed max 
     // If beyond then we throw as the call is unlikely to be intentional.

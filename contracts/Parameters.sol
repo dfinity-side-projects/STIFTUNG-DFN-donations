@@ -48,7 +48,7 @@ contract Parameters {
   // Token issuance
   //
   // The following configuration parameters completely govern all aspects of the token issuance.
-  uint public constant chfCentsPerToken = 10; // tokens assigned for the equivalent of 1 CHF in donations
+  uint public constant tokensPerCHF = 10; // tokens assigned for the equivalent of 1 CHF in donations
   uint public constant minDonation = 1 ether; // minimal donation amount for a single on-chain donation
   uint public constant phase0Multiplier = 150; // multiplier in % applied to all donations during donation phase 0
   uint public constant phase1Steps = 5;  // number of down-steps for multiplier during donation phase 1
