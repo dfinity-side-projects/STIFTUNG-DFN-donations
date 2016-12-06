@@ -48,10 +48,16 @@ UI.prototype.setForwardedETH = function(fe) {
 // Set amount of ETH remaining in client
 UI.prototype.setRemainingETH = function(re) {
   var e = document.getElementById('waiting-eth');
-  if (re == undefined)
+  var e2 = document.getElementById('withdraw-waiting-eth');
+  console.log("set remaining eth: " + re);
+  if (re == undefined) {
     e.innerHTML = "?";
+    e2.innerHTML = "?";
+  }
   else {
     e.innerHTML = formatCurrency(re, "ETH", 2);
+    e2.innerHTML = formatCurrency(re, "ETH", 2);
+
     // if (re < 1)
     //   e.innerHTML = ""+re+" ETH";
     // else
@@ -218,16 +224,23 @@ UI.prototype.hideCreateSeed = function() {
 
 UI.prototype.doImportSeed = function() {
   seed = document.getElementById('imported-seed').value;
+
   try {
-  app.accs.generateKeys(seed);
-   } 
+    app.doImportSeed(seed);
+  } 
   catch (e) {
-    showAndSetElement("import-seed-error","Error in importing seed: " + e);
+    this.showImportSeedError("Error in importing seed: " + e);
     return;
   }
-  app.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
-  hideElement("import-dfn-seed");
+  this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
 
+  // finish the dialog and move on
+  hideElement("import-dfn-seed");
+  this.finishCreateSeed();
+}
+
+
+UI.prototype.finishCreateSeed = function() {
   // Make sure we completely wipe the seed.
   this.wipeSeed();
   this.setCurrentTask('task-understand-fwd-eth');
@@ -253,7 +266,7 @@ UI.prototype.showCreateSeed = function() {
   // } else {
   if (s == "undefined" || s.trim() === "") {
     console.log("Seed doesn't exist ... generating a new seed.")
-    ui.generateSeed();
+    this.generateSeed();
   }
   // app.generateSeed();
   document.getElementById('create-dfn-seed').style.display = 'block';
@@ -275,7 +288,9 @@ UI.prototype.beforeValidateSeed = function() {
   this.showCreateSeed();
 }
 
-
+UI.prototype.showImportSeedError = function(e) {
+  showAndSetElement("import-seed-error","Error in importing seed: " + e);
+}
 
 UI.prototype.showValidateSeedError= function () {
   document.getElementById('verify-seed-error').style.display = 'block';
@@ -311,8 +326,9 @@ UI.prototype.doValidateSeed = function() {
 UI.prototype.wipeSeed = function () {
    seedText ="Seed has already been generated and you should have safely copied it somewhere. Click Cancel button to proceed with the donation.";
    // seedText += "<a href='javascript:ui.generateSeed()'>generate new seed</a>, but all previous information will be lost.";
-    this.setUserSeed(seedText) ;
-    disableButton("after-create-seed-button");
+   this.setUserSeed(seedText) ;
+   showAndSetElement("typed-seed", "");
+   disableButton("after-create-seed-button");
 }
 
 UI.prototype.hideValidateSeed = function() {

@@ -421,9 +421,7 @@ div.important-notes {
 	padding: 10 20 10 20px;
 	margin-bottom:10px;
 }
-#withdraw-eth-addr {
-    width: 400px;
-}
+
 .eth-host {
     cursor: pointer;
 }
