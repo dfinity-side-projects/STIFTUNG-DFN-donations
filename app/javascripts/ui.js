@@ -84,11 +84,11 @@ UI.prototype.generateSeed = function() {
 // Set the user seed
 UI.prototype.setUserSeed = function(seed) {
   var s = getChildWithClass(document.getElementById("create-dfn-seed"), "seed");
-  if (seed == undefined) {
-    s.innerHTML = "-- <a href='javascript:ui.generateSeed()'>create</a>, or <a href=''>restore from seed</a> --"
-  } else {
-    s.innerHTML = seed;
-  }
+  // if (seed == undefined) {
+    // s.innerHTML = "-- <a href='javascript:ui.generateSeed()'>create</a>, or <a href=''>restore from seed</a> --"
+  // } else {
+  s.innerHTML = seed;
+  // }
 }
 
 // Set the total amount of donations received so far, in CHF
@@ -167,7 +167,7 @@ UI.prototype.setCurrentTask = function(taskId) {
     _ui.unsetNextTask('task-understand-fwd-eth');
     _ui.unsetNextTask('task-donate');
     var t = document.getElementById(taskId);
-    t.className += 'next-task';
+    t.className += 'next-task ';
   };
   setTimeout(f , 100);
 }
@@ -177,7 +177,7 @@ UI.prototype.unsetNextTask = function(t) {
 }
 
 UI.prototype.makeTaskDone = function(t) {
-  document.getElementById(t).className += "done-task";
+  document.getElementById(t).className += "done-task ";
   this.tickTaskItem(t);
 }
 
@@ -220,12 +220,21 @@ UI.prototype.showCreateSeed = function() {
   if (!this.isTaskReady("task-create-seed")) {
     return;
   }
+  var s = getChildWithClass(document.getElementById("create-dfn-seed"), "seed").innerHTML;
+  // if (seed == undefined) {
+    // s.innerHTML = "-- <a href='javascript:ui.generateSeed()'>create</a>, or <a href=''>restore from seed</a> --"
+  // } else {
+  if (s == "undefined" || s.trim() === "") {
+    console.log("Seed doesn't exist ... generating a new seed.")
+    ui.generateSeed();
+  }
   // app.generateSeed();
   document.getElementById('create-dfn-seed').style.display = 'block';
 }
 
 UI.prototype.afterCreateSeed = function() {
   document.getElementById('create-dfn-seed').style.display = 'none';
+  this.hideCreateSeed();
   this.showValidateSeed();
 }
 
@@ -271,8 +280,8 @@ UI.prototype.doValidateSeed = function() {
 }
 
 UI.prototype.wipeSeed = function () {
-   seedText ="Seed has already been generated and you should have safely copied it somewhere. Click cancel to proceed with the donation.  (if you lost the seed, you can";
-   seedText += "<a href='javascript:ui.generateSeed()'>generate new seed</a>, but all previous information will be lost.";
+   seedText ="Seed has already been generated and you should have safely copied it somewhere. Click Cancel button to proceed with the donation.";
+   // seedText += "<a href='javascript:ui.generateSeed()'>generate new seed</a>, but all previous information will be lost.";
     this.setUserSeed(seedText) ;
     disableButton("after-create-seed-button");
 }
@@ -321,8 +330,9 @@ UI.prototype.showExplainForwarding = function() {
 
 UI.prototype.doneExplainForwarding = function() {
   document.getElementById('explain-eth-forwarding').style.display = 'none';
-  this.setCurrentTask('task-donate');
   this.makeTaskDone('task-understand-fwd-eth');
+  this.setCurrentTask('task-donate');
+  
 }
 
 UI.prototype.showWithdrawEth = function() {
@@ -335,15 +345,20 @@ UI.prototype.hideWithdrawEth = function() {
 
 UI.prototype.withdrawETH = function() {
   var addr = document.getElementById('withdraw-eth-addr').value;
-  if (!EthJSUtil.isValidChecksumAddress(addr)) {
+  console.log("addr",addr);
+  console.log("lower",addr.toLowerCase());
+  console.log("addr",addr.toUpperCase());
+  // We accept either all lower case or all upper case except the 'x' in '0x' or a valid checksum
+  if ((addr.length == 42) && 
+      (addr == addr.toLowerCase() || addr.slice(2) == addr.toUpperCase().slice(2) || EthJSUtil.isValidChecksumAddress(addr))
+      ) {
+    app.withdrawETH(addr);
+    this.hideErrorEthForwarding();
+  } else {
     // TODO: UI error feedback in withdraw popup
-    ui.logger("Invalid ETH withdraw address, please try again.");
-    this.hideWithdrawEth();
-    return;
+    ui.logger("Invalid ETH withdraw address, the checksum may be incorrect.");
   }
-  app.withdrawETH(addr);
   this.hideWithdrawEth();
-  this.hideErrorEthForwarding();
 }
 
 UI.prototype.showErrorEthForwarding = function() {

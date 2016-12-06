@@ -58,7 +58,9 @@ var App = function(userAccounts, testUI) {
 
   this.setCurrentTask(this.lastTask);
   this.setGenesisDFN(undefined);
-  this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr);
+  if (this.accs.ETH.addr != undefined && this.accs.DFN.addr != undefined) {
+    this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr);
+  }
   ui.setUserSeed(undefined);
 
   this.setFunderChfReceived(undefined);
@@ -248,6 +250,16 @@ App.prototype.pollStatus = function() {
   this.ethConnectionRetries = 0;
   console.log("Ethereum provider: "+JSON.stringify(web3.currentProvider));
 
+
+  // Address defined yet?
+  console.log(this.accs.DFN.addr);
+  if (this.accs.DFN.addr == undefined || this.accs.ETH.addr ==undefined) {
+    this.schedulePollStatus(); // bail, try later...
+    return;
+  }
+
+
+
   // retrieve status information from the FDC...
   var self = this;
   var fdc = FDC.deployed();
@@ -312,8 +324,9 @@ App.prototype.schedulePollStatus = function() {
 }
 
 App.prototype.useNewSeed = function() {
-  var seed = this.accs.generateSeed();
-  this.accs = new Accounts(seed);
+  var seed = this.accs.generateSeed().trim();
+  this.accs.generateKeys(seed);
+  // this.accs = new Accounts(seed);
   this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr);
   ui.setUserSeed(seed);
   seed ="";
@@ -415,7 +428,10 @@ App.prototype.setRemainingETH = function(re) {
 App.prototype.setEthereumClientStatus = function(status) {
   this.ethClientStatus = status;
   if (status == "OK") {
+    // ui.logger("Connected successfully to an Etheruem node");
     ui.setEthereumClientStatus("&#10004 connected, forwarding...");
+
+
     // now we're connected, grab all the values we need
     // this.pollStatus();
   } else
@@ -486,7 +502,7 @@ window.onload = function() {
     // TODO: persistence of accounts. for now, for testing, we generate new accounts on each load.
     // TODO: remember to clear userAccounts.seed after user has backed it up!
     var userAccounts = new Accounts();
-    ui.logger("user accounts created");
+    // ui.logger("user accounts created");
    // console.log("userAccounts: " + JSON.stringify(userAccounts));
     ui.logger("now starting App");
 

@@ -115,7 +115,7 @@ Accounts.prototype.loadKeys = function() {
   
   // dummy version simply re-generates dummy keys from a hardwired address
   // uncomment for testing the situation when no keyss are found in storage
-  var success = true;
+  var success = false;
   if (success) {
     this.generateKeys("drill expose helmet journey flat arrange twelve cliff pepper broken damp denial");
     ui.logger("Simulating keys found in storage. Dummy keys loaded (change this code if you want to test the other flow)");
