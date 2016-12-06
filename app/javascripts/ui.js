@@ -218,8 +218,6 @@ UI.prototype.hideCreateSeed = function() {
 
 UI.prototype.doImportSeed = function() {
   seed = document.getElementById('imported-seed').value;
-
-
   try {
   app.accs.generateKeys(seed);
    } 
@@ -229,6 +227,11 @@ UI.prototype.doImportSeed = function() {
   }
   app.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
   hideElement("import-dfn-seed");
+
+  // Make sure we completely wipe the seed.
+  this.wipeSeed();
+  this.setCurrentTask('task-understand-fwd-eth');
+  this.makeTaskDone('task-create-seed');
 }
 
 UI.prototype.showImportSeed =function() {
@@ -394,28 +397,6 @@ UI.prototype.hideErrorEthForwarding = function() {
   document.getElementById('error-eth-forwarding').style.display = 'none';
 }
 
-disableButton= function(buttonId) {
-  button = document.getElementById(buttonId);
-    button.className += " disabled";
-}
-
-showAndSetElement = function(element, s) {
-  document.getElementById(element).innerHTML = s;
-  document.getElementById(element).style.display = 'block';
-}
-
-showElement = function(element) {
-  document.getElementById(element).style.display = 'block';
-}
-hideElement = function(element) {
-  document.getElementById(element).style.display = 'none';
-}
-
-enableButton= function(buttonId) {
-    button = document.getElementById(buttonId);
-    button.className.replace('disabled','');
-}
-
 UI.prototype.updateLocationBlocker = function() {
   usBlocker = document.getElementById("us-person-error");
   agreeButton = document.getElementById("agree-terms-button");
@@ -436,6 +417,32 @@ enableButton("agree-terms-button");
           usBlocker.style.display = 'none';
         } );
 }
+
+/** Common UI functions */
+
+function disableButton(buttonId) {
+  button = document.getElementById(buttonId);
+    button.className += " disabled";
+}
+
+function showAndSetElement(element, s) {
+  document.getElementById(element).innerHTML = s;
+  document.getElementById(element).style.display = 'block';
+}
+
+function showElement(element) {
+  document.getElementById(element).style.display = 'block';
+}
+ function hideElement(element) {
+  document.getElementById(element).style.display = 'none';
+}
+
+function enableButton(buttonId) {
+    button = document.getElementById(buttonId);
+    button.className.replace('disabled','');
+}
+
+/** UI utility functions */
 
 function formatCurrency(n, symbol, d) {
   // source for the regexp: http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
