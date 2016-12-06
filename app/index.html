@@ -160,8 +160,14 @@
     <div id="withdraw-eth" class="dialog">
         <h2>Withdraw unsent ETH in your forwarding account</h2>
         <p>If there is ETH in your forwarding account that has not already been forwarded to the Foundation Collection Contract, you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a private wallet).</p>
-        <p>Withdraw to address:
-            <input id="withdraw-eth-addr" type="text" />
+        <p>
+        <b>ETH balance in forwarding address:  </b><span id="withdraw-waiting-eth"></span>
+        </p>
+        <p>
+            <h3>Withdraw to ETH address: </h3>
+            <input id="withdraw-eth-addr" type="text" class="textbox-custom" />
+        </p>
+        <p>
             <a href="javascript:ui.withdrawETH()" class="btn">Withdraw</a>
             <a href="javascript:ui.hideWithdrawEth()" class="btn">Cancel</a>
         </p>

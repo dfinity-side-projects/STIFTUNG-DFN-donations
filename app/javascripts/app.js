@@ -425,6 +425,11 @@ App.prototype.setRemainingETH = function(re) {
   ui.setRemainingETH(re);
 }
 
+
+App.prototype.doImportSeed = function(seed) {
+  this.accs.generateKeys(seed);
+}
+
 App.prototype.setEthereumClientStatus = function(status) {
   this.ethClientStatus = status;
   if (status == "OK") {
