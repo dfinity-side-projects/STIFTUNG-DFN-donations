@@ -327,6 +327,10 @@ App.prototype.generateSeed = function() {
   var seed = this.accs.generateSeed().trim();
   return seed;
 }
+App.prototype.useSeed = function(s) {
+    this.accs.generateKeys(s);
+}
+
 
 App.prototype.useNewSeed = function() {
   var seed = this.generateSeed();
