@@ -1,4 +1,5 @@
 // *
+
 // *** User interface wrapper ***
 // *
 
@@ -66,7 +67,7 @@ UI.prototype.setRemainingETH = function(re) {
 }
 
 // Set the forwarding address the user should send ETH donations to
-// Set the DFN address the user might want ot communicate to Stiftung Dfinity
+// Set the DFN address the user might want ot communicate to  Dfinity Stiftung
 UI.prototype.setUserAddresses = function(efa, dfa) {
   var e = getChildWithClass(document.getElementById("eth-forwarding-address"), "eth-address");
   var f = document.getElementById("eth-forwarding-address-explained");
@@ -83,7 +84,8 @@ UI.prototype.setUserAddresses = function(efa, dfa) {
 }
 
 UI.prototype.generateSeed = function() {
-  app.useNewSeed();
+  seed = app.generateSeed();
+  this.setUserSeed(seed);
   enableButton("after-create-seed-button");
 }
 
@@ -218,7 +220,13 @@ UI.prototype.isTaskReady =function (taskId) {
   return true;
 }
 
+UI.prototype.cancelCreateSeed = function() {
+  setElementText("seed", "");
+  document.getElementById('create-dfn-seed').style.display = 'none';
+}
+
 UI.prototype.hideCreateSeed = function() {
+  // this.markSeedGenerated();
   document.getElementById('create-dfn-seed').style.display = 'none';
 }
 
@@ -234,15 +242,18 @@ UI.prototype.doImportSeed = function() {
   }
   this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
 
-  // finish the dialog and move on
+  ui.logger("Imported new seed successfully. ETH forwarding address and DFN address have been updated.")
+
+  // finish the dialog, clean up errors and move on
   hideElement("import-dfn-seed");
+  this.hideElement("import-seed-error");
   this.finishCreateSeed();
 }
 
 
 UI.prototype.finishCreateSeed = function() {
   // Make sure we completely wipe the seed.
-  this.wipeSeed();
+  this.markSeedGenerated();
   this.setCurrentTask('task-understand-fwd-eth');
   this.makeTaskDone('task-create-seed');
 }
@@ -318,12 +329,12 @@ UI.prototype.doValidateSeed = function() {
 
   this.hideValidateSeed();
   // Make sure we completely wipe the seed.
-  this.wipeSeed();
+  this.markSeedGenerated();
   this.setCurrentTask('task-understand-fwd-eth');
   this.makeTaskDone('task-create-seed');
 }
 
-UI.prototype.wipeSeed = function () {
+UI.prototype.markSeedGenerated = function () {
    seedText ="Seed has already been generated and you should have safely copied it somewhere. Click Cancel button to proceed with the donation.";
    // seedText += "<a href='javascript:ui.generateSeed()'>generate new seed</a>, but all previous information will be lost.";
    this.setUserSeed(seedText) ;
@@ -406,6 +417,7 @@ UI.prototype.withdrawETH = function() {
   } else {
     // TODO: UI error feedback in withdraw popup
     ui.logger("Invalid ETH withdraw address, the checksum may be incorrect.");
+    
   }
   this.hideWithdrawEth();
 }
@@ -429,7 +441,7 @@ UI.prototype.updateLocationBlocker = function() {
             } else if (countryCode == "US") {
                 // IMPORTANT TODO: need to change to disable rather than enable. This is only for dev / debugging.
                 // disableButton("agree-terms-button");
-enableButton("agree-terms-button");
+                enableButton("agree-terms-button");
                 usBlocker.style.display = 'block';
             }
         }, function(err) {
@@ -446,6 +458,9 @@ function disableButton(buttonId) {
     button.className += " disabled";
 }
 
+function setElementText(element, s) {
+  document.getElementById(element).innerHTML = s;
+}
 function showAndSetElement(element, s) {
   document.getElementById(element).innerHTML = s;
   document.getElementById(element).style.display = 'block';

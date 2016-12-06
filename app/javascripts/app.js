@@ -323,8 +323,13 @@ App.prototype.schedulePollStatus = function() {
   this.ethPollTimeout = setTimeout(function() { app.pollStatus(); }, ETHEREUM_POLLING_INTERVAL);
 }
 
-App.prototype.useNewSeed = function() {
+App.prototype.generateSeed = function() {
   var seed = this.accs.generateSeed().trim();
+  return seed;
+}
+
+App.prototype.useNewSeed = function() {
+  var seed = this.generateSeed();
   this.accs.generateKeys(seed);
   // this.accs = new Accounts(seed);
   this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr);
@@ -352,7 +357,6 @@ App.prototype.adjustConnection = function(retries) {
 
 // Set current task given to user making donations
 App.prototype.setCurrentTask = function(tId) {
-  console.log("Set current task: "+tId);
   this.currentTask = tId;
   ui.setCurrentTask(tId);
 }
