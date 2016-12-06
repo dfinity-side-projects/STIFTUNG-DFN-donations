@@ -246,7 +246,7 @@ UI.prototype.doImportSeed = function() {
 
   // finish the dialog, clean up errors and move on
   hideElement("import-dfn-seed");
-  this.hideElement("import-seed-error");
+  hideElement("import-seed-error");
   this.finishCreateSeed();
 }
 
@@ -326,6 +326,8 @@ UI.prototype.doValidateSeed = function() {
   }
 
   // Validation passed
+   app.doImportSeed(s.trim());
+    this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
 
   this.hideValidateSeed();
   // Make sure we completely wipe the seed.
