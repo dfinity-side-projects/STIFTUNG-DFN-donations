@@ -28,7 +28,7 @@ contract Parameters {
   uint public constant phase1StartTime      = now + 4 hours;
   uint public constant phase1EndTime        = now + 5 hours;
   uint public constant finalizeStartTime    = now + 6 hours;
-  uint public constant finalizeEndTime      = now + 7 hours;
+  uint public constant finalizeEndTime      = now + 1000 years;
   uint public constant maxDelay             = 180 days;
 
   /* TODO: replace with above after testing & audits
