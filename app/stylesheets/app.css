@@ -321,7 +321,7 @@ input, button {
 }
 
 
-#terms, #create-dfn-seed, #verify-dfn-seed, #explain-eth-forwarding, #select-full-node, #withdraw-eth {
+#terms, #create-dfn-seed, #verify-dfn-seed, #explain-eth-forwarding, #select-full-node, #withdraw-eth, #import-dfn-seed{
 	display: none;	
 	position: fixed;
 	overflow: scroll;				
@@ -332,7 +332,10 @@ input, button {
 	left: 0px;
 	right: 0px;					
 	border: 6px solid #6d6d6d;	
-	padding: 60px;
+	padding-left: 60px;
+	padding-right: 60px;
+	padding-top: 40px;
+	padding-top: 60px;
 }
 
 @media screen and (max-width: 1680px) {
@@ -352,11 +355,17 @@ input, button {
 }	
 .dialog h1, .dialog h2 {
 	font-size: 26px;
+	/*padding-top:20px;*/
+	padding-bottom:20px;
 	/*color: rgb(52,171,226);*/
 }	
 .dialog h3 {
 	font-size: 16px;
 }	
+.dialog .dialog-contaienr {
+	margin-left: 10%;
+	margin-right: 10%;
+}
 
 /* Error block within dialogs */
 .dialog .error-block {
@@ -514,7 +523,8 @@ div.important-notes {
   display: inline-block;
   font-family: avenir, helvetica, roboto, arial, sans-serif;
   letter-spacing: 0.15em;
-  margin-bottom: 0.5em;
+  margin-bottom: 1em;
+  margin-top:1em;
   /*margin-left: 1em;*/
   margin-right: 1em;
 
