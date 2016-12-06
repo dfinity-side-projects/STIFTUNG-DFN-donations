@@ -229,7 +229,15 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   function empty() returns (bool) {
     return foundationWallet.call.value(this.balance)();
   }
-  
+
+  // Delay donation phase 1
+  function delayDonPhase1(uint timedelta) returns (uint) {
+    // Require permission
+    if (msg.sender != registrarAuth) { throw; }
+
+    return delayPhaseEndBy(3, timedelta);
+  }
+ 
   //
   // AUTHENTICATED API
   //
@@ -315,8 +323,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     chfCents = (chfCents * bonusMultiplier * expandFraction) / (100 * expandFraction);
 
     // Convert chfCents into tokens
-    uint tokenAmount = chfCents / chfCentsPerToken;
-//    uint tokenAmount = (chfCents * tokensPerCHF) / 100;
+    //    uint tokenAmount = chfCents / chfCentsPerToken;
+    uint tokenAmount = (chfCents * tokensPerCHF) / 100;
 
     // assign unrestricted tokens in TokenTracker
     assign(addr,tokenAmount,false);
@@ -380,9 +388,5 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     tokenAmount = tokens[dfnAddr];
     fwdBalance = fwdAddr.balance;
     donated = weiDonated[dfnAddr];
-  }
-
-  function donationCount() public constant returns (uint256) {
-    return totalUnrestrictedAssignments;
   }
 }
