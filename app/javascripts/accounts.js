@@ -1,3 +1,6 @@
+"use strict";
+
+
 // if seedStr == null then a new seed is generated, otherwise
 // keys are derived deterministically from the passed seed if it's valid
 var Accounts = function(seedStr) {
@@ -11,12 +14,12 @@ var Accounts = function(seedStr) {
   this.HDPathBTCForwarder = "m/44'/0'/0'/0/0";   // BTC key forwarding donation for HDPathDFN key
 
   // this.seed = seedStr;
-  this.DFN      = {};
+  this.DFN      = {addr: "hi"};
   this.ETH      = {};
   this.BTC      = {};
   
   // for backwards compatibility, strip out when complete flow is implemented
-  // loadKeys should be called by the App, not by the constructor, but that flow is not yet implemented
+  // loadKeys should be called by the Backend, not by the constructor, but that flow is not yet implemented
   this.loadKeys();
 }
 
@@ -33,8 +36,8 @@ Accounts.prototype.HDPrivKeyToAddr = function(privHex) {
      publicKeyCreate	@	ethereumjs-util.js:17454
      exports.privateToPublic	@	ethereumjs-util.js:6400
      exports.privateToAddress	@	ethereumjs-util.js:6501
-     Accounts.HDPrivKeyToAddr	@	app.js:57286
-     Accounts	@	app.js:57263
+     Accounts.HDPrivKeyToAddr	@	services.js:57286
+     Accounts	@	services.js:57263
 
      which likely is the common padding bug of privkey being less than 32 bytes
   */
@@ -82,14 +85,14 @@ Accounts.prototype.saveKeys = function() {
   if (typeof(chrome) !== "undefined") {
     // We have access to Chrome storage e.g. as does Chrome extension
     // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
-    ui.logger("Saving keys to Chrome storage");
+    state.logger("Saving keys to Chrome storage");
   }
   else if (typeof(Storage) !== "undefined") {
     // We have access to browser storage
     // http://www.w3schools.com/html/html5_webstorage.asp
-    ui.logger("Saving keys to local Web page storage. WARNING this storage not secure");
+    state.logger("Saving keys to local Web page storage. WARNING this storage not secure");
   } else {
-    ui.logger("WARNING: No storage facility available to save keys to");
+    state.logger("WARNING: No storage facility available to save keys to");
   }  
  
   // dummy version returns true always 
@@ -103,14 +106,14 @@ Accounts.prototype.loadKeys = function() {
   if (typeof(chrome) !== "undefined") {
     // We have access to Chrome storage e.g. as does Chrome extension
     // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
-    ui.logger("Querying Chrome storage for keys");
+    state.logger("Querying Chrome storage for keys");
   }
   else if (typeof(Storage) !== "undefined") {
     // We have access to browser storage
     // http://www.w3schools.com/html/html5_webstorage.asp
-    ui.logger("Querying local Web page storage for keys. WARNING this storage not secure");
+    state.logger("Querying local Web page storage for keys. WARNING this storage not secure");
   } else {
-    ui.logger("WARNING: No storage facility that can query for keys");
+    state.logger("WARNING: No storage facility that can query for keys");
   }
   
   // dummy version simply re-generates dummy keys from a hardwired address
@@ -118,10 +121,10 @@ Accounts.prototype.loadKeys = function() {
   var success = false;
   if (success) {
     this.generateKeys("drill expose helmet journey flat arrange twelve cliff pepper broken damp denial");
-    ui.logger("Simulating keys found in storage. Dummy keys loaded (change this code if you want to test the other flow)");
+    state.logger("Simulating keys found in storage. Dummy keys loaded (change this code if you want to test the other flow)");
     return true;
   } else {
-    ui.logger("Simulating no keys in storage");
+    state.logger("Simulating no keys in storage");
     return false;
   }
 }

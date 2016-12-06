@@ -5,7 +5,12 @@ module.exports = {
       "javascripts/util.js",
       "javascripts/accounts.js",
       "javascripts/ui.js",
-      "javascripts/app.js"
+        "javascripts/backend.js",
+        "javascripts/view_binder.js",
+        "javascripts/app_state.js",
+      "javascripts/services.js",
+        "javascripts/app.js",
+
     ],
     "app.css": [
       "stylesheets/app.css"

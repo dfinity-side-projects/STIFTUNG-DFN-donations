@@ -1,3 +1,5 @@
+"use strict";
+
 var KEYCODE_ENTER = 13;
 var KEYCODE_ESC = 27;
 

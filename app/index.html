@@ -79,7 +79,7 @@
                     <a class="blink" href="javascript:ui.showWithdrawEth()">Please withdraw remaining ETH</a> or <a class="blink" href="javascript:app.retryForwarding()">try forwarding again</a>
                 </div>
                 <div id="genesis-dfinities">
-                    <div class="amount">0 DFN</div>
+                    <div class="amount"><span id="genesis-dfn">0</span> DFN</div>
                     <div class="legend ">Genesis Dfinities <a class="tip-link tooltip" href="#">
                     ?
                     <span>
@@ -94,7 +94,7 @@
                     </a></div>
                 </div>
                 <div id="eth-forwarding-address">
-                    <div class="eth-address">&lt;none&gt;</div>
+                    <div id="eth-address" class="eth-address">&lt;none&gt;</div>
                     <div class="legend">ETH Forwarding Address
                         <a class="tip-link tooltip" href="#">
                     ?
@@ -175,7 +175,7 @@
     <div id="create-dfn-seed" class="dialog">
         <h2>Create your DFN address seed, and store it very safely</h2>
         <p><i>This application does not store your DFN seed. <b>You must securely maintain this yourself</b>.</i>
-            <p class="seed"></p>
+            <p class="seed" id="seed"></p>
             <p>Your DFN (DFINITY token) seed is a string of random words and is shown <em>above</em>. You must have this seed to access your DFN later. This application does not store the seed for security reasons, and only keeps the derived keys it needs. Therefore, it is ESSENTIAL that you take a copy of your seed <i>right now</i> and store it safely or YOU WILL LOSE ALL ACCESS TO YOUR DFN.</p>
             <div class="important-notes">
                 <h3>Security Notes</h3>
@@ -346,6 +346,7 @@
         <script type="text/javascript" src="./deps/ethereumjs-tx.js"></script>
         <script type="text/javascript" src="./deps/moment.min.js"></script>
         <script type="text/javascript" src="./app.js"></script>
+    </div>
 </body>
 
 </html>
