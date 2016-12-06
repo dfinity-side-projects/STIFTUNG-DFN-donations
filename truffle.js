@@ -8,7 +8,7 @@ module.exports = {
         "javascripts/backend.js",
         "javascripts/view_binder.js",
         "javascripts/app_state.js",
-      "javascripts/services.js",
+
         "javascripts/app.js",
 
     ],
