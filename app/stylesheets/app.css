@@ -110,18 +110,15 @@ input, button {
 }							
 #tasks .next-task {
 	font-weight: bold;
+	/*text-decoration: underline;*/
+	cursor: pointer;
 	/*background-color: #33E9FF;*/
 	background-color: rgb(141,196,72);
-	color: black;
-}	
-#tasks .done-task {
 	color: white;
+	border: solid 1px white;
 }	
-#tasks li span.task-number {
-	font-family: 'Open Sans Condensed', 'Arial', sans-serif;
-	display: inline-block;
-	color: white;
-}
+
+
 .tick {
 	height: 22px;
 	width: 22px;
@@ -131,11 +128,56 @@ input, button {
 	margin-top: -4px;
 	position: relative;
 }
+
+
+
+
+
 .tick span {
 	position: absolute;
 	left: 8px;
 	top: 4px;
 }
+
+
+/** Done Task style changes */
+#tasks .done-task {
+	color: #808080;
+}	
+
+#tasks li span.task-number {
+	font-family: 'Open Sans Condensed', 'Arial', sans-serif;
+	display: inline-block;
+	color: #ccc;
+}
+
+#tasks li .done-task span.task-number {
+	font-family: 'Open Sans Condensed', 'Arial', sans-serif;
+	display: inline-block;
+	color: #808080;
+}
+
+.done-task .tick span{
+	color: #808080;
+}
+
+/* Next task style changes */
+
+.next-task .tick {
+	height: 22px;
+	width: 22px;
+	padding: 3px;
+	background-color: white;
+	border-radius: 50%;
+	margin-top: -4px;
+	position: relative;
+}
+#tasks li .next-task span.task-number {
+	color:white;
+}
+
+
+
 .blink {
   animation: blinker 1s linear infinite;
 }
@@ -277,16 +319,27 @@ input, button {
 .hidden {
 	display: none;
 }
+
+
 #terms, #create-dfn-seed, #verify-dfn-seed, #explain-eth-forwarding, #select-full-node, #withdraw-eth {
 	display: none;	
 	position: fixed;
 	overflow: scroll;				
 	top: 40px;
-	bottom: 20px;
-	left: 20px;
-	right: 20px;					
-	/*border: 3px solid #333;	*/
+	margin-left:15%;
+	margin-right:15%;
+	bottom: 40px;
+	left: 0px;
+	right: 0px;					
+	border: 6px solid #6d6d6d;	
 	padding: 60px;
+}
+
+@media screen and (max-width: 1680px) {
+	#terms, #create-dfn-seed, #verify-dfn-seed, #explain-eth-forwarding, #select-full-node, #withdraw-eth {
+		margin-left: 5%;
+		margin-right: 5%;
+	}
 }
 .dialog {
 	background-color: rgb(55,55,55);
@@ -337,7 +390,7 @@ input, button {
 	color: white;
 	padding-bottom: 15px;
 }
-p.seed {
+.seed {
 	color: white !important;
 	background-color: black;
 	padding: 10px;
@@ -627,9 +680,33 @@ div.important-notes {
   background-color: #001F3F;
   border-color: #001F3F; }
 
-/* Keep it mobile-first and responsive */
 @media screen and (min-width: 32em) {
   .btn--full {
     max-width: 16em !important; } }
 
+
+/** Explantory tool tips for concepts and terms */
+
+a.tooltip {outline:none; }
+a.tooltip strong {line-height:30px;}
+a.tooltip:hover {text-decoration:none;} 
+a.tooltip span {
+    z-index:10;display:none; padding:14px 20px;
+    margin-top:60px; margin-left:-160px;
+    width:300px; line-height:16px;
+}
+a.tooltip:hover span{
+    display:inline; position:absolute; 
+    border:2px solid #FFF;  color:#EEE;
+    background:#333 url(cssttp/css-tooltip-gradient-bg.png) repeat-x 0 0;
+}
+.callout {z-index:20;position:absolute;border:0;top:-14px;left:120px;}
+    
+/*CSS3 extras*/
+a.tooltip span
+{
+    border-radius:2px;        
+    box-shadow: 0px 0px 8px 4px #666;
+    /*opacity: 0.8;*/
+}
 
