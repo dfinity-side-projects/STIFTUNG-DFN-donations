@@ -350,12 +350,25 @@ UI.prototype.hideValidateSeed = function () {
     document.getElementById('verify-dfn-seed').style.display = 'none';
 }
 
+function removeClass(element, className) {
+    document.getElementById(element).className.replace(className, '');
+}
+function showDialog(dialogId) {
+    showElement(dialogId);
+    document.body.className += " modal-open";
+}
+
+function closeDialog(dialogId) {
+    hideElement(dialogId);
+    document.body.className.replace("modal-open", '');
+}
+
 UI.prototype.showTerms = function () {
-    document.getElementById('terms').style.display = 'block';
+    showDialog("terms");
 }
 
 UI.prototype.hideTerms = function () {
-    document.getElementById('terms').style.display = 'none';
+    closeDialog("terms");
 }
 
 
@@ -363,10 +376,10 @@ UI.prototype.readTerms = function () {
     // Once agreed, it should be disabled to prevent confusion
     disableButton("agree-terms-button");
     document.getElementById('agree-terms-button').innerText = "You have already accepted the terms";
-
-    document.getElementById('terms').style.display = 'none';
+    closeDialog("terms");
     this.setCurrentTask('task-create-seed');
     this.makeTaskDone('task-agree');
+
 }
 
 UI.prototype.showSelectEthereumNode = function () {
@@ -389,22 +402,23 @@ UI.prototype.showExplainForwarding = function () {
     if (!this.isTaskReady("task-understand-fwd-eth")) {
         return;
     }
-    document.getElementById('explain-eth-forwarding').style.display = 'block';
+    showDialog("explain-eth-forwarding");
+    // document.getElementById('explain-eth-forwarding').style.display = 'block';
 }
 
 UI.prototype.doneExplainForwarding = function () {
-    document.getElementById('explain-eth-forwarding').style.display = 'none';
+    closeDialog("explain-eth-forwarding");
     this.makeTaskDone('task-understand-fwd-eth');
     this.setCurrentTask('task-donate');
-
 }
 
 UI.prototype.showWithdrawEth = function () {
-    document.getElementById('withdraw-eth').style.display = 'block';
+    showDialog("withdraw-eth");
 }
 
 UI.prototype.hideWithdrawEth = function () {
-    document.getElementById('withdraw-eth').style.display = 'none';
+    closeDialog("withdraw-eth");
+
 }
 
 UI.prototype.withdrawETH = function () {
