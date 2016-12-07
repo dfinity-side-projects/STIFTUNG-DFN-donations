@@ -222,8 +222,8 @@ App.prototype.withdrawETH = function(toAddr) {
       }
 
       try {
-        console.log("Sent withdraw tx: " + value + " ETH (txID=" + txID + ")");
-        ui.logger("Sent withdraw tx: " + value + " ETH (txID=" + txID + ")");
+        console.log("Sent withdraw tx: " + web3.fromWei(value, "ether") + " ETH (txID=" + txID + ")");
+        ui.logger("Sent withdraw tx: " + web3.fromWei(value, "ether") + " ETH (txID=" + txID + ")");
         self.contFwdingOnNewData = true; // start fowarding again on new data
         // TODO: track state of withdraw tx
       } finally {
