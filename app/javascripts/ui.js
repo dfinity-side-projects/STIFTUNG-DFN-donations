@@ -496,7 +496,7 @@ function formatCurrency(n, symbol, d) {
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   // re-combine parts
-  return parts.join(".");
+  return parts.join(".") + " " + symbol;
 }
 
 // pad is e.g. "000", 29 => "029"
