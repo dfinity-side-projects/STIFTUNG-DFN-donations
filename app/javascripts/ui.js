@@ -485,8 +485,20 @@ function enableButton(buttonId) {
 /** UI utility functions */
 
 function formatCurrency(n, symbol, d) {
-    // source for the regexp: http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
-    return n.toFixed(d).replace(/(\d)(?=(\d{3})+(?:\.\d+)?$)/g, "$1,") + " " + symbol;
+  // round it
+  if (d > 0) { 
+    n = Math.round(n*Math.pow(10, d)) / Math.pow(10, d);		
+  }
+
+  // cut off and/or pad
+  var s = n.toFixed(d);
+
+  // insert comma separators into the whole part
+  var parts = s.split("."); 
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  // re-combine parts
+  return parts.join(".") + " " + symbol;
 }
 
 // pad is e.g. "000", 29 => "029"
