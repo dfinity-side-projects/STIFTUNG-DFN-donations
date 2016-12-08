@@ -11,6 +11,7 @@ var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically 
 var ETHEREUM_HOSTED_NODES = ["TODO"];
 var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
 
+
 var GAS_PRICE;                      // estimate price of gas
 var MIN_DONATION;                   // minimum donation allowed
 var MAX_DONATE_GAS;                 // maximum gas used making donation
@@ -50,6 +51,7 @@ var App = function (userAccounts, testUI) {
     this.ethConnectionRetries = 0;    // number consecutive provider connection fails
     this.saidBalanceTooSmall = false; // told user balance too small?
     this.lastBalanceSeen;             // last balance we saw
+    this.ethConnected = -1;
     this.donationPhase = 0;           // seed funder
     this.ethBalance = undefined;      // balance of ETH forwarding wallet
     this.accs = userAccounts;
@@ -77,15 +79,53 @@ var App = function (userAccounts, testUI) {
     ui.updateLocationBlocker();
 }
 
+/*
+ * This is an async variation of the web3 connection test, which by default is synchronous and freezes the browser
+ * on a bad node/connection.
+ * @returns {boolean} - since it's async the return result is only based on previous set result.By default it's false.
+ */
+Web3.prototype.isConnectedAsync = function() {
+    // console.log("isConnectedAsync () checking ...");
+
+    try {
+        this.currentProvider.sendAsync({
+            id: 9999999999,
+            jsonrpc: '2.0',
+            method: 'net_listening',
+            params: []
+        }, function(error, result) {
+            if (error != null) {
+                app.ethConnected = 0;
+            }
+            else {
+                app.ethConnected = 1;
+            }
+        });
+        if (app.ethConnected == 1)
+            return true;
+        else
+            return false;
+    } catch(e) {
+        return false;
+    }
+}
+
 // Forward any ETH we can see lying in our wallet as a donation!
 App.prototype.tryForwardETH = function () {
+
     if (this.ethFwdTimeout) clearTimeout(this.ethFwdTimeout);
 
+
     // we are forwarding, connected and have seen an ETH balance?
-    if (!this.tryForwardBalance || !web3.isConnected() ||
+    if (!web3.isConnectedAsync()) {
+        console.log("Not connected to web3. Trying later");
+    }
+    if (!this.tryForwardBalance || !web3.isConnectedAsync() ||
         this.ethBalance == undefined || this.ethBalance.equals(0)) {
         // try again later!
+
         this.scheduleTryForwardETH();
+
         return;
     }
 
@@ -237,15 +277,20 @@ App.prototype.withdrawETH = function (toAddr) {
 
 // Poll Ethereum for status information from FDC and wallet
 App.prototype.pollStatus = function () {
+    console.log("pollStatus()");
     if (this.ethPollTimeout) clearTimeout(this.ethPollTimeout);
 
     // connected?
-    if (!web3.isConnected()) {
+    if (!web3.isConnectedAsync()) {
         ui.logger("Not connected to Ethereum...");
         // adjust connection if too many fails and appropriate
         this.adjustConnection(++this.ethConnectionRetries);
         // reschedule next polling
-        this.schedulePollStatus(); // bail, try later...
+        if (this.ethConnectionRetries < ETHEREUM_CONN_MAX_RETRIES) {
+            this.schedulePollStatus(); // bail, try later...
+        } else {
+            ui.logger("Max ETH node connection retries reached. Giving up for now. ");
+        }
         return;
     }
     this.onEthereumConnect();
@@ -312,7 +357,6 @@ App.prototype.pollStatus = function () {
             self.updateUI(currentState, fxRate, donationCount, totalTokenAmount,
                 startTime, endTime, isCapReached, chfCentsDonated, tokenAmount,
                 self.ethBalance, donated);
-
         } finally {
             // do this all over again...
             self.schedulePollStatus();
@@ -384,8 +428,9 @@ App.prototype.setEthereumNode = function (host) {
         // TODO: add fallback logic if one hosted node is down
         this.setETHNodeInternal(ETHEREUM_HOSTED_NODES[0]);
     } else {
-        // host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
-        // host = host.replace(/\s/g, '') // all whitespace chars
+        host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
+        host = host.replace(/\s/g, '') // all whitespace chars
+        host = host.replace(/\/$/g, '')  // remove trailing "/"
         if (!host.startsWith('http://') && !host.startsWith('https://')) {
             ui.logger("Ethereum full node host must start with http:// or https://");
             return;
@@ -403,12 +448,17 @@ App.prototype.setEthereumNode = function (host) {
 App.prototype.setETHNodeInternal = function (host) {
     ui.logger("Connecting to: " + host + "...");
     this.setEthereumClientStatus('connecting...');
+    this.ethConnected = 0;
+    this.ethConnectionRetries = 0;
     this.ethereumNode = host;
     ui.setEthereumNode(host);
 
     var provider = new web3.providers.HttpProvider(this.ethereumNode);
     web3.setProvider(provider);
     FDC.setProvider(provider);
+
+    console.log("New provider set to:" + provider);
+
 
     // TODO: reconnect immediately instead of waiting for next poll
     // TODO save node to storage
