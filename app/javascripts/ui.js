@@ -35,13 +35,13 @@ UI.prototype.setGenesisDFN = function (dfn) {
     if (dfn == undefined) {
         e.innerHTML = "? DFN";
         e2.innerHTML = "? DFN (unknown as not connected to an Ethereum node)";
-        hideElement("genesis-dfinities-info-icon");
+        // hideElement("genesis-dfinities-info-icon");
 
     }
     else {
         e.innerHTML = formatCurrency(dfn, "DFN");
         e2.innerHTML = formatCurrency(dfn, "DFN");
-        showElement("genesis-dfinities-info-icon", "inline-block");
+        // showElement("genesis-dfinities-info-icon", "inline-block");
     }
 }
 
@@ -81,13 +81,17 @@ UI.prototype.setUserAddresses = function (efa, dfa) {
     var f = document.getElementById("eth-forwarding-address-explained");
     var d = document.getElementById("dfn-address");
     if (efa == undefined) {
-        e.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
-        f.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
-        d.innerHTML = "-- create, or <a href=''>restore from seed</a> --"
+        // e.innerHTML = "-- create, or <a href='javascript:ui.showImportSeed()'>import seed</a> --"
+        // f.innerHTML = "-- create, or <a href='javascript:ui.showImportSeed()'>import seed</a> --"
+        // d.innerHTML = "-- create, or <a href='javascript:ui.showImportSeed()'>import seed</a> --"
+        e.innerHTML = "<not generated>";
+        hideElement("genesis-dfinities-info-icon");
+
     } else {
         e.innerHTML = web3.toChecksumAddress(efa);
         f.innerHTML = web3.toChecksumAddress(efa);
         d.innerHTML = dfa;
+        showElement("genesis-dfinities-info-icon", "inline-block");
     }
 }
 
