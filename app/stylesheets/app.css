@@ -375,10 +375,31 @@ body.modal-open {
     display: none;
 }
 
-#terms, #create-dfn-seed, #verify-dfn-seed, #explain-eth-forwarding, #select-full-node, #withdraw-eth, #import-dfn-seed {
+.vertical-alignment-helper {
+    display:table;
+    height: 100%;
+    width: 100%;
+    pointer-events:none;
+}
+.vertical-align-center {
+    /* To center vertically */
+    display: table-cell;
+    vertical-align: middle;
+    pointer-events:none;
+}
+.modal-content {
+    /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
+    width:inherit;
+    height:inherit;
+    /* To center horizontally */
+    margin: 0 auto;
+    pointer-events:all;
+}
+
+.dialog {
     display: none;
     position: fixed;
-    overflow: scroll;
+    overflow: auto;
     top: 40px;
     margin-left: 15%;
     margin-right: 15%;
@@ -392,10 +413,30 @@ body.modal-open {
     padding-top: 60px;
 }
 
+.dialog-small {
+    margin-left: 25%;
+    margin-right: 25%;
+    /*margin-top: auto;*/
+    margin-bottom: auto;
+    padding-bottom: 20px;
+    padding-top: 20px;
+    bottom: auto;
+    top: 15%;
+}
+.dialog-no-scroll {
+    overflow: hidden;
+}
+
+
+
 @media screen and (max-width: 1680px) {
-    #terms, #create-dfn-seed, #verify-dfn-seed, #explain-eth-forwarding, #select-full-node, #withdraw-eth {
+    .dialog {
         margin-left: 5%;
         margin-right: 5%;
+    }
+    .dialog-small {
+        margin-left: 15%;
+        margin-right: 15%;
     }
 }
 
@@ -495,7 +536,7 @@ div.important-notes {
 
 }
 
-.textbox-custom {
+.textbox-custom,.textbox-custom-inline {
     color: white !important;
     background-color: black;
     padding: 10px;
@@ -507,11 +548,13 @@ div.important-notes {
     padding-right: 15px;
     border: 4px solid rgb(52, 171, 226);
     margin: 5px;
-
     display: inline-block;
     width: 100%;
     -webkit-transition: color 0.4s, background-color 0.4s, border 0.4s;
     transition: color 0.4s, background-color 0.4s, border 0.4s;
+}
+.textbox-custom-inline {
+    display: inline;
 }
 
 /** checkbox **/
@@ -792,13 +835,15 @@ a.tooltip:hover {
     text-decoration: none;
 }
 
+
+
 a.tooltip span {
     z-index: 999;
     display: none;
     padding: 14px 20px;
-    margin-top: 60px;
+    margin-top: 40px;
     margin-left: -160px;
-    width: 300px;
+    width: 500px;
     line-height: 16px;
     color: white;
     border-radius: 2px;
@@ -818,10 +863,65 @@ a.tooltip:hover span {
     color: white;
 }
 
+
+a.tooltip span:hover {
+    display: inline;
+    position: absolute;
+    border: 2px solid #FFF;
+    color: white;
+}
+
+
 .callout {
     z-index: 20;
     position: absolute;
     border: 0;
     top: -14px;
     left: 120px;
+}
+
+.icon {
+    margin-left:5px;
+    /*margin-right:10px;*/
+}
+
+/** Useful Icons */
+.icon.info,
+.icon.good,
+.icon.bad
+{
+    background-color: #30abe2;
+    display: inline-block;
+    top: 0.15em;
+    width: 1em;
+    height: 1em;
+    overflow: hidden;
+    border: none;
+    border-radius: .5em;
+    box-shadow: #9c9c9c 0 1px 1px;
+}
+
+.icon.info::after,
+.icon.good::after,
+.icon.bad::after
+{
+    display: block;
+    padding-top: 2px;
+    /* position: absolute; */
+    top: 0.25em;
+    left: 0;
+    width: 100%;
+    /* font-weight: bold; */
+    text-align: center;
+    font-family: "Times New Roman", "Garamond", serif;
+    font-size: 11px;
+    color: white;
+}
+
+
+
+.icon.info::after {
+    font-style: italic;
+    font-weight: bold;
+    content: "i";
 }

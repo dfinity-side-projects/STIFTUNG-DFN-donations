@@ -431,13 +431,14 @@ App.prototype.setEthereumNode = function (host) {
         host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
         host = host.replace(/\s/g, '') // all whitespace chars
         host = host.replace(/\/$/g, '')  // remove trailing "/"
-        if (!host.startsWith('http://') && !host.startsWith('https://')) {
-            ui.logger("Ethereum full node host must start with http:// or https://");
-            return;
+
+        // Add a prefix http if none found
+        if (host.match("^(?!http:)^(?!https:).*.*:[0-9]*[/]*$")) {
+            host += "http://";
         }
         var splits = host.split(':');
         var port = splits[splits.length - 1];
-        if ((port.length != 4 && port.length != 5) || port.match(/^[0-9]+$/) == null) {
+        if ((port.length < 2 && port.length > 5) || port.match(/^[0-9]+$/) == null) {
             ui.logger("Host string must end with valid port, e.g. \":8545\"");
             return;
         }
