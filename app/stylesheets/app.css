@@ -170,6 +170,7 @@ body.modal-open {
 /** Done Task style changes */
 #tasks .done-task {
     color: #808080;
+    cursor: pointer;
 }
 
 #tasks li span.task-number {
@@ -197,6 +198,7 @@ body.modal-open {
     background-color: white;
     border-radius: 50%;
     margin-top: -4px;
+    cursor: pointer;
     position: relative;
 }
 

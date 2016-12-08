@@ -1,10 +1,4 @@
 contract('FDC', function(accounts) {
-  it("It should initialize the donation count to zero", function() {
-     var fdc = FDC.deployed();
-     return fdc.donationCount.call().then(function(count) {
-         assert.equal(count.valueOf(), 0, "Donation count wasn't initialized to zero");
-     });
-  });
    
   it("We will set the Wei to CHF exchange rate", function() {
     var fdc = FDC.deployed();
@@ -15,7 +9,7 @@ contract('FDC', function(accounts) {
       console.log("Test exception: "+e);
       throw e;        
     });
-  });   
+  });
 
   it("We should get some stats back", function() {
      var fdc = FDC.deployed();
@@ -79,8 +73,10 @@ contract('FDC', function(accounts) {
                         gas: FDCDonateGasMax}).then(function(txID) {
               console.log("Forwarding tx id: " + txID);
               // verify donation was registered
-              fdc.donationCount.call().then(function(count) {
-                assert.equal(count.valueOf(), 1, "Donation count not 1");
+
+              fdc.getStatus(2, DFNAddr, ETHForwardAddr).then(function(res) {
+                  var donationCount = res[3];  // total individual donations made (a count)
+                  assert.equal(donationCount.valueOf(), 1, "Donation count not 1");
               });
             }).catch(function(e) {
               console.log("Error sending ETH forwarding tx: " + e);
