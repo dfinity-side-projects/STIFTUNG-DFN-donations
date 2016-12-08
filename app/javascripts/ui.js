@@ -87,7 +87,7 @@ UI.prototype.setUserAddresses = function (efa, dfa) {
     } else {
         e.innerHTML = web3.toChecksumAddress(efa);
         f.innerHTML = web3.toChecksumAddress(efa);
-        d.innerHTML = web3.toChecksumAddress(dfa);
+        d.innerHTML = dfa;
     }
 }
 
@@ -250,7 +250,7 @@ UI.prototype.doImportSeed = function () {
         this.showImportSeedError("Error in importing seed: " + e);
         return;
     }
-    this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
+//    this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
 
     ui.logger("Imported new seed successfully. ETH forwarding address and DFN address have been updated.")
 
@@ -337,7 +337,7 @@ UI.prototype.doValidateSeed = function () {
 
     // Validation passed
     app.doImportSeed(s.trim());
-    this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
+//    this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
 
     this.hideValidateSeed();
     // Make sure we completely wipe the seed.
