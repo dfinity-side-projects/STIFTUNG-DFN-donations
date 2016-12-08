@@ -231,11 +231,13 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   }
 
   // Delay donation phase 1
-  function delayDonPhase1(uint timedelta) returns (uint) {
+  function delayDonPhase1(uint timedelta) returns (bool) {
     // Require permission
     if (msg.sender != registrarAuth) { throw; }
 
-    return delayPhaseEndBy(3, timedelta);
+    delayPhaseEndBy(3, timedelta);
+    
+    return true;
   }
  
   //
