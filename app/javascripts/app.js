@@ -60,9 +60,12 @@ var App = function (userAccounts, testUI) {
 
     this.setCurrentTask(this.lastTask);
     this.setGenesisDFN(undefined);
+    this.setUiUserAddresses();
+    /*
     if (this.accs.ETH.addr != undefined && this.accs.DFN.addr != undefined) {
-        this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr);
+        ui.setUserAddresses(this.accs.ETH.addr, addrWithChecksum(this.accs.DFN.addr));
     }
+    */
     ui.setUserSeed(undefined);
 
     this.setFunderChfReceived(undefined);
@@ -382,8 +385,9 @@ App.prototype.useSeed = function (s) {
 App.prototype.useNewSeed = function () {
     var seed = this.generateSeed();
     this.accs.generateKeys(seed);
+    this.setUiUserAddresses();
     // this.accs = new Accounts(seed);
-    this.setUserAddresses(this.accs.ETH.addr, this.accs.DFN.addr);
+//    this.setUserAddresses(this.accs.ETH.addr, addrWithChecksum(this.accs.DFN.addr));
     ui.setUserSeed(seed);
     seed = "";
 }
@@ -457,12 +461,14 @@ App.prototype.setETHNodeInternal = function (host) {
     // TODO save node to storage
 }
 
-// Set the user's DFN addr & ETH forwarding addr
-App.prototype.setUserAddresses = function (ETHAddr, DFNAddr) {
+// Set the user's DFN addr & ETH forwarding addr in the UI
+App.prototype.setUiUserAddresses = function () {
+    var ETHAddr = this.accs.ETHAddr;
+    var DFNAddr = this.accs.DFNAddr;
     console.log("Set Ethereum forwarding addr: " + ETHAddr);
     console.log("Set DFN addr: " + DFNAddr);
-    this.DFNAddr = DFNAddr;
-    ui.setUserAddresses(EthJSUtil.toChecksumAddress(ETHAddr), EthJSUtil.toChecksumAddress(DFNAddr));
+    console.log("Set DFN addr with checksum: " + addrWithChecksum(DFNAddr));
+    ui.setUserAddresses(ETHAddr, addrWithChecksum(DFNAddr));
 }
 
 App.prototype.setFunderChfReceived = function (chf) {
@@ -493,6 +499,7 @@ App.prototype.setRemainingETH = function (re) {
 App.prototype.doImportSeed = function (seed) {
     this.accs.generateKeys(seed);
     this.accs.saveKeys();
+    this.setUiUserAddresses();
 }
 
 App.prototype.setEthereumClientStatus = function (status) {
@@ -526,7 +533,6 @@ App.prototype.setDummyDisplayValues = function () {
     this.setGenesisDFN(282819);
     this.setForwardedETH(000);
     this.setRemainingETH(100);
-    //this.setUserAddresses("1ES2uBmbXP1pn1KBjPMwwUMbhDHiRuiRkf", undefined);
     this.setFunderChfReceived(762521);
     this.setEthereumClientStatus("OK");
     this.setEthereumNode("127.0.0.1");
@@ -588,7 +594,9 @@ window.onload = function () {
         // First attempt to load stored keys if any.
         // If loading fails, then simply wait user to generate new seed or import seed
         userAccounts.loadKeys(function() {
-            ui.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
+            // TODO fix this: why can't we call this./app?
+            // app.setUiUserAddresses();
+            ui.setUserAddresses(app.accs.ETH.addr, addrWithChecksum(app.accs.DFN.addr));
             ui.readTerms();
             ui.markSeedGenerated();
             ui.makeTaskDone('task-agree');
@@ -616,4 +624,8 @@ function addrChecksum(addr) {
     // hash the buffer and take first 4 bytes
     var checksumBuf = EthJSUtil.sha256(addrBuf).slice(0, 4); 
     return EthJSUtil.bufferToHex(checksumBuf);
+}
+
+function addrWithChecksum(addr) {
+    return addr + addrChecksum(addr).slice(2);
 }
