@@ -28,7 +28,9 @@ contract Phased {
     if (N > 0 && time <= phaseEndTime[N-1]) { throw; } 
 
     // It is not allowed to add a phase transition now or in the past
-    if (time <= now) { throw; }
+    // TODO turn back on (it is turned off for the first phase while we are testing with truffle)
+    //   if (time <= now) { throw; }
+    if (N > 0 && time <= now) { throw; }
     
     N++;
     phaseEndTime.push(time);
