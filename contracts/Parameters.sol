@@ -23,7 +23,7 @@ contract Parameters {
   // We could move all this into the constructor but it is convenient to have as constants for the test code
 
   uint public constant earlyContribEndTime  = now - 1 hours;
-  uint public constant phase0StartTime      = now;
+  uint public constant phase0StartTime      = now + 1;
   uint public constant phase0EndTime        = now + 10 hours;
   uint public constant phase1StartTime      = now + 11 hours;
   uint public constant phase1EndTime        = now + 15 hours;
