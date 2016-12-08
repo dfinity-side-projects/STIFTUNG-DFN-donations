@@ -328,9 +328,11 @@ App.prototype.pollStatus = function () {
             var endTime = res[6];           // expected end time of specified donation phase
             var isCapReached = res[7];      // whether target cap specified phase reached
             var chfCentsDonated = res[8];   // total value donated in specified phase as CHF
-            var tokenAmount = res[9];       // total DFN planned allocted to donor (user)
-            var ethFwdBalance = res[10];    // total ETH (in Wei) waiting in forwarding address
-            var donated = res[11];          // total ETH (in Wei) donated so far
+            if (ethAddr != -1 && dfnAddr != -1) {
+                var tokenAmount = res[9];       // total DFN planned allocted to donor (user)
+                var ethFwdBalance = res[10];    // total ETH (in Wei) waiting in forwarding address
+                var donated = res[11];          // total ETH (in Wei) donated so far
+            }
 
             // if the forwarding balance has changed, then we may have to inform the user
             // that it is "still" too small
@@ -464,8 +466,8 @@ App.prototype.setETHNodeInternal = function (host) {
 
 // Set the user's DFN addr & ETH forwarding addr in the UI
 App.prototype.setUiUserAddresses = function () {
-    var ETHAddr = this.accs.ETHAddr;
-    var DFNAddr = this.accs.DFNAddr;
+    var ETHAddr = this.accs.ETH.addr;
+    var DFNAddr = this.accs.DFN.addr;
     console.log("Set Ethereum forwarding addr: " + ETHAddr);
     console.log("Set DFN addr: " + DFNAddr);
     console.log("Set DFN addr with checksum: " + addrWithChecksum(DFNAddr));
