@@ -1,3 +1,5 @@
+"use strict";
+
 var KEYCODE_ENTER = 13;
 var KEYCODE_ESC = 27;
 
@@ -42,4 +44,65 @@ function ajaxGet(url, successFn, errFn) {
             }
         }
     }
+}
+
+
+// Write the user's keys to storage e.g. Chrome storage
+function saveToStorage(values, successFn) {
+    if (typeof(chrome.storage) !== "undefined") {
+        // We have access to Chrome storage e.g. as does Chrome extension
+        // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
+        ui.logger("Saving values to Chrome storage");
+        // Save in the local chrome storage (not sync storage as we don't want sensitive info uploaded to cloud)
+        chrome.storage.local.set(values, function () {
+            successFn();
+        });
+    }
+    else if (typeof(Storage) !== "undefined") {
+        // We have access to browser storage
+        // http://www.w3schools.com/html/html5_webstorage.asp
+        ui.logger("Saving values to local Web page storage. WARNING this storage not secure");
+        for (var k in values) {
+            localStorage.setItem(k, values[k]);
+        }
+        successFn();
+    } else {
+        ui.logger("WARNING: No storage facility available to save keys to");
+        return false;
+    }
+    return true;
+}
+
+// Load the user's keys from storage e.g. Chrome storage. If the operate fails,
+// an exception is thrown. If no keys were previously saved, no keys are loaded
+// and the key values will be undefined
+function loadfromStorage (keys, successFn) {
+    if (typeof(chrome.storage) !== "undefined") {
+        // We have access to Chrome storage e.g. as does Chrome extension
+        // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
+        ui.logger("Querying Chrome storage for " + keys);
+        chrome.storage.local.get(keys, function (s) {
+            if (runtime.lastError) {
+                ui.logger("Key loading failed: " + runtime.lastError);
+            }
+            successFn(s);
+        });
+    }
+    else if (typeof(Storage) !== "undefined") {
+        // We only have access to browser storage
+        // http://www.w3schools.com/html/html5_webstorage.asp
+        ui.logger("Querying local Web page storage for " + keys + ".  WARNING this storage not secure");
+
+
+        var s = {};
+        for (var k in keys) {
+            ui.logger("Querying local Web page storage for " + keys[k]);
+            s[keys[k]] = localStorage.getItem(keys[k]);
+        }
+        successFn(s);
+    } else {
+        ui.logger("WARNING: No storage facility that can query for keys");
+        return false;
+    }
+    return true;
 }

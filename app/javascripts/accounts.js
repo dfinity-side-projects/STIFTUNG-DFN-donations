@@ -75,86 +75,36 @@ Accounts.prototype.generateKeys = function (seedStr) {
 
 // Write the user's keys to storage e.g. Chrome storage
 Accounts.prototype.saveKeys = function () {
-    // if (!keys) return;
-
-    if (typeof(chrome.storage) !== "undefined") {
-        // We have access to Chrome storage e.g. as does Chrome extension
-        // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
-        ui.logger("Saving keys to Chrome storage");
-        // Save in the local chrome storage (not sync storage as we don't want sensitive info uploaded to cloud)
-        chrome.storage.local.set({
-            "dfn-address": this.DFN.addr,
-            "eth-address": this.ETH.addr,
-            "eth-private-key": this.ETH.priv,
-        }, function () {
-            ui.logger("DFN and ETH address successfully saved in Chrome storage.");
-            console.log("DFN and ETH address successfully saved in Chrome storage.");
-        });
-    }
-    else if (typeof(Storage) !== "undefined") {
-        // We have access to browser storage
-        // http://www.w3schools.com/html/html5_webstorage.asp
-        ui.logger("Saving keys to local Web page storage. WARNING this storage not secure");
-        localStorage.setItem("dfn-address",this.DFN.addr );
-        localStorage.setItem("eth-address",this.ETH.addr );
-        localStorage.setItem("eth-private-key", this.ETH.priv);
-        ui.logger("DFN and ETH address successfully saved in local storage.");
-    } else {
-        ui.logger("WARNING: No storage facility available to save keys to");
-    }
-
-
+    saveToStorage({
+        "dfn-address": this.DFN.addr,
+        "eth-address": this.ETH.addr,
+        "eth-private-key": this.ETH.priv,
+    }, function () {
+        ui.logger("DFN and ETH address successfully saved in Chrome storage.");
+        console.log("DFN and ETH address successfully saved in Chrome storage.");
+    });
 }
 
 // Load the user's keys from storage e.g. Chrome storage. If the operate fails,
 // an exception is thrown. If no keys were previously saved, no keys are loaded
 // and the key values will be undefined
 Accounts.prototype.loadKeys = function (successFn) {
-    if (typeof(chrome.storage) !== "undefined") {
-        // We have access to Chrome storage e.g. as does Chrome extension
-        // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
-        ui.logger("Querying Chrome storage for keys");
-        chrome.storage.local.get([
-            "dfn-address",
-            "eth-address",
-            "eth-private-key"], function (s) {
-            if (runtime.lastError) {
-                ui.logger("Key loading failed: " + runtime.lastError);
-            }
-            if (s["dfn-address"] && s["eth-address"] && s["eth-private-key"]) {
-                this.DFN.addr = s["dfn-address"];
-                this.ETH.addr = s["eth-address"];
-                this.ETH.priv = s["eth-private-key"];
-                successFn();
-            }
-
-            ui.logger("DFN and ETH address loaded successfully: " + this.DFN.addr + " /" + this.DFN.priv + " / " + this.ETH.addr);
-        });
-    }
-    else if (typeof(Storage) !== "undefined") {
-        // We only have access to browser storage
-        // http://www.w3schools.com/html/html5_webstorage.asp
-        ui.logger("Querying local Web page storage for keys. WARNING this storage not secure");
-
-        if (localStorage.getItem("dfn-address") != undefined && localStorage.getItem("eth-address") != undefined  && localStorage.getItem("eth-private-key") != undefined ) {
-            this.DFN.addr = localStorage.getItem("dfn-address");
-            this.ETH.addr = localStorage.getItem("eth-address");
-            this.ETH.priv =localStorage.getItem("eth-private-key");
-            ui.logger("DFN and ETH address loaded successfully: " + this.DFN.addr + " /" + this.DFN.priv + " / " + this.ETH.addr);
+    var self = this;
+    loadfromStorage([
+        "dfn-address",
+        "eth-address",
+        "eth-private-key"], function (s) {
+        console.log(s);
+        if (s["dfn-address"] && s["eth-address"] && s["eth-private-key"]) {
+            self.DFN.addr = s["dfn-address"];
+            self.ETH.addr = s["eth-address"];
+            self.ETH.priv = s["eth-private-key"];
             successFn();
-
         }
-
-    } else {
-        ui.logger("WARNING: No storage facility that can query for keys");
-        return;
-    }
-
-
-
-
-
+        ui.logger("DFN and ETH address loaded successfully: " + self.DFN.addr + " / " + self.ETH.addr);
+    });
 }
+
 
 function padPrivkey(privHex) {
     return ("0000000000000000" + privHex).slice(-64);
