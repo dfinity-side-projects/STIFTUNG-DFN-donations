@@ -30,11 +30,19 @@ UI.prototype.setEthereumClientStatus = function (status) {
 
 // Set the allocation of Genesis DFN to be recommended for user
 UI.prototype.setGenesisDFN = function (dfn) {
-    var e = getChildWithClass(document.getElementById("genesis-dfinities"), "amount");
-    if (dfn == undefined)
+    var e =document.getElementById("genesis-dfinities-amount");
+    var e2 =document.getElementById("genesis-dfinities-amount-2");
+    if (dfn == undefined) {
         e.innerHTML = "? DFN";
-    else
+        e2.innerHTML = "? DFN (unknown as not connected to an Ethereum node)";
+        hideElement("genesis-dfinities-info-icon");
+
+    }
+    else {
         e.innerHTML = formatCurrency(dfn, "DFN");
+        e2.innerHTML = formatCurrency(dfn, "DFN");
+        showElement("genesis-dfinities-info-icon", "inline-block");
+    }
 }
 
 // Set amount of ETH forwarded so far
@@ -484,8 +492,10 @@ function showAndSetElement(element, s) {
     document.getElementById(element).style.display = 'block';
 }
 
-function showElement(element) {
-    document.getElementById(element).style.display = 'block';
+function showElement(element, style) {
+    if (!style)
+        style="block";
+    document.getElementById(element).style.display = style;
 }
 function hideElement(element) {
     document.getElementById(element).style.display = 'none';

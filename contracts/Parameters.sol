@@ -24,10 +24,10 @@ contract Parameters {
 
   uint public constant earlyContribEndTime  = now - 1 hours;
   uint public constant phase0StartTime      = now;
-  uint public constant phase0EndTime        = now + 3 hours;
-  uint public constant phase1StartTime      = now + 4 hours;
-  uint public constant phase1EndTime        = now + 5 hours;
-  uint public constant finalizeStartTime    = now + 6 hours;
+  uint public constant phase0EndTime        = now + 10 hours;
+  uint public constant phase1StartTime      = now + 11 hours;
+  uint public constant phase1EndTime        = now + 15 hours;
+  uint public constant finalizeStartTime    = now + 16 hours;
   uint public constant finalizeEndTime      = now + 1000 years;
   uint public constant maxDelay             = 180 days;
 
