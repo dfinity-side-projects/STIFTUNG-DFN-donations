@@ -72,7 +72,7 @@ contract('FDC', function(accounts) {
         fdc.setWeiPerCHF(WEI_PER_CHF, {gas: 300000, from: accounts[2]}).then(function() {
             setTimeout(function() {
                 printStatus();
-                makeMultiDonations(5000,10, 1,1);
+                makeMultiDonations(5000,10m, 1,1);
             },3000);
         });
 
