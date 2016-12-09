@@ -106,3 +106,15 @@ function loadfromStorage (keys, successFn) {
     }
     return true;
 }
+
+function addrChecksum(addr) {
+    // convert to buffer
+    var addrBuf = EthJSUtil.toBuffer(addr);
+    // hash the buffer and take first 4 bytes
+    var checksumBuf = EthJSUtil.sha256(addrBuf).slice(0, 4);
+    return EthJSUtil.bufferToHex(checksumBuf);
+}
+
+function addrWithChecksum(addr) {
+    return addr + addrChecksum(addr).slice(2);
+}

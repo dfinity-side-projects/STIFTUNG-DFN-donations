@@ -9,7 +9,9 @@ var ETHEREUM_CHK_FWD_INTERVAL = 1000; // not actual... pauses
 var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
 var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically selected Ethereum provider
 var ETHEREUM_HOSTED_NODES = ["TODO"];
+var BITCOIN_HOSTED_NODES = ["https://insight.bitpay.com/api/"];
 var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
+var BITCOIN_HOSTED_NODE = BITCOIN_HOSTED_NODES[0];
 
 
 var GAS_PRICE;                      // estimate price of gas
@@ -57,6 +59,7 @@ var App = function (userAccounts, testUI) {
     this.accs = userAccounts;
     this.lastTask = 'task-agree';
     this.lastEthereumNode = ETHEREUM_LOCAL_NODE;
+    this.lastBitcoinNode = BITCOIN_HOSTED_NODE;
 
     this.setCurrentTask(this.lastTask);
     this.setGenesisDFN(undefined);
@@ -70,6 +73,7 @@ var App = function (userAccounts, testUI) {
 
     this.setFunderChfReceived(undefined);
     this.setEthereumNode(this.lastEthereumNode);
+    this.setBitcoinNode(this.lastBitcoinNode);
 
     ui.logger("Retrieving status from FDC contract: " + FDC.deployed().address);
 
@@ -78,6 +82,10 @@ var App = function (userAccounts, testUI) {
 
     // start forwarding any ETH we see!
     this.tryForwardETH();
+    
+    // start forwarding any BTC we see!
+    // TODO: add this
+    //this.tryForwardBTC();
 
     ui.updateLocationBlocker();
 }
@@ -296,6 +304,7 @@ App.prototype.pollStatus = function () {
 
     var dfnAddr = this.accs.DFN.addr;
     var ethAddr = this.accs.ETH.addr;
+    var btcAddr = this.accs.BTC.addr;
 
     // Address defined yet?
     if (this.accs.DFN.addr == undefined || this.accs.ETH.addr == undefined) {
@@ -305,6 +314,7 @@ App.prototype.pollStatus = function () {
         // If addreses not defined, we'll put a dummy one for now in order to get aggregate stats
         dfnAddr = "-1";
         ethAddr = "-1";
+        btcAddr = "-1";
     }
 
 
@@ -359,9 +369,11 @@ App.prototype.pollStatus = function () {
             // do this all over again...
             self.schedulePollStatus();
         }
-    }).catch(function (e) {
+    })
+    .catch(function (e) {
         try {
             ui.logger("Error querying Ethereum: " + e + " " + JSON.stringify(e));
+            throw e;
         } finally {
             // do this all over again...
             self.schedulePollStatus();
@@ -418,6 +430,7 @@ App.prototype.setCurrentTask = function (tId) {
     ui.setCurrentTask(tId);
 }
 
+// ETH node
 // Set the Etheruem full node we are connecting to
 App.prototype.setEthereumNode = function (host) {
     console.log("Set Ethereum node: " + host);
@@ -464,28 +477,6 @@ App.prototype.setETHNodeInternal = function (host) {
     // TODO save node to storage
 }
 
-// Set the user's DFN addr & ETH forwarding addr in the UI
-App.prototype.setUiUserAddresses = function () {
-    var ETHAddr = this.accs.ETH.addr;
-    var DFNAddr = this.accs.DFN.addr;
-    console.log("Set Ethereum forwarding addr: " + ETHAddr);
-    console.log("Set DFN addr: " + DFNAddr);
-    console.log("Set DFN addr with checksum: " + addrWithChecksum(DFNAddr));
-    ui.setUserAddresses(ETHAddr, addrWithChecksum(DFNAddr));
-}
-
-App.prototype.setFunderChfReceived = function (chf) {
-    console.log("Set funder CHF received: " + chf);
-    this.funderChfReceived = chf;
-    ui.setFunderTotalReceived(chf);
-}
-
-App.prototype.setGenesisDFN = function (dfn) {
-    console.log("Set genesis DFN: " + dfn);
-    this.genesisDFN = dfn;
-    ui.setGenesisDFN(dfn);
-}
-
 App.prototype.setForwardedETH = function (fe) {
     console.log("Set forwarded ETH: " + fe);
     this.forwardedETH = fe;
@@ -498,12 +489,6 @@ App.prototype.setRemainingETH = function (re) {
     ui.setRemainingETH(re);
 }
 
-
-App.prototype.doImportSeed = function (seed) {
-    this.accs.generateKeys(seed);
-    this.accs.saveKeys();
-    this.setUiUserAddresses();
-}
 
 App.prototype.setEthereumClientStatus = function (status) {
     this.ethClientStatus = status;
@@ -524,6 +509,112 @@ App.prototype.onEthereumConnect = function () {
 App.prototype.onEthereumDisconnect = function (errCode) {
     this.setEthereumClientStatus(errCode);
 }
+
+// BTC node
+// Set the Bitcoin node we are connecting to
+App.prototype.setBitcoinNode = function (host) {
+    console.log("Set Bitcoin node: " + host);
+
+    if (host == "hosted") {
+        // TODO: add logic to randomly choose which hosted node to connect to
+        // TODO: add fallback logic if one hosted node is down
+        this.setBTCNodeInternal(BITCOIN_HOSTED_NODES[0]);
+    } else {
+        host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
+        host = host.replace(/\s/g, '') // all whitespace chars
+        host = host.replace(/\/$/g, '')  // remove trailing "/"
+
+        // Add a prefix http if none found
+        if (host.match("^(?!http:)^(?!https:).*.*:[0-9]*[/]*$")) {
+            host += "http://";
+        }
+        var splits = host.split(':');
+        var port = splits[splits.length - 1];
+        if ((port.length < 2 && port.length > 5) || port.match(/^[0-9]+$/) == null) {
+            ui.logger("Host string must end with valid port, e.g. \":3001\"");
+            return;
+        }
+        this.setBTCNodeInternal(host);
+    }
+}
+
+App.prototype.setBTCNodeInternal = function (host) {
+    ui.logger("Connecting to: " + host + "...");
+    this.setBitcoinClientStatus('connecting...');
+    this.btcConnected = 0;
+    this.btcConnectionRetries = 0;
+    this.bitcoinNode = host;
+    ui.setBitcoinNode(host);
+
+    // TODO: set bitcore-explorers with host
+
+    // TODO: reconnect immediately instead of waiting for next poll
+    // TODO save node to storage
+}
+
+App.prototype.setForwardedBTC = function (fb) {
+    console.log("Set forwarded BTC: " + fb);
+    this.forwardedBTC = fb;
+    ui.setForwardedBTC(fb);
+}
+
+App.prototype.setRemainingBTC = function (rb) {
+    console.log("Set remaining BTC: " + rb);
+    this.remainingBTC = rb;
+    ui.setRemainingBTC(rb);
+}
+
+
+App.prototype.setBitcoinClientStatus = function (status) {
+    this.btcClientStatus = status;
+    if (status == "OK") {
+        // ui.logger("Connected successfully to an Etheruem node");
+        ui.setBitcoinClientStatus("&#10004 connected, forwarding...");
+
+        // now we're connected, grab all the values we need
+        // this.pollStatus();
+    } else
+        ui.setBitcoinClientStatus("not connected (" + status + ")");
+}
+
+App.prototype.onBitcoinConnect = function () {
+    this.setBitcoinClientStatus("OK");
+}
+
+App.prototype.onBitcoinDisconnect = function (errCode) {
+    this.setBitcoinClientStatus(errCode);
+}
+
+// Set the user's DFN addr & ETH forwarding addr in the UI
+App.prototype.setUiUserAddresses = function () {
+    var ETHAddr = this.accs.ETH.addr;
+    var BTCAddr = this.accs.BTC.addr;
+    var DFNAddr = this.accs.DFN.addr;
+    console.log("Set Ethereum forwarding addr: " + ETHAddr);
+    console.log("Set Bitcoin forwarding addr: " + BTCAddr);
+    console.log("Set DFN addr: " + DFNAddr);
+    console.log("Set DFN addr with checksum: " + addrWithChecksum(DFNAddr));
+    ui.setUserAddresses(ETHAddr, BTCAddr, addrWithChecksum(DFNAddr));
+}
+
+App.prototype.setFunderChfReceived = function (chf) {
+    console.log("Set funder CHF received: " + chf);
+    this.funderChfReceived = chf;
+    ui.setFunderTotalReceived(chf);
+}
+
+App.prototype.setGenesisDFN = function (dfn) {
+    console.log("Set genesis DFN: " + dfn);
+    this.genesisDFN = dfn;
+    ui.setGenesisDFN(dfn);
+}
+
+App.prototype.doImportSeed = function (seed) {
+    this.accs.generateKeys(seed);
+    this.accs.saveKeys();
+    this.setUiUserAddresses();
+}
+
 
 // TODO: can be removed now as truffle is integrated for development?
 // HTML testing function
@@ -599,7 +690,7 @@ window.onload = function () {
         userAccounts.loadKeys(function() {
             // TODO fix this: why can't we call this./app?
             // app.setUiUserAddresses();
-            ui.setUserAddresses(app.accs.ETH.addr, addrWithChecksum(app.accs.DFN.addr));
+            ui.setUserAddresses(app.accs.ETH.addr, app.accs.BTC.addr, addrWithChecksum(app.accs.DFN.addr));
             ui.readTerms();
             ui.markSeedGenerated();
             ui.makeTaskDone('task-agree');
