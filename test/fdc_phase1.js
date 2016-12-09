@@ -144,7 +144,7 @@ contract('FDC', function(accounts) {
                     console.log("txFee: " + txFee);
                     console.log("amount: " + value);
                     //var txData     = "0x" + packArg(donateAs, app.DFNAcc.addr);
-                    fdc.donateAs(DFNAddr,  {
+                    fdc.donateAsWithChecksum(DFNAddr, addrChecksum(DFNAddr), {
                         from: ETHForwardAddr,
                         value: value,
                         gasPrice: gasPrice,
