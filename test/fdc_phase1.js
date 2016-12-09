@@ -72,7 +72,7 @@ contract('FDC', function(accounts) {
         fdc.setWeiPerCHF(WEI_PER_CHF, {gas: 300000, from: accounts[2]}).then(function() {
             setTimeout(function() {
                 printStatus();
-                makeMultiDonations(5000,20, 1,1);
+                makeMultiDonations(5000,10, 1,1);
             },3000);
         });
 
@@ -92,23 +92,27 @@ contract('FDC', function(accounts) {
 
         /* Make multiple donations per */
         function makeMultiDonations(amount, times, interval, randomizedAmount) {
-            p = makeDonation(amount);
-            for (var i = 0; i < times; i++) {
-                p = p.then(function(lastWeiDonated){
+            var onDonated = function(lastWeiDonated) {
+                return new Promise(function(resolve, reject) {
+                    console.log("onDonated() - donated amount [local value] " + lastWeiDonated);
                     weiDonated += lastWeiDonated;
                     chfCentsDonated += (lastWeiDonated * 100) / WEI_PER_CHF;
                     var fdc_chfCentsDonated, fdc_dfnTokens;
                     // Assert local donation record = FDC records
-
-                    var ret =  makeDonation(amount);
                     getStatus().then(function (res) {
                         fdc_chfCentsDonated = res[8].valueOf();
+                        console.log("  - onDonated() - fdc donated amount: " + fdc_chfCentsDonated);
                         fdc_dfnTokens = res[4].valueOf();
                         assert.equal(chfCentsDonated, fdc_chfCentsDonated);
-
+                        resolve(true);
                     });
-                    return ret;
                 });
+            };
+
+            var donateAndValidate = function() {return makeDonation(amount).then(onDonated);};
+            p = donateAndValidate();
+            for (var i = 0; i < times - 1; i++) {
+                p = p.then(donateAndValidate);
             }
         }
 
@@ -150,13 +154,14 @@ contract('FDC', function(accounts) {
                         gasPrice: gasPrice,
                         gas: FDCDonateGasMax
                     }).then(function (txID) {
-                        console.log("makeDonation()  tx id: " + txID);
+                        console.log("makeDonation() completed. tx id: " + txID);
                         // verify donation was registered
                         fdc.getStatus(2, DFNAddr, ETHForwardAddr).then(function (res) {
                             var donationCount = res[3];  // total individual donations made (a count)
                             assert.equal(donationCount.valueOf(), ++totalDonationCount, "Donation count not correct");
+                            resolve(web3.toWei(amount, "ether") - txFee);
                         });
-                        resolve(web3.toWei(amount, "ether") - txFee);
+
                     }).catch(function (e) {
                         console.log("Error sending ETH forwarding tx: " + e);
                         reject();
