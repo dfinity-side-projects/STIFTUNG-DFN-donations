@@ -620,15 +620,3 @@ function packArg(ABISig, arg) {
 function packArg2(ABISig, arg20, arg4) {
     return ABISig + "000000000000000000000000" + arg20.replace("0x", "") + arg4.replace("0x", "");
 }
-
-function addrChecksum(addr) {
-    // convert to buffer
-    var addrBuf = EthJSUtil.toBuffer(addr);
-    // hash the buffer and take first 4 bytes
-    var checksumBuf = EthJSUtil.sha256(addrBuf).slice(0, 4); 
-    return EthJSUtil.bufferToHex(checksumBuf);
-}
-
-function addrWithChecksum(addr) {
-    return addr + addrChecksum(addr).slice(2);
-}
