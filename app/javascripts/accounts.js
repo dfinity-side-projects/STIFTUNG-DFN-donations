@@ -70,7 +70,7 @@ Accounts.prototype.generateKeys = function (seedStr) {
 
     var BTCAddr = new this.bitcore.Address(BTCPriv.publicKey, this.bitcore.Networks.livenet);
     this.BTC.addr = BTCAddr.toString();
-    this.BTC.priv = "0x" + BTCPriv.toObject().privateKey;
+    this.BTC.priv = BTCPriv.toObject().privateKey;
 }
 
 // Write the user's keys to storage e.g. Chrome storage
@@ -79,9 +79,11 @@ Accounts.prototype.saveKeys = function () {
         "dfn-address": this.DFN.addr,
         "eth-address": this.ETH.addr,
         "eth-private-key": this.ETH.priv,
+        "btc-address": this.BTC.addr,
+        "btc-private-key": this.BTC.priv,
     }, function () {
-        ui.logger("DFN and ETH address successfully saved in Chrome storage.");
-        console.log("DFN and ETH address successfully saved in Chrome storage.");
+        ui.logger("DFN, BTC and ETH address successfully saved in Chrome storage.");
+        console.log("DFN, BTC and ETH address successfully saved in Chrome storage.");
     });
 }
 
@@ -93,15 +95,23 @@ Accounts.prototype.loadKeys = function (successFn) {
     loadfromStorage([
         "dfn-address",
         "eth-address",
-        "eth-private-key"], function (s) {
+        "eth-private-key",
+        "btc-address",
+        "btc-private-key",
+    ], function (s) {
         console.log(s);
-        if (s["dfn-address"] && s["eth-address"] && s["eth-private-key"]) {
+        if (s["dfn-address"]
+            && s["eth-address"] && s["eth-private-key"]
+            && s["btc-address"] && s["btc-private-key"]
+           ) {
             self.DFN.addr = s["dfn-address"];
             self.ETH.addr = s["eth-address"];
             self.ETH.priv = s["eth-private-key"];
+            self.BTC.addr = s["btc-address"];
+            self.BTC.priv = s["btc-private-key"];
             successFn();
         }
-        ui.logger("DFN and ETH address loaded successfully: " + self.DFN.addr + " / " + self.ETH.addr);
+        ui.logger("DFN, BTC and ETH address loaded successfully: " + self.DFN.addr   + " / " + self.BTC.addr + " / " + self.ETH.addr);
     });
 }
 
