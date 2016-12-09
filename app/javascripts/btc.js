@@ -139,31 +139,6 @@ BitcoinHelper.prototype.calculateFee = function(utxos) {
 }
 
 
-BitcoinHelper.prototype.makeExternalToClientTx = function() {
-  // Move funds from an external testnet source to our client address
-  var sourcePk = bitcore.PrivateKey('675a600b9e90ff786fd7966b3a0b84ba787d88ab57cafa4242a28d080f894271')
-  var amount = 1e8
-
-  const utxo = bitcore.Transaction.UnspentOutput(    {
-        "address": "mpraKTVqqgTxUpYDu1yHakrGLogRcYt5Xo",
-        "amount": 47.9992,
-        "confirmations": 1,
-        "height": 1057233,
-        "satoshis": 4799920000,
-        "scriptPubKey": "76a914666f1b58521631cd03d0562e631858cce7db8c0488ac",
-        "txid": "dbb3bbbbea050cd7e080756d78ddb5a5e3a8d685bac9591c4046d9de71aa4a36",
-        "vout": 1
-    })
-
-  return new bitcore.Transaction()
-    .from(utxo)
-    .to(this.clientAddress, amount)
-    .change(sourcePk.toAddress())
-    .sign(sourcePk)
-    .toString('hex')
-}
-
-
 function utxoSum(utxos) {
   return utxos.reduce(function(total, nextUtxo) {
     return total + nextUtxo.satoshis
