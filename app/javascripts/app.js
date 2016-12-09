@@ -9,9 +9,13 @@ var ETHEREUM_CHK_FWD_INTERVAL = 1000; // not actual... pauses
 var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
 var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically selected Ethereum provider
 var ETHEREUM_HOSTED_NODES = ["TODO"];
-var BITCOIN_HOSTED_NODES = ["https://insight.bitpay.com/api/"];
+var BITCOIN_HOSTED_NODES = ["hosted"];
 var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
 var BITCOIN_HOSTED_NODE = BITCOIN_HOSTED_NODES[0];
+
+var Insight = require('bitcore-explorers').Insight;
+var bitcore = require('bitcore-lib');
+var BITCOIN_NETWORK = bitcore.Networks.testnet; // TODO: change to livenet
 
 
 var GAS_PRICE;                      // estimate price of gas
@@ -546,7 +550,9 @@ App.prototype.setBTCNodeInternal = function (host) {
     this.bitcoinNode = host;
     ui.setBitcoinNode(host);
 
-    // TODO: set bitcore-explorers with host
+    this.btcProvider = this.bitcoinNode === 'hosted' ?
+      new Insight(this.bitcoinNode, BITCOIN_NETWORK):
+      new Insight(BITCOIN_NETWORK);
 
     // TODO: reconnect immediately instead of waiting for next poll
     // TODO save node to storage

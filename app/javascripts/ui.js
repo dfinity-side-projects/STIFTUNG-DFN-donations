@@ -68,8 +68,6 @@ UI.prototype.setRemainingETH = function (re) {
 // Set the forwarding address the user should send ETH donations to
 // Set the DFN address the user might want ot communicate to  Dfinity Stiftung
 UI.prototype.setUserAddresses = function (efa, bfa, dfa) {
-  console.log(bfa)
-  console.trace()
     var ethExt = getChildWithClass(document.getElementById("eth-forwarding-address"), "eth-address");
     var ethFor = document.getElementById("eth-forwarding-address-explained");
     var btcExt = getChildWithClass(document.getElementById("btc-forwarding-address"), "eth-address");

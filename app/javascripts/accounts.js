@@ -1,9 +1,8 @@
 // if seedStr == null then a new seed is generated, otherwise
 // keys are derived deterministically from the passed seed if it's valid
 var Accounts = function (seedStr) {
-    this.Mnemonic = BitcoreMnemonic;
-    var dummyCode = new this.Mnemonic(this.Mnemonic.Words.ENGLISH);
-    this.bitcore = dummyCode.getBitcore();
+    this.Mnemonic = require('bitcore-mnemonic');
+    this.bitcore = require('bitcore-lib')
 
     // single quote == hardened derivation
     this.HDPathDFN = "m/44'/223'/0'/0/0"; // key controlling DFN allocation
