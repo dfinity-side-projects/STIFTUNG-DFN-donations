@@ -87,22 +87,42 @@ contract('FDC', function (accounts) {
         var WEI_PER_CHF = web3.toWei("0.1", "ether");
 
 
-        printStatus();
+        var PHASE0_CAP, PHASE1_CAP;
+        // printStatus();
 
 
         // Below's the main test flow.
         var test= function() {
-            printStatus();
-            var t = makeMultiDonations(5000, 5, 1, 1);
+            // printStatus();
+            initConstants();
+            var t = makeMultiDonations(25000, 5, 1, 1);
             t = t.then(function() { return advanceToPhase(4,0) });
-            t = t.then(function() { return makeMultiDonations(2500, 5, 1,1 ) });
+            t = t.then(function() { return makeMultiDonations(200000, 5, 1,1 ) });
         }
-
         // Set exchange rate first
         var p = fdc.setWeiPerCHF(WEI_PER_CHF, {gas: 300000, from: accounts[2]});
 
         // Wait a few seconds (unstable if doesn't wait), before making donations
         p = p.then(function () { setTimeout(function () { test(); }, 3000); });
+
+
+
+        ///////////////  FUNCTIONS /////////////////////////////////
+        function initConstants() {
+            return new Promise(function (resolve, reject) {
+                var f = fdc.phase0Cap();
+                f = f.then(function (c) {
+                    PHASE0_CAP = c
+                });
+                f = f.then(fdc.phase1Cap);
+                f = f.then(function (c) {
+                    PHASE1_CAP = c
+                });
+                f = f.then(function (c) {
+                    console.log(" CAPS: " + PHASE0_CAP + ", " + PHASE1_CAP);
+                });
+            });
+        }
 
 
         function printStatus() {
@@ -123,26 +143,60 @@ contract('FDC', function (accounts) {
         function onDonated (lastWeiDonated) {
             return new Promise(function (resolve, reject) {
                 // wait(1000, false);
-                console.log("[t: " + getVmTime() + "] onDonated() - last donated amount [local value] " + lastWeiDonated);
+                // console.log("[t: " + getVmTime() + "] onDonated() - last donated amount [local value] " + lastWeiDonated);
                 weiDonated += lastWeiDonated;
-                chfCentsDonated[currentPhase] += (lastWeiDonated * 100) / WEI_PER_CHF;
+                chfCentsDonated[currentPhase] += Math.ceil((lastWeiDonated * 100) / WEI_PER_CHF);
+
                 var fdc_chfCentsDonated, fdc_dfnTokens;
                 // Assert local donation record = FDC records
                 getStatus().then(function (res) {
                     fdc_chfCentsDonated = res[8].valueOf();
-                    console.log("  - onDonated() - fdc donated amount: " + fdc_chfCentsDonated);
+                    console.log(" - Validating FDC donated amount: " + fdc_chfCentsDonated);
                     fdc_dfnTokens = res[4].valueOf();
                     assert.equal(chfCentsDonated[currentPhase], fdc_chfCentsDonated);
+                    console.log(" - Assert success: " + chfCentsDonated[currentPhase] + " ==" + fdc_chfCentsDonated)
+
+
                     resolve(true);
                 });
             });
         };
 
-        /* Make multiple donations per */
+        /*
+         * Check if the current phase end time has been adjusted based on the target reach status
+         */
+        function assertPhaseEndTime() {
+            return new Promise(function (resolve, reject) {
+                getStatus().then(function (res) {
+                    var startTime = res[5];      // expected start time of specified donation phase
+                    var endTime = res[6];        // expected end time of specified donation phase
+
+                    var phaseCap = currentPhase==0 ? PHASE0_CAP : PHASE1_CAP;
+                    console.log(" - Asserting if remaining end time less than 1hr if cap reached: chfCents = " + chfCentsDonated[currentPhase] + " // cap = " + phaseCap);
+                    if (chfCentsDonated[currentPhase] >= phaseCap) {
+                        console.log(" --> Target reached. End time should shorten to < 1hr");
+                        assert.isAtMost(endTime - getVmTime(), 3600);
+                        console.log(" --> Assert success. Remaining time: " + (endTime - getVmTime()));
+                        resolve();
+                    } else  {
+                        console.log(" --> Target NOT reached. End time should keep as is.");
+
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        /*
+         *  Make multiple donations for specified times, and per interval.
+         *  TODO: Also support randomizedAmount if true.
+         *
+         */
         function makeMultiDonations(amount, times, interval, randomizedAmount) {
             return new Promise(function (resolve, reject) {
+                console.log ("\n  ==== [PHASE " + currentPhase + "] " + "  Making " + times + " x "  + amount + " Ether donations  ===");
                 var donateAndValidate = function () {
-                    return makeDonation(amount).then(onDonated);
+                    return makeDonation(amount).then(onDonated).then(assertPhaseEndTime);
                 };
                 p = donateAndValidate();
                 for (var i = 0; i < times - 1; i++) {
@@ -157,7 +211,7 @@ contract('FDC', function (accounts) {
          Fast forward VM time to specified time. If already there then ignore
          */
         function advanceVmTimeTo(time) {
-            console.log("//**// Time advanced to " + time);
+            console.log(" \n *** Time advanced to " + time);
             web3.currentProvider.send({method: "evm_increaseTime", params: [time - getVmTime()]})
         }
 
@@ -191,9 +245,9 @@ contract('FDC', function (accounts) {
 
                     var target = startTime - offset;
                     advanceVmTimeTo(target);
-                    if (phase == 2) {
+                    if (phase >= 2 && phase <= 3) {
                         currentPhase = 0;
-                    } else if (phase == 4) {
+                    } else if (phase >= 4) {
                         currentPhase = 1;
                     }
                     console.log(" *** PHASE SHIFTED TO: " + currentPhase);
@@ -239,12 +293,11 @@ contract('FDC', function (accounts) {
                 if (ETHForwardAddr == null || web3.toBigNumber(balance).lt(minBalance)) {
                     assert.isOk(false, 'not enough balance to forward');
                 } else {
-                    console.log("enough balance for forwarding: " + web3.fromWei(balance, 'ether') + " ETH");
+                    // console.log("Enough balance for forwarding: " + web3.fromWei(balance, 'ether') + " ETH");
                     var accNonce = web3.eth.getTransactionCount(ETHForwardAddr);
                     var txFee = web3.toBigNumber(gasPrice).mul(web3.toBigNumber(FDCDonateGasMax));
                     var value = web3.toBigNumber(web3.toWei(amount, 'ether')).sub(txFee); // TODO: all ether: balance.sub(txFee);
-                    console.log("txFee: " + txFee);
-                    console.log("amount: " + value);
+                    // console.log("\ntxFee: " + txFee + "  // amount: " + value);
                     //var txData     = "0x" + packArg(donateAs, app.DFNAcc.addr);
                     fdc.donateAs(DFNAddr, {
                         from: ETHForwardAddr,
@@ -252,12 +305,13 @@ contract('FDC', function (accounts) {
                         gasPrice: gasPrice,
                         gas: FDCDonateGasMax
                     }).then(function (txID) {
-                        console.log("makeDonation() completed. tx id: " + txID);
+                        console.log("\n makeDonation() " + value + " Ether completed. tx id: " + txID);
                         // verify donation was registered
                         getStatus().then(function (res) {
                             var donationCount = res[3];  // total individual donations made (a count)
                             assert.equal(donationCount.valueOf(), ++totalDonationCount, "Donation count not correct");
-                            resolve(web3.toWei(amount, "ether") - txFee);
+                            var amt = Math.ceil(web3.toWei(amount, "ether") - txFee);
+                            resolve(amt);
                         });
 
                     }).catch(function (e) {
