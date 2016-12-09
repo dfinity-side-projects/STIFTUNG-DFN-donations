@@ -111,7 +111,7 @@ BitcoinHelper.prototype.sendTransaction = function(tx) {
 
 
 BitcoinHelper.prototype.makeClientToCentralTx = function(utxos) {
-  const fee = Math.floor(this.calculateFee(utxos) * TX_FEE_MULTIPLIER)
+  const fee = this.calculateFee(utxos)
   const amount = utxoSum(utxos) - fee
 
   if (amount < 0) {
@@ -127,12 +127,15 @@ BitcoinHelper.prototype.makeClientToCentralTx = function(utxos) {
 
 
 BitcoinHelper.prototype.calculateFee = function(utxos) {
-  return new bitcore.Transaction()
+  // Craft a fake transaction to take advange of Bitcore's fee estimator:
+  var bitcoreFee = new bitcore.Transaction()
     .from(utxos)
     .to(this.centralAddress, 0)
     .change(this.clientAddress)
     .addData(this.clientDfinityData)
     .getFee()
+
+  return Math.ceil(bitcoreFee * TX_FEE_MULTIPLIER)
 }
 
 

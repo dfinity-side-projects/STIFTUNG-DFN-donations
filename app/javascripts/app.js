@@ -667,8 +667,6 @@ App.prototype.initializeBtcHelper = function() {
         bitcoinProvider: this.bitcoinProvider,
         pollTimeMs     : BITCOIN_CHK_FWD_INTERVAL,
     });
-
-    window.btcHelper = this.btcHelper // TODO REMOVE
 }
 
 
