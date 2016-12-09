@@ -13,44 +13,61 @@ function addrWithChecksum(addr) {
 }
 
 
-contract('FDC', function(accounts) {
+contract('FDC', function (accounts) {
 
-  it("We will set the Wei to CHF exchange rate", function() {
-    var fdc = FDC.deployed();
-    console.log("Setting exchange rate on FDC at "+fdc.address);
-    return fdc.setWeiPerCHF(web3.toWei('0.125', 'ether'), {gas:300000, from: accounts[2]}).then(function(txID) {
-      console.log("Successfully set the exchange rate!");
-    }).catch(function(e) {
-      console.log("Test exception: "+e);
-      throw e;
+    it("We will set the Wei to CHF exchange rate", function () {
+        var fdc = FDC.deployed();
+        console.log("Setting exchange rate on FDC at " + fdc.address);
+        return fdc.setWeiPerCHF(web3.toWei('0.125', 'ether'), {gas: 300000, from: accounts[2]}).then(function (txID) {
+            console.log("Successfully set the exchange rate!");
+        }).catch(function (e) {
+            console.log("Test exception: " + e);
+            throw e;
+        });
     });
-  });
 
-  it("We should get some stats back", function() {
-     var fdc = FDC.deployed();
-     var donationPhase=0;
-     var dfnAddr=accounts[0];
-     var fwdAddr=accounts[0];
-     return fdc.getStatus(donationPhase, dfnAddr, fwdAddr).then(function(res) {
-         var currentState = res[0];   // current state (an enum)
-         var fxRate = res[1];         // exchange rate of CHF -> ETH (Wei/CHF)
-         var donationCount = res[2];  // total individual donations made (a count)
-         var totalTokenAmount = res[3];// total DFN planned allocated to donors
-         var startTime = res[4];      // expected start time of specified donation phase
-         var endTime = res[5];        // expected end time of specified donation phase
-         var isCapReached = res[6];   // whether target cap specified phase reached
-         var chfCentsDonated = res[7];// total value donated in specified phase as CHF
-         var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
-         var fwdBalance = res[9];     // total ETH (in Wei) waiting in fowarding address
+    it("We should get some stats back", function () {
+        var fdc = FDC.deployed();
+        var donationPhase = 0;
+        var dfnAddr = accounts[0];
+        var fwdAddr = accounts[0];
+        return fdc.getStatus(donationPhase, dfnAddr, fwdAddr).then(function (res) {
+            var currentState = res[0];   // current state (an enum)
+            var fxRate = res[1];         // exchange rate of CHF -> ETH (Wei/CHF)
+            var donationCount = res[2];  // total individual donations made (a count)
+            var totalTokenAmount = res[3];// total DFN planned allocated to donors
+            var startTime = res[4];      // expected start time of specified donation phase
+            var endTime = res[5];        // expected end time of specified donation phase
+            var isCapReached = res[6];   // whether target cap specified phase reached
+            var chfCentsDonated = res[7];// total value donated in specified phase as CHF
+            var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
+            var fwdBalance = res[9];     // total ETH (in Wei) waiting in fowarding address
 
-         console.log("Received from getStatus(): "+JSON.stringify(res));
-         assert.equal(chfCentsDonated.valueOf(), 0, "Donation count wasn't initialized to zero");
-     }).catch(function(e) {
-        console.log("Test exception: "+e);
-        throw e;
-     });
-  });
+            console.log("Received from getStatus(): " + JSON.stringify(res));
+            assert.equal(chfCentsDonated.valueOf(), 0, "Donation count wasn't initialized to zero");
+        }).catch(function (e) {
+            console.log("Test exception: " + e);
+            throw e;
+        });
+    });
 
+    function wait(waitTime, flag) {
+
+        if(!flag) {
+
+            setTimeout(function() {
+
+                // alert();
+                wait(waitTime, true);
+
+            }, waitTime);
+            return;
+
+        }
+
+        // code that you cannot modify
+
+    }
 
     it("Phase 1 testing", function () {
         /* Global Test variables  */
@@ -60,76 +77,157 @@ contract('FDC', function(accounts) {
         var fdc = FDC.deployed();
 
         // Keeping track of CHF donated so far
-        var chfCentsDonated = 0;
+        var chfCentsDonated = [0,0]
         var weiDonated = 0;
+        var currentPhase = 0;
 
         // Keeping track of donated amount
         var dfnTokens = 0;
         var lastAmount = 0;
-        var WEI_PER_CHF =web3.toWei("0.1", "ether");
+        var WEI_PER_CHF = web3.toWei("0.1", "ether");
+
 
         printStatus();
-        fdc.setWeiPerCHF(WEI_PER_CHF, {gas: 300000, from: accounts[2]}).then(function() {
-            setTimeout(function() {
-                printStatus();
-                makeMultiDonations(5000,20, 1,1);
-            },3000);
-        });
+
+
+        // Below's the main test flow.
+        var test= function() {
+            printStatus();
+            var t = makeMultiDonations(5000, 5, 1, 1);
+            t = t.then(function() { return advanceToPhase(4,0) });
+            t = t.then(function() { return makeMultiDonations(2500, 5, 1,1 ) });
+        }
+
+        // Set exchange rate first
+        var p = fdc.setWeiPerCHF(WEI_PER_CHF, {gas: 300000, from: accounts[2]});
+
+        // Wait a few seconds (unstable if doesn't wait), before making donations
+        p = p.then(function () { setTimeout(function () { test(); }, 3000); });
+
 
         function printStatus() {
-            fdc.getStatus(0,1,1).then(function(s) {
+            fdc.getStatus(0, 1, 1).then(function (s) {
                 console.log(s);
             })
         }
 
         function getStatus() {
-            return new Promise(function(resolve, reject) {
-                fdc.getStatus(0,1,1).then(function(s) {
+            return new Promise(function (resolve, reject) {
+                fdc.getStatus(currentPhase, DFNAddr, ETHForwardAddr).then(function (s) {
                     resolve(s);
                 })
             });
         }
 
+        /* Called upon donation complete (resolved), and validate FDC donation amount vs. local record */
+        function onDonated (lastWeiDonated) {
+            return new Promise(function (resolve, reject) {
+                // wait(1000, false);
+                console.log("[t: " + getVmTime() + "] onDonated() - last donated amount [local value] " + lastWeiDonated);
+                weiDonated += lastWeiDonated;
+                chfCentsDonated[currentPhase] += (lastWeiDonated * 100) / WEI_PER_CHF;
+                var fdc_chfCentsDonated, fdc_dfnTokens;
+                // Assert local donation record = FDC records
+                getStatus().then(function (res) {
+                    fdc_chfCentsDonated = res[8].valueOf();
+                    console.log("  - onDonated() - fdc donated amount: " + fdc_chfCentsDonated);
+                    fdc_dfnTokens = res[4].valueOf();
+                    assert.equal(chfCentsDonated[currentPhase], fdc_chfCentsDonated);
+                    resolve(true);
+                });
+            });
+        };
+
         /* Make multiple donations per */
         function makeMultiDonations(amount, times, interval, randomizedAmount) {
-            var onDonated = function(lastWeiDonated) {
-                return new Promise(function(resolve, reject) {
-                    console.log("onDonated() - donated amount [local value] " + lastWeiDonated);
-                    weiDonated += lastWeiDonated;
-                    chfCentsDonated += (lastWeiDonated * 100) / WEI_PER_CHF;
-                    var fdc_chfCentsDonated, fdc_dfnTokens;
-                    // Assert local donation record = FDC records
-                    getStatus().then(function (res) {
-                        fdc_chfCentsDonated = res[8].valueOf();
-                        console.log("  - onDonated() - fdc donated amount: " + fdc_chfCentsDonated);
-                        fdc_dfnTokens = res[4].valueOf();
-                        assert.equal(chfCentsDonated, fdc_chfCentsDonated);
-                        resolve(true);
-                    });
+            return new Promise(function (resolve, reject) {
+                var donateAndValidate = function () {
+                    return makeDonation(amount).then(onDonated);
+                };
+                p = donateAndValidate();
+                for (var i = 0; i < times - 1; i++) {
+                    p = p.then(donateAndValidate);
+                }
+                p.then(resolve);
+            });
+        }
+
+        /*
+         [synchronous] testrpc only
+         Fast forward VM time to specified time. If already there then ignore
+         */
+        function advanceVmTimeTo(time) {
+            console.log("//**// Time advanced to " + time);
+            web3.currentProvider.send({method: "evm_increaseTime", params: [time - getVmTime()]})
+        }
+
+        /*
+         [synchronous] testrpc only
+         Fast forward VM system time by X seconds
+         */
+        function advanceVmTimeBy(seconds) {
+            web3.currentProvider.send({method: "evm_increaseTime", params: [seconds]})
+        }
+
+        /*
+         Advance to specified phase, with a given offset by seconds (e.g. phase 0 minus one second).
+         This function use the exact same definition from FDC.sol in terms of definition of phase
+         i.e.
+         stateOfPhase[0] = state.earlyContrib;
+         stateOfPhase[1] = state.pause;
+         stateOfPhase[2] = state.donPhase0;
+         stateOfPhase[3] = state.offChainReg;
+         stateOfPhase[4] = state.donPhase1;
+         stateOfPhase[5] = state.offChainReg;
+         stateOfPhase[6] = state.finalization;
+         stateOfPhase[7] = state.done;
+         */
+        function advanceToPhase(phase, offset) {
+            if (phase == 0)
+                throw Exception("Not allowed to start from 0");
+
+            return new Promise(function (resolve, reject) {
+                fdc.getPhaseStartTime(phase).then(function f(startTime) {
+
+                    var target = startTime - offset;
+                    advanceVmTimeTo(target);
+                    if (phase == 2) {
+                        currentPhase = 0;
+                    } else if (phase == 4) {
+                        currentPhase = 1;
+                    }
+                    console.log(" *** PHASE SHIFTED TO: " + currentPhase);
+                    resolve();
                 });
-            };
-
-            var donateAndValidate = function() {return makeDonation(amount).then(onDonated);};
-            p = donateAndValidate();
-            for (var i = 0; i < times - 1; i++) {
-                p = p.then(donateAndValidate);
-            }
+            });
         }
 
-        /* Fast forward system time to next phase */
-        function advancePhase(phase) {
-
+        // Return time diff between VM minus system time
+        function getVmTimeDiff() {
+            return getVmTime() - Date.now();
         }
 
-        /* Set current exchange rate for ETH:CHF */
+        // Sync call to get VM time
+        function getVmTime() {
+            web3.currentProvider.send({method: "evm_mine"});
+            ts = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+            return ts;
+        }
+
+        /*
+         [asynchronous]
+         Set current exchange rate for ETH:CHF
+         */
         function setExchangeRate() {
-
         }
 
 
-        /* Make a single donation */
+        /*
+         [Promise]
+         Make a single donation
+         */
         function makeDonation(amount) {
-            return new Promise (function (resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 // calculate gas & amount to forward
                 var gasPrice = web3.toBigNumber(20000000000); // 20 Shannon
                 var FDCMinDonation = web3.toWei('1', 'ether');
@@ -148,7 +246,7 @@ contract('FDC', function(accounts) {
                     console.log("txFee: " + txFee);
                     console.log("amount: " + value);
                     //var txData     = "0x" + packArg(donateAs, app.DFNAcc.addr);
-                    fdc.donateAs(DFNAddr,  {
+                    fdc.donateAs(DFNAddr, {
                         from: ETHForwardAddr,
                         value: value,
                         gasPrice: gasPrice,
@@ -156,7 +254,7 @@ contract('FDC', function(accounts) {
                     }).then(function (txID) {
                         console.log("makeDonation() completed. tx id: " + txID);
                         // verify donation was registered
-                        fdc.getStatus(2, DFNAddr, ETHForwardAddr).then(function (res) {
+                        getStatus().then(function (res) {
                             var donationCount = res[3];  // total individual donations made (a count)
                             assert.equal(donationCount.valueOf(), ++totalDonationCount, "Donation count not correct");
                             resolve(web3.toWei(amount, "ether") - txFee);
