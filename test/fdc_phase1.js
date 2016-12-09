@@ -72,7 +72,7 @@ contract('FDC', function(accounts) {
         fdc.setWeiPerCHF(WEI_PER_CHF, {gas: 300000, from: accounts[2]}).then(function() {
             setTimeout(function() {
                 printStatus();
-                makeMultiDonations(5000,10m, 1,1);
+                makeMultiDonations(5000,20, 1,1);
             },3000);
         });
 
@@ -148,7 +148,7 @@ contract('FDC', function(accounts) {
                     console.log("txFee: " + txFee);
                     console.log("amount: " + value);
                     //var txData     = "0x" + packArg(donateAs, app.DFNAcc.addr);
-                    fdc.donateAsWithChecksum(DFNAddr, addrChecksum(DFNAddr), {
+                    fdc.donateAs(DFNAddr,  {
                         from: ETHForwardAddr,
                         value: value,
                         gasPrice: gasPrice,
