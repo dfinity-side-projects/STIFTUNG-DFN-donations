@@ -221,7 +221,7 @@ body.modal-open {
     float: right;
 }
 
-#eth-forwarding-address, #genesis-dfinities {
+#btc-forwarding-address, #eth-forwarding-address, #genesis-dfinities {
     text-align: center;
     padding-bottom: 40px;
 }
@@ -244,7 +244,7 @@ body.modal-open {
     margin: 5px;
 }
 
-#eth-forwarding-address .eth-address, #eth-forwarding-address .eth-address * {
+#btc-forwarding-address .eth-address, #eth-forwarding-address .eth-address, #eth-forwarding-address .eth-address * {
     font-size: 20px;
 }
 
@@ -268,7 +268,7 @@ body.modal-open {
     color: white;
 }
 
-#eth-forwarding-address .legend, #genesis-dfinities .legend {
+#btc-forwarding-address .legend, #eth-forwarding-address .legend, #genesis-dfinities .legend {
     font-size: 18px;
     padding-top: 10px;
     /*color: #33E9FF;*/
@@ -527,6 +527,11 @@ div.important-notes {
     background-color: #4e4e4e;
     padding: 10 20 10 20px;
     margin-bottom: 10px;
+}
+
+
+.btc-host {
+    cursor: pointer;
 }
 
 .eth-host {
