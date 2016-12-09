@@ -4,6 +4,7 @@ module.exports = {
     "app.js": [
       "javascripts/util.js",
       "javascripts/accounts.js",
+      "javascripts/btc.js",
       "javascripts/ui.js",
       "javascripts/app.js"
     ],
@@ -35,7 +36,7 @@ module.exports = {
   "development": {
     network_id: "default",
     host: "localhost",
-    port: 8545    
+    port: 8545
   }
 }
 };

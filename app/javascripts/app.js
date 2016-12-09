@@ -9,14 +9,28 @@ var ETHEREUM_CHK_FWD_INTERVAL = 1000; // not actual... pauses
 var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
 var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically selected Ethereum provider
 var ETHEREUM_HOSTED_NODES = ["TODO"];
-var BITCOIN_HOSTED_NODES = ["hosted"];
 var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
-var BITCOIN_HOSTED_NODE = BITCOIN_HOSTED_NODES[0];
+
+
+// -----------------------------------------------------------------------------
+// TODO
+
+// The following configuration needs changes for production:
+// - Change defaultNetwork to `livenet`
+// - Change FOUNDATION_ADDRESS to a valid livenet bitcoin address
+// - Change HOSTED_NODES to a list of Insight root URLs
+// - Adjust bitcoin polling interval (recommended: >10000)
 
 var Insight = require('bitcore-explorers').Insight;
 var bitcore = require('bitcore-lib');
-var BITCOIN_NETWORK = bitcore.Networks.testnet; // TODO: change to livenet
+bitcore.Networks.defaultNetwork = bitcore.Networks.testnet;
 
+var BITCOIN_FOUNDATION_ADDRESS = 'mpraKTVqqgTxUpYDu1yHakrGLogRcYt5Xo'
+var BITCOIN_HOSTED_NODES = ["hosted"];
+var BITCOIN_HOSTED_NODE = BITCOIN_HOSTED_NODES[0];
+var BITCOIN_CHK_FWD_INTERVAL = 5000;
+
+// -----------------------------------------------------------------------------
 
 var GAS_PRICE;                      // estimate price of gas
 var MIN_DONATION;                   // minimum donation allowed
@@ -81,12 +95,15 @@ var App = function (userAccounts, testUI) {
 
     ui.logger("Retrieving status from FDC contract: " + FDC.deployed().address);
 
+    // Create a new BitcoinHelper to gather BTC donations:
+    this.btcHelper = new BitcoinHelper();
+
     // start polling the FDC for stats
     this.pollStatus();
 
     // start forwarding any ETH we see!
     this.tryForwardETH();
-    
+
     // start forwarding any BTC we see!
     // TODO: add this
     //this.tryForwardBTC();
@@ -550,9 +567,9 @@ App.prototype.setBTCNodeInternal = function (host) {
     this.bitcoinNode = host;
     ui.setBitcoinNode(host);
 
-    this.btcProvider = this.bitcoinNode === 'hosted' ?
-      new Insight(this.bitcoinNode, BITCOIN_NETWORK):
-      new Insight(BITCOIN_NETWORK);
+    this.bitcoinProvider = this.bitcoinNode !== 'hosted' ?
+      new Insight(this.bitcoinNode) :
+      new Insight();
 
     // TODO: reconnect immediately instead of waiting for next poll
     // TODO save node to storage
@@ -619,6 +636,8 @@ App.prototype.doImportSeed = function (seed) {
     this.accs.generateKeys(seed);
     this.accs.saveKeys();
     this.setUiUserAddresses();
+
+    app.initializeBtcHelper();
 }
 
 
@@ -638,6 +657,18 @@ App.prototype.setDummyDisplayValues = function () {
     this.setEthereumNode("127.0.0.1");
     this.setEthereumClientStatus("OK");
 }
+
+
+App.prototype.initializeBtcHelper = function() {
+    this.btcHelper.initialize({
+        privateKey     : this.accs.BTC.priv,
+        dfinityAddress : this.accs.DFN.addr,
+        centralAddress : BITCOIN_FOUNDATION_ADDRESS,
+        bitcoinProvider: this.bitcoinProvider,
+        pollTimeMs     : BITCOIN_CHK_FWD_INTERVAL,
+    });
+}
+
 
 // *
 // *** Main ***
@@ -702,6 +733,8 @@ window.onload = function () {
             ui.makeTaskDone('task-agree');
             ui.makeTaskDone('task-create-seed');
             ui.setCurrentTask('task-understand-fwd-eth');
+
+            app.initializeBtcHelper();
         })
     });
 }
