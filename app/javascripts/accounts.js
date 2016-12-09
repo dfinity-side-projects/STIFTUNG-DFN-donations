@@ -67,7 +67,7 @@ Accounts.prototype.generateKeys = function (seedStr) {
     this.ETH.priv = "0x" + padPrivkey(ETHPriv.toObject().privateKey);
     this.ETH.addr = this.HDPrivKeyToAddr(this.ETH.priv);
 
-    var BTCAddr = new this.bitcore.Address(BTCPriv.publicKey, this.bitcore.Networks.livenet);
+    var BTCAddr = new this.bitcore.Address(BTCPriv.publicKey);
     this.BTC.addr = BTCAddr.toString();
     this.BTC.priv = BTCPriv.toObject().privateKey;
 }
