@@ -120,6 +120,20 @@
 
                     </a></div>
             </div>
+            <div id="btc-forwarding-address">
+                <div class="eth-address">&lt;not generated&gt;</div>
+                <div class="legend">BTC Forwarding Address
+                    <a class="tip-link tooltip" href="#">
+                        ?
+                        <span>
+                    <strong>BTC Forwarding Address</strong><br/>
+                    <p>
+                    This is the address where you send your Bitcoin donation to. This DFINITY donation software will forward the Bitcoin further to an official Foundation Donation smart contract address.
+</p>
+                    </span>
+
+                    </a></div>
+            </div>
             <ul>
                 <li class="dim">
                     <div>Ethereum full node <a class="tip-link tooltip" href="">?
@@ -134,6 +148,15 @@
                     </a>
                         <span><a id="btn-ethereum-node" href="javascript:ui.showSelectEthereumNode()">...</a>&nbsp; | &nbsp;<span
                                 id="eth-client-status">?</span></span>
+                    </div>
+                </li>
+                <li class="dim">
+                    <div>Bitcoin explorer <a class="tip-link tooltip" href="">?
+                        <span>
+                    <strong>Bitcoin explorer</strong><br/>
+                    </a>
+                        <span><a id="btn-bitcoin-node" href="javascript:ui.showSelectBitcoinNode()">...</a>&nbsp; | &nbsp;<span
+                                id="btc-client-status">?</span></span>
                     </div>
                 </li>
                 <li class="dim">
@@ -294,6 +317,8 @@
     <div class="dialog-container">
         <p>Send ETH donations to: </p>
         <p id="eth-forwarding-address-explained" class="seed">...</p>
+        <p>Send BTC donations to: </p>
+        <p id="btc-forwarding-address-explained" class="seed">...</p>
         <p>You can use any method you like to send ETH to this forwarding address. For example, you could send it
             directly from a cryptocurrency exchange, or from a wallet application such as Mist.</p>
         <p><i>KEEP THIS APPLICATION OPEN to allow it to forward donated ETH, and to monitor progress.</i></p>
@@ -336,7 +361,7 @@
     </div>
 </div>
 
-<div id="select-full-node" class="dialog dialog-small dialog-no-scroll ">
+<div id="select-full-node-eth" class="dialog dialog-small dialog-no-scroll ">
     <h2>Select Ethereum full node</h2>
 
     <p>Choose one of the following options for this application to connect to the Ethereum network:</p>
@@ -365,9 +390,9 @@
         <p>
             Enter an alternative custom node that you trust, for example a full node that your company runs, or which
             DFINITY Stiftung announced on its Twitter feed:
-            <input id='custom-full-node-address' placeholder="http://server:port/" type='text' class="textbox-custom"/>
-            <a id='btn-custom-full-node' class="btn"
-               href="javascript:ui.onSelectEthereumNode(document.getElementById('custom-full-node-address').value)">Connect to this
+            <input id='custom-full-node-address-eth' placeholder="http://server:port/" type='text' class="textbox-custom"/>
+            <a id='btn-custom-full-node-eth' class="btn"
+               href="javascript:ui.onSelectEthereumNode(document.getElementById('custom-full-node-address-eth').value)">Connect to this
                 node </a>
         </p>
     </li>
@@ -375,7 +400,51 @@
     <p>
 
 
-        <a href="javascript:closeDialog('select-full-node')" class="btn">Cancel</a>
+        <a href="javascript:closeDialog('select-full-node-eth')" class="btn">Cancel</a>
+
+    </p>
+</div>
+
+<div id="select-full-node-btc" class="dialog dialog-small dialog-no-scroll ">
+    <h2>Select Bitcoin Block Explorer</h2>
+
+    <p>Choose one of the following options for this application to connect to the Bitcoin network:</p>
+    <ul>
+        <li>
+        <h3>Recommended: Hosted Node (DFINITY Stiftung)</h3>
+        <p>
+            This is the recommended and easiest option, withou need to setup any Bitcoin instance.
+            If you are not sure what Bitcoin node means, just go with this.
+        </p>
+            <a id="connect-hosted" class="btc-host btn"
+              href="javascript:ui.onSelectBitcoinNode('hosted')">
+                Hosted node
+        </a>
+        </li>
+        <li>
+        <h3>Local node (http://localhost:3001) </h3>
+        <p>
+            Select this option if you run a Bitcoin block explorer locally and would prefer this software to connect to it.
+        </p>
+            <a id="connect-localhost" class="btc-host btn"
+               href="javascript:ui.onSelectBitcoinNode('http://localhost:3001')">Local node</a>
+        </li>
+    <li>
+        <h3>Custom Node</h3>
+        <p>
+            Enter an alternative custom node that you trust, for example a full node that your company runs, or which
+            DFINITY Stiftung announced on its Twitter feed:
+            <input id='custom-full-node-address-btc' placeholder="http://server:port/" type='text' class="textbox-custom"/>
+            <a id='btn-custom-full-node-btc' class="btn"
+               href="javascript:ui.onSelectBitcoinNode(document.getElementById('custom-full-node-address-btc').value)">Connect to this
+                node </a>
+        </p>
+    </li>
+    </ul>
+    <p>
+
+
+        <a href="javascript:closeDialog('select-full-node-btc')" class="btn">Cancel</a>
 
     </p>
 </div>

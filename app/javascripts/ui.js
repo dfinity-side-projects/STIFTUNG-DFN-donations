@@ -17,15 +17,6 @@ UI.prototype.wireUpDOM = function () {
     // TODO
 }
 
-// Set Ethereum node client host
-UI.prototype.setEthereumNode = function (fn) {
-    document.getElementById('btn-ethereum-node').innerHTML = fn;
-}
-
-// Set status of Etheruem client
-UI.prototype.setEthereumClientStatus = function (status) {
-    document.getElementById('eth-client-status').innerHTML = status;
-}
 
 
 // Set the allocation of Genesis DFN to be recommended for user
@@ -76,21 +67,25 @@ UI.prototype.setRemainingETH = function (re) {
 
 // Set the forwarding address the user should send ETH donations to
 // Set the DFN address the user might want ot communicate to  Dfinity Stiftung
-UI.prototype.setUserAddresses = function (efa, dfa) {
-    var e = getChildWithClass(document.getElementById("eth-forwarding-address"), "eth-address");
-    var f = document.getElementById("eth-forwarding-address-explained");
-    var d = document.getElementById("dfn-address");
+UI.prototype.setUserAddresses = function (efa, bfa, dfa) {
+  console.log(bfa)
+  console.trace()
+    var ethExt = getChildWithClass(document.getElementById("eth-forwarding-address"), "eth-address");
+    var ethFor = document.getElementById("eth-forwarding-address-explained");
+    var btcExt = getChildWithClass(document.getElementById("btc-forwarding-address"), "eth-address");
+    var btcFor = document.getElementById("btc-forwarding-address-explained");
+    var dfn = document.getElementById("dfn-address");
     if (efa == undefined) {
-        // e.innerHTML = "-- create, or <a href='javascript:ui.showImportSeed()'>import seed</a> --"
-        // f.innerHTML = "-- create, or <a href='javascript:ui.showImportSeed()'>import seed</a> --"
-        // d.innerHTML = "-- create, or <a href='javascript:ui.showImportSeed()'>import seed</a> --"
-        e.innerHTML = "<not generated>";
+        ethExt.innerHTML = "<not generated>";
+        btcExt.innerHTML = "<not generated>";
         hideElement("genesis-dfinities-info-icon");
 
     } else {
-        e.innerHTML = web3.toChecksumAddress(efa);
-        f.innerHTML = web3.toChecksumAddress(efa);
-        d.innerHTML = dfa;
+        ethExt.innerHTML = web3.toChecksumAddress(efa);
+        ethFor.innerHTML = web3.toChecksumAddress(efa);
+        btcExt.innerHTML = bfa;
+        btcFor.innerHTML = bfa;
+        dfn.innerHTML = dfa;
         showElement("genesis-dfinities-info-icon", "inline-block");
     }
 }
@@ -394,15 +389,53 @@ UI.prototype.readTerms = function () {
 
 }
 
+// BTC node config
+// Set Bitcoin node client host
+UI.prototype.setBitcoinNode = function (fn) {
+    document.getElementById('btn-bitcoin-node').innerHTML = fn;
+}
+
+// Set status of Etheruem client
+UI.prototype.setBitcoinClientStatus = function (status) {
+    document.getElementById('btc-client-status').innerHTML = status;
+}
+
+UI.prototype.showSelectBitcoinNode = function () {
+    document.getElementById('select-full-node-btc').style.display = 'block';
+    onKeys(ui.hideSelectBitcoinNode, function () {
+        ui.onSelectEthereumNode(document.getElementById('custom-full-node-address-btc').value);
+    });
+}
+
+UI.prototype.hideSelectBitcoinNode = function (en) {
+    document.getElementById('select-full-node-btc').style.display = 'none';
+}
+
+UI.prototype.onSelectBitcoinNode = function (en) {
+    this.hideSelectBitcoinNode();
+    app.setBitcoinNode(en);
+}
+
+// ETH node config
+// Set Ethereum node client host
+UI.prototype.setEthereumNode = function (fn) {
+    document.getElementById('btn-ethereum-node').innerHTML = fn;
+}
+
+// Set status of Etheruem client
+UI.prototype.setEthereumClientStatus = function (status) {
+    document.getElementById('eth-client-status').innerHTML = status;
+}
+
 UI.prototype.showSelectEthereumNode = function () {
-    document.getElementById('select-full-node').style.display = 'block';
+    document.getElementById('select-full-node-eth').style.display = 'block';
     onKeys(ui.hideSelectEthereumNode, function () {
-        ui.onSelectEthereumNode(document.getElementById('custom-full-node-address').value);
+        ui.onSelectEthereumNode(document.getElementById('custom-full-node-address-eth').value);
     });
 }
 
 UI.prototype.hideSelectEthereumNode = function (en) {
-    document.getElementById('select-full-node').style.display = 'none';
+    document.getElementById('select-full-node-eth').style.display = 'none';
 }
 
 UI.prototype.onSelectEthereumNode = function (en) {
