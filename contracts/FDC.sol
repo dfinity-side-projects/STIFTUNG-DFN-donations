@@ -127,8 +127,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     setMaxDelay(3, maxDelay);
 
     // initialize Caps base contract
-    setCap(uint(state.donPhase0), phase0Cap);
-    setCap(uint(state.donPhase1), phase1Cap);
+    setCap(2, phase0Cap);
+    setCap(4, phase1Cap);
   }
   
   //
