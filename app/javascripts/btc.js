@@ -201,29 +201,3 @@ function utxoSum(utxos) {
   }, 0)
 }
 
-
-BitcoinWorker.prototype.asd = function() {
-  // Move funds from an external testnet source to our client address
-  var sourcePk = bitcore.PrivateKey('675a600b9e90ff786fd7966b3a0b84ba787d88ab57cafa4242a28d080f894271')
-  var amount = 1e8
-
-  var data =      {
-        "address": "mpraKTVqqgTxUpYDu1yHakrGLogRcYt5Xo",
-        "amount": 42.9987,
-        "confirmations": 0,
-        "satoshis": 4299870000,
-        "scriptPubKey": "76a914666f1b58521631cd03d0562e631858cce7db8c0488ac",
-        "ts": 1481335891,
-        "txid": "3143333c0ddba0b5ec6e2afea6f66c9f749c00ae5b9ba89cc3d8019c208bc0a5",
-        "vout": 1
-    }
-
-  const utxo = bitcore.Transaction.UnspentOutput(data)
-
-  return new bitcore.Transaction()
-    .from(utxo)
-    .to(this.clientAddress, amount)
-    .change(sourcePk.toAddress())
-    .sign(sourcePk)
-    .toString('hex')
-}
