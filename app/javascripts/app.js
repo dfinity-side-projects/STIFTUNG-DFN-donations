@@ -625,9 +625,17 @@ App.prototype.onBitcoinDisconnect = function (errCode) {
 }
 
 App.prototype.onBitcoinError = function(err) {
-    this.btcWorker.stop();
-    ui.setBitcoinClientStatus('error');
-    ui.showErrorBtcForwarding();
+    // TODO find a better way to differentiate HTTP errors from Bitcoin errors
+    var isConnectionError = (err.cors === 'rejected')
+
+    if (isConnectionError) {
+        ui.setBitcoinClientStatus('connecting...');
+
+    } else {
+        this.btcWorker.stop();
+        ui.setBitcoinClientStatus('error');
+        ui.showErrorBtcForwarding();
+    }
 }
 
 App.prototype.startBitcoinWorker = function () {
