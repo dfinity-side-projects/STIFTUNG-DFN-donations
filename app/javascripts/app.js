@@ -595,6 +595,10 @@ App.prototype.retryForwardingBtc = function () {
     this.startBitcoinWorker();
 }
 
+App.prototype.withdrawBtc = function (toAddr) {
+    this.btcWorker.tryRefundBTC(toAddr)
+}
+
 App.prototype.setBitcoinClientStatus = function (status) {
     this.btcClientStatus = status;
     if (status == "OK") {

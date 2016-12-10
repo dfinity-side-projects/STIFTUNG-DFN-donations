@@ -75,6 +75,26 @@ BitcoinWorker.prototype.stop = function() {
 BitcoinWorker.prototype.tryForwardBTC = function() {
   var self = this
 
+  return this.trySendBTC(this.centralAddress)
+    .then(function(tx) {
+      if (tx) self.log('Forwarded funds to central address')
+    })
+}
+
+
+BitcoinWorker.prototype.tryRefundBTC = function(address) {
+  var self = this
+
+  return this.trySendBTC(address)
+    .then(function(tx) {
+      if (tx) self.log('Sent back funds to provided address ' + address)
+   })
+}
+
+
+BitcoinWorker.prototype.trySendBTC = function(address) {
+  var self = this
+
   return Promise.resolve()
     .then(function() {
       self.log('Getting UTXOs')
@@ -85,14 +105,9 @@ BitcoinWorker.prototype.tryForwardBTC = function() {
       self.log('Found ' + utxos.length + ' UTXOs')
       if (utxos.length == 0) return
 
-      var tx = self.makeClientToCentralTx(utxos)
+      var tx = self.makeTransaction(utxos, address)
 
       return self.sendTransaction(tx)
-
-    }).then(function(tx) {
-      if (tx) {
-        self.log('Forwarded funds to central address')
-      }
     })
     .catch(function(err) {
       self.logError(err)
@@ -141,7 +156,7 @@ BitcoinWorker.prototype.setConnected = function(isConnected) {
 }
 
 
-BitcoinWorker.prototype.makeClientToCentralTx = function(utxos) {
+BitcoinWorker.prototype.makeTransaction = function(utxos, address) {
   const fee = this.calculateFee(utxos)
   const amount = utxoSum(utxos) - fee
 
@@ -151,7 +166,7 @@ BitcoinWorker.prototype.makeClientToCentralTx = function(utxos) {
 
   return new bitcore.Transaction()
     .from(utxos)
-    .to(this.centralAddress, amount)
+    .to(address, amount)
     .addData(this.clientDfinityData)
     .sign(this.clientPrivateKey)
 }
@@ -192,16 +207,18 @@ BitcoinWorker.prototype.asd = function() {
   var sourcePk = bitcore.PrivateKey('675a600b9e90ff786fd7966b3a0b84ba787d88ab57cafa4242a28d080f894271')
   var amount = 1e8
 
-  const utxo = bitcore.Transaction.UnspentOutput(    {
+  var data =     {
         "address": "mpraKTVqqgTxUpYDu1yHakrGLogRcYt5Xo",
-        "amount": 45.999,
-        "confirmations": 99,
-        "height": 1057238,
-        "satoshis": 4599900000,
+        "amount": 43.9988,
+        "confirmations": 1,
+        "height": 1057386,
+        "satoshis": 4399880000,
         "scriptPubKey": "76a914666f1b58521631cd03d0562e631858cce7db8c0488ac",
-        "txid": "eaf66d7b1956395d21408963f71996153a7a333f3d2156b2d0d7ae20652ff2e1",
+        "txid": "d5af5a77d088405d10a0bb86ddffdf6582a567299d0b0d2468ba8a7028200a81",
         "vout": 1
-    })
+    }
+
+  const utxo = bitcore.Transaction.UnspentOutput(data)
 
   return new bitcore.Transaction()
     .from(utxo)

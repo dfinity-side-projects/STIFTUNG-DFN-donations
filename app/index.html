@@ -232,6 +232,25 @@
         <a href="javascript:ui.hideWithdrawEth()" class="btn">Cancel</a>
     </p>
 </div>
+<div id="withdraw-btc" class="dialog dialog-no-scroll dialog-small">
+    <h2>Withdraw unsent BTC in your forwarding account</h2>
+    <p>
+        If there is BTC in your forwarding account that has not already been forwarded to the Foundation address,
+        you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a
+        private wallet).
+    </p>
+    <!-- <p>
+        <b>BTC balance in forwarding address: </b><span id="withdraw-waiting-btc"></span>
+    </p> -->
+    <p>
+    <h3>Withdraw to BTC address: </h3>
+        <input id="withdraw-btc-addr" type="text" class="textbox-custom"/>
+    </p>
+    <p>
+        <a href="javascript:ui.withdrawBtc()" class="btn">Withdraw</a>
+        <a href="javascript:ui.hideWithdrawBtc()" class="btn">Cancel</a>
+    </p>
+</div>
 <div id="dfinities-info" class="dialog dialog-small dialog-no-scroll">
     <h2>Your Genesis Dfinities </h2>
     <p>In return for your donation, DFINITY Stiftung, which is a Swiss-based non-profit foundation, will recommend a
