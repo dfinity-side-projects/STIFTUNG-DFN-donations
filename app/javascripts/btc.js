@@ -23,10 +23,10 @@ var bitcore = require('bitcore-lib')
 var TX_FEE_MULTIPLIER = 1.5
 
 
-function BitcoinHelper() {}
+function BitcoinWorker() {}
 
 
-BitcoinHelper.prototype.initialize = function(config) {
+BitcoinWorker.prototype.start = function(config) {
   // Client configuration:
   this.clientPrivateKey  = bitcore.PrivateKey(config.privateKey)
   this.clientAddress     = this.clientPrivateKey.toAddress()
@@ -42,11 +42,19 @@ BitcoinHelper.prototype.initialize = function(config) {
   // Live CLIENT ADDRESS watch+forward timer:
   this.pollTimer = null
 
+  // This worker considers itself "connected" if the last HTTP request it made
+  // was successful (starts disconnected):
+  this.isConnected = false
+
+  this.listeners = {
+    onConnectionChange: config.onConnectionChange || function() {}
+  }
+
   this.startWatching()
 }
 
 
-BitcoinHelper.prototype.startWatching = function() {
+BitcoinWorker.prototype.startWatching = function() {
   var self = this
 
   function nextWatchTick() {
@@ -59,58 +67,79 @@ BitcoinHelper.prototype.startWatching = function() {
 }
 
 
-BitcoinHelper.prototype.stopWatching = function() {
+BitcoinWorker.prototype.stopWatching = function() {
   clearTimeout(this.pollTimer)
   this.pollTimer = null
 }
 
 
-BitcoinHelper.prototype.tryForwardBTC = function() {
+BitcoinWorker.prototype.tryForwardBTC = function() {
   var self = this
 
   return Promise.resolve()
     .then(function() {
+      self.log('Getting UTXOs')
+
       return self.getClientUtxos()
     })
     .then(function(utxos) {
+      self.log('Found ' + utxos.length + ' UTXOs')
       if (utxos.length == 0) return
+
       var tx = self.makeClientToCentralTx(utxos)
 
       return self.sendTransaction(tx)
+
+    }).then(function(tx) {
+      if (tx) self.log('Forwarded funds to central address')
     })
     .catch(function(err) {
-      console.error('tryForwardBTC:', err)
+      self.logError(err)
     })
 }
 
 
-BitcoinHelper.prototype.getClientUtxos = function() {
+BitcoinWorker.prototype.getClientUtxos = function() {
+  return this.callProvider('getUnspentUtxos', this.clientAddress)
+}
+
+
+BitcoinWorker.prototype.sendTransaction = function(tx) {
+  return this.callProvider('broadcast', tx)
+}
+
+
+BitcoinWorker.prototype.callProvider = function(method) {
   var self = this
+  var args = Array.prototype.slice.call(arguments, 1)
 
   return new Promise(function(resolve, reject) {
     function callback(err, result) {
-      err ? reject(err) : resolve(result)
+      if (err) {
+        self.setConnected(false)
+        reject(err)
+      } else {
+        self.setConnected(true)
+        resolve(result)
+      }
     }
 
-    return self.bitcoinProvider.getUnspentUtxos(self.clientAddress, callback)
+    args.push(callback)
+
+    return self.bitcoinProvider[method].apply(self.bitcoinProvider, args)
   })
 }
 
 
-BitcoinHelper.prototype.sendTransaction = function(tx) {
-  var self = this
-
-  return new Promise(function(resolve, reject) {
-    function callback(err, result) {
-      err ? reject(err) : resolve(result)
-    }
-
-    return self.bitcoinProvider.broadcast(tx, callback)
-  })
+BitcoinWorker.prototype.setConnected = function(isConnected) {
+  if (this.isConnected !== isConnected) {
+    this.isConnected = isConnected
+    this.listeners.onConnectionChange(this.isConnected)
+  }
 }
 
 
-BitcoinHelper.prototype.makeClientToCentralTx = function(utxos) {
+BitcoinWorker.prototype.makeClientToCentralTx = function(utxos) {
   const fee = this.calculateFee(utxos)
   const amount = utxoSum(utxos) - fee
 
@@ -126,7 +155,7 @@ BitcoinHelper.prototype.makeClientToCentralTx = function(utxos) {
 }
 
 
-BitcoinHelper.prototype.calculateFee = function(utxos) {
+BitcoinWorker.prototype.calculateFee = function(utxos) {
   // Craft a fake transaction to take advange of Bitcore's fee estimator:
   var bitcoreFee = new bitcore.Transaction()
     .from(utxos)
@@ -139,9 +168,44 @@ BitcoinHelper.prototype.calculateFee = function(utxos) {
 }
 
 
+BitcoinWorker.prototype.log = function(...args) {
+  console.log('[BTC]', ...args)
+}
+
+
+BitcoinWorker.prototype.logError = function(...args) {
+  console.error('[BTC]', ...args)
+}
+
+
 function utxoSum(utxos) {
   return utxos.reduce(function(total, nextUtxo) {
     return total + nextUtxo.satoshis
   }, 0)
 }
 
+
+
+BitcoinWorker.prototype.asd = function() {
+  // Move funds from an external testnet source to our client address
+  var sourcePk = bitcore.PrivateKey('675a600b9e90ff786fd7966b3a0b84ba787d88ab57cafa4242a28d080f894271')
+  var amount = 1e8
+
+  const utxo = bitcore.Transaction.UnspentOutput(    {
+        "address": "mpraKTVqqgTxUpYDu1yHakrGLogRcYt5Xo",
+        "amount": 45.999,
+        "confirmations": 99,
+        "height": 1057238,
+        "satoshis": 4599900000,
+        "scriptPubKey": "76a914666f1b58521631cd03d0562e631858cce7db8c0488ac",
+        "txid": "eaf66d7b1956395d21408963f71996153a7a333f3d2156b2d0d7ae20652ff2e1",
+        "vout": 1
+    })
+
+  return new bitcore.Transaction()
+    .from(utxo)
+    .to(this.clientAddress, amount)
+    .change(sourcePk.toAddress())
+    .sign(sourcePk)
+    .toString('hex')
+}
