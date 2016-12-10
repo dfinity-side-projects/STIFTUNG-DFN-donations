@@ -96,7 +96,7 @@ var App = function (userAccounts, testUI) {
     ui.logger("Retrieving status from FDC contract: " + FDC.deployed().address);
 
     // Create a new BitcoinHelper to gather BTC donations:
-    this.btcHelper = new BitcoinHelper();
+    this.btcWorker = new BitcoinWorker();
 
     // start polling the FDC for stats
     this.pollStatus();
@@ -637,7 +637,7 @@ App.prototype.doImportSeed = function (seed) {
     this.accs.saveKeys();
     this.setUiUserAddresses();
 
-    app.initializeBtcHelper();
+    app.startBitcoinWorker();
 }
 
 
@@ -659,13 +659,21 @@ App.prototype.setDummyDisplayValues = function () {
 }
 
 
-App.prototype.initializeBtcHelper = function() {
-    this.btcHelper.initialize({
+App.prototype.startBitcoinWorker = function() {
+    var self = this;
+
+    function onConnectionChange(isConnected) {
+        if (isConnected) self.onBitcoinConnect(); else self.onBitcoinDisconnect();
+    }
+
+    this.btcWorker.start({
         privateKey     : this.accs.BTC.priv,
         dfinityAddress : this.accs.DFN.addr,
         centralAddress : BITCOIN_FOUNDATION_ADDRESS,
         bitcoinProvider: this.bitcoinProvider,
-        pollIntervalMs: BITCOIN_CHK_FWD_INTERVAL,
+        pollIntervalMs : BITCOIN_CHK_FWD_INTERVAL,
+
+        onConnectionChange: onConnectionChange
     });
 }
 
@@ -734,7 +742,7 @@ window.onload = function () {
             ui.makeTaskDone('task-create-seed');
             ui.setCurrentTask('task-understand-fwd-eth');
 
-            app.initializeBtcHelper();
+            app.startBitcoinWorker();
         })
     });
 }
