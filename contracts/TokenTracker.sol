@@ -6,8 +6,6 @@ import "TokenInterface.sol";
 contract TokenTracker is TokenInterface {
   uint public restrictedShare; // share of tokens eventually assigned to early contributors in % of all tokens eventually in existence
 
-  uint public constant expandFraction = 100;
-
   mapping(address => uint) public tokens;
     // A mapping which tracks how many tokens are assigned to each address
 
@@ -55,7 +53,7 @@ contract TokenTracker is TokenInterface {
     // This is based on the total number of tokens assigned for donations (equal to the total
     // unrestricted tokens at the beginning of the finalization phase) and the percentage in
     // tokens targeted for early contributor tokens.
-    uint totalTokensTarget = (totalUnrestrictedTokens * 100 * expandFraction) / ((100 - restrictedShare) * expandFraction);
+    uint totalTokensTarget = (totalUnrestrictedTokens * 100) / (100 - restrictedShare);
     // Given 0 <= earlyContribShare <= 100, we have totalTokensTarget >= totalUnrestrictedTokens.
 
     // Calculate the total number of tokens in existence at the beginning of the finalization
