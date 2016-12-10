@@ -77,8 +77,8 @@ contract('FDC', function (accounts) {
         var fdc = FDC.deployed();
 
         // Keeping track of CHF donated so far
-        var chfCentsDonated = [0, 0]
-        var weiDonated = 0;
+        var chfCentsDonated = [web3.toBigNumber(0), web3.toBigNumber(0)]
+        var weiDonated = web3.toBigNumber(0);
 
         // donation phase = {0, 1} of the donation stage
         // lifecycleStage = {0 .. 8} of all the possible stages of the FDC lifecycle
@@ -105,7 +105,7 @@ contract('FDC', function (accounts) {
             }).then(function () {
                 return advanceToPhase(4, 0)
             }).then(function () {
-                return makeMultiDonations(560000, 5, 1, 1)
+                return makeMultiDonations(600000, 5, 1, 1)
             });
         }
         // Set exchange rate first
@@ -123,7 +123,8 @@ contract('FDC', function (accounts) {
             "finalizeEndTime",
             "phase0Cap","phase1Cap",
             "phase0Multiplier", "phase1Steps", "phase1StepSize",
-            "earlyContribShare", "gracePeriodAfterCap"
+            "earlyContribShare", "gracePeriodAfterCap",
+            "tokensPerCHF"
         ]
 
 
@@ -139,7 +140,7 @@ contract('FDC', function (accounts) {
                     const index = i;
                     f = f.then(fdc[key]);
                     f = f.then(function (c) {
-                        fdcConstants[key] = c;
+                        fdcConstants[key] = parseInt(c.valueOf());
                         console.log(" [[ Constant - " + key + " : " + c + " ]]");
                         if (index == constants.length - 1)
                             resolve();
@@ -165,24 +166,39 @@ contract('FDC', function (accounts) {
         }
 
         // Calculate bonus based on remaining time left
-        function getPhase1Bonus(time, startTime) {
-            var timeElpased = getVmTime() - startTime;
-            var f = (fdcConstants["phase0EndTime"] - fdcConstants["phase0StartTime"])
-            // var timeLeft =
-            // fdcConstants["phase1Steps"]  fdcConstants["phase1StepSize"]
+        function getPhase1Bonus(time) {
+
+            var timeLeft =  fdcConstants["phase1EndTime"] - time;
+            var duration = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"])
+            console.log("phase1step: " + fdcConstants["phase1Steps"]);
+            var perPeriod = duration / (fdcConstants["phase1Steps"].valueOf());
+            var bonus = Math.ceil(timeLeft / perPeriod ) * fdcConstants["phase1StepSize"];
+            console.log(" - Using Phase 1 bonus of: " + bonus + " [ " + timeLeft + "/" + duration + "/" + perPeriod + "]");
+            return bonus;
         }
 
-        function calcDfnAmountAtTime (time, phase) {
+        function calcDfnAmountAtTime (cents, time, phase) {
             var multiplier = 100;
             var startTime = phaseStartTime[phase];
             if (phase == 0) {
-                multiplier = FDC_CONSTANTS["phase0Multiplier"];
+                multiplier = fdcConstants["phase0Multiplier"];
             } else if (phase == 1) {
-                multiplier += getPhase1Bonus(time, startTime);
+                multiplier += getPhase1Bonus(time);
+                console.log(" Using Phase 1 bonus multiplier: " + multiplier);
+            }
+            return Math.floor((cents.mul(multiplier).mul(fdcConstants["tokensPerCHF"]).div(10000)));
+        }
+        function totalDfnAmountAtTime (cents, time, phase) {
+            if (phase == 1) {
+                return calcDfnAmountAtTime(cents, time, phase) + calcDfnAmountAtTime(chfCentsDonated[0], time, 0);
+            } else if (phase == 0) {
+                return calcDfnAmountAtTime (cents, time, phase);
             }
         }
 
-        /* Called upon donation complete (resolved), and validate FDC vs. local records on:
+
+        /*
+         Called upon donation complete (resolved), and validate FDC vs. local records on:
          - Donation amount
          - Token amount
          */
@@ -190,33 +206,41 @@ contract('FDC', function (accounts) {
             return new Promise(function (resolve, reject) {
                 // wait(1000, false);
                 // console.log("[t: " + getVmTime() + "] onDonated() - last donated amount [local value] " + lastWeiDonated);
-                weiDonated += lastWeiDonated;
-                chfCentsDonated[donationPhase] += Math.ceil((lastWeiDonated * 100) / WEI_PER_CHF);
+                weiDonated = weiDonated.add(lastWeiDonated);
+
+                var lastCentsDonated =  Math.floor((lastWeiDonated * 100) / WEI_PER_CHF);
+                console.log("Last wei donated: " + lastWeiDonated);
+                // chfCentsDonated[donationPhase] += Math.floor((lastWeiDonated * 100) / WEI_PER_CHF);
+                chfCentsDonated[donationPhase] = chfCentsDonated[donationPhase].add((lastWeiDonated).mul(100).div(WEI_PER_CHF));
 
                 var fdcChfCentsDonated, fdcDfnTokens;
                 // Assert local donation record = FDC records
                 getStatus().then(function (res) {
                     var fdcChfCentsDonated = res[8].valueOf();
                     var fdcDfnToken = res[4].valueOf();
+                    var fdcWeiDonated = res[11].valueOf();
                     var startTime = res[5];      // expected start time of specified donation phase
                     var endTime = res[6];        // expected end time of specified donation phase
 
-                    console.log(" - Validating FDC donated amount: " + fdcChfCentsDonated);
+                    console.log(" - Validating FDC donated amount in wei: " + weiDonated + " == " + fdcWeiDonated);
+                    console.log(" - Validating FDC donated amount in chf: " + fdcChfCentsDonated );
 
                     assert.equal(chfCentsDonated[donationPhase], fdcChfCentsDonated);
                     console.log(" - Assert success: [cents donated] " + chfCentsDonated[donationPhase] + " ==" + fdcChfCentsDonated)
 
-                    console.log(" - Validating FDC tokens got: " + fdcDfnToken);
-
                     // todo: should only use local calculation and avoid using remote FDC variables for assertions
-                    // assert.equal(calcDfnAmountAtTime(getLastBlockTime(), donationPhase), fdcDfnToken);
+                    // var expectedToken = calcDfnAmountAtTime(chfCentsDonated[donationPhase], getLastBlockTime(), donationPhase);
+                    var expectedToken = totalDfnAmountAtTime(chfCentsDonated[donationPhase], getLastBlockTime(), donationPhase);
+                    console.log(" - Validating FDC tokens got: " + expectedToken + " == " + fdcDfnToken);
+
+                    assert.equal(expectedToken, fdcDfnToken);
                     resolve(true);
                 });
             });
         };
 
         /*
-         * Check if the current phase end time has been adjusted based on the target reach status
+         * Check if the current phase end time has been adjusted based on the cap reached status
          */
         function assertPhaseEndTime() {
             return new Promise(function (resolve, reject) {
@@ -226,7 +250,7 @@ contract('FDC', function (accounts) {
 
                     var phaseCap = donationPhase == 0 ? fdcConstants["phase0Cap"] : fdcConstants["phase1Cap"];
                     console.log(" - Asserting if remaining end time less than 1hr if cap reached: chfCents = " + chfCentsDonated[donationPhase] + " // cap = " + phaseCap);
-                    if (chfCentsDonated[donationPhase] >= phaseCap) {
+                    if (chfCentsDonated[donationPhase].greaterThanOrEqualTo(phaseCap)) {
                         console.log(" --> Target reached. End time should shorten to " + fdcConstants["gracePeriodAfterCap"] + " seconds ");
                         printStatus();
 
@@ -237,10 +261,11 @@ contract('FDC', function (accounts) {
                             });
                         }
                         wait(5000, false);
+                        var timeLeft = endTime - getVmTime();
 
-                        // assert.isAtMost(endTime - getVmTime(), fdcConstants["gracePeriodAfterCap"]);
+                        assert.isAtMost(timeLeft, fdcConstants["gracePeriodAfterCap"]);
 
-                        // assert.isAtLeast(endTime - getVmTime(), fdcConstants["gracePeriodAfterCap"] - 3);
+                        assert.isAtLeast(timeLeft, fdcConstants["gracePeriodAfterCap"] - 10);
                         console.log(" --> Assert success. Remaining time: " + (endTime - getVmTime()));
                         resolve();
                     } else {
@@ -371,27 +396,27 @@ contract('FDC', function (accounts) {
                 var balance = web3.eth.getBalance(ETHForwardAddr);
 
                 if (ETHForwardAddr == null || web3.toBigNumber(balance).lt(minBalance)) {
-                    assert.isOk(false, 'not enough balance to forward');
+                    // assert.isOk(false, 'not enough balance to forward');
                 } else {
                     // console.log("Enough balance for forwarding: " + web3.fromWei(balance, 'ether') + " ETH");
                     var accNonce = web3.eth.getTransactionCount(ETHForwardAddr);
-                    var txFee = web3.toBigNumber(gasPrice).mul(web3.toBigNumber(FDCDonateGasMax));
-                    var value = web3.toBigNumber(web3.toWei(amount, 'ether')).sub(txFee); // TODO: all ether: balance.sub(txFee);
+                    // var value = web3.toBigNumber(web3.toWei(amount, 'ether')).sub(txFee); // TODO: all ether: balance.sub(txFee);
+                    var amountWei = web3.toBigNumber(web3.toWei(amount, 'ether'));
                     // console.log("\ntxFee: " + txFee + "  // amount: " + value);
                     //var txData     = "0x" + packArg(donateAs, app.DFNAcc.addr);
                     fdc.donateAs(DFNAddr, {
                         from: ETHForwardAddr,
-                        value: value,
+                        value: amountWei,
                         gasPrice: gasPrice,
                         gas: FDCDonateGasMax
                     }).then(function (txID) {
-                        console.log("\n makeDonation() " + value + " Ether completed. tx id: " + txID);
+                        console.log("\n makeDonation() " + amount + " Ether completed. tx id: " + txID);
                         // verify donation was registered
                         getStatus().then(function (res) {
                             var donationCount = res[3];  // total individual donations made (a count)
                             assert.equal(donationCount.valueOf(), ++totalDonationCount, "Donation count not correct");
-                            var amt = Math.ceil(web3.toWei(amount, "ether") - txFee);
-                            resolve(amt);
+
+                            resolve(amountWei);
                         });
 
                     }).catch(function (e) {
