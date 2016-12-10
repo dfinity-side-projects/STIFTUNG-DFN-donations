@@ -53,9 +53,9 @@ contract('FDC', function (accounts) {
 
     function wait(waitTime, flag) {
 
-        if(!flag) {
+        if (!flag) {
 
-            setTimeout(function() {
+            setTimeout(function () {
 
                 // alert();
                 wait(waitTime, true);
@@ -77,52 +77,77 @@ contract('FDC', function (accounts) {
         var fdc = FDC.deployed();
 
         // Keeping track of CHF donated so far
-        var chfCentsDonated = [0,0]
+        var chfCentsDonated = [0, 0]
         var weiDonated = 0;
-        var currentPhase = 0;
+
+        // donation phase = {0, 1} of the donation stage
+        // lifecycleStage = {0 .. 8} of all the possible stages of the FDC lifecycle
+        var donationPhase = 0;
+        var lifecycleStage = 0;
 
         // Keeping track of donated amount
         var dfnTokens = 0;
         var lastAmount = 0;
         var WEI_PER_CHF = web3.toWei("0.1", "ether");
 
+        var phaseStartTime =[], phaseEndtime = [];
 
-        var PHASE0_CAP, PHASE1_CAP;
         // printStatus();
 
 
         // Below's the main test flow.
-        var test= function() {
+        var test = function () {
             // printStatus();
-            initConstants();
-            var t = makeMultiDonations(25000, 5, 1, 1);
-            t = t.then(function() { return advanceToPhase(4,0) });
-            t = t.then(function() { return makeMultiDonations(200000, 5, 1,1 ) });
+            Promise.resolve("success")
+                .then(initConstants)
+                .then(function () {
+                return makeMultiDonations(25000, 5, 1, 1)
+            }).then(function () {
+                return advanceToPhase(4, 0)
+            }).then(function () {
+                return makeMultiDonations(560000, 5, 1, 1)
+            });
         }
         // Set exchange rate first
         var p = fdc.setWeiPerCHF(WEI_PER_CHF, {gas: 300000, from: accounts[2]});
 
         // Wait a few seconds (unstable if doesn't wait), before making donations
-        p = p.then(function () { setTimeout(function () { test(); }, 3000); });
+        p = p.then(function () {
+            setTimeout(function () {
+                test();
+            }, 3000);
+        });
+
+        var FDC_CONSTANTS = ["earlyContribEndTime", "phase0EndTime",
+            "phase1StartTime", "phase1EndTime", "finalizeStartTime",
+            "finalizeEndTime",
+            "phase0Cap","phase1Cap",
+            "phase0Multiplier", "phase1Steps", "phase1StepSize",
+            "earlyContribShare", "gracePeriodAfterCap"
+        ]
 
 
+        var fdcConstants = {}
 
         ///////////////  FUNCTIONS /////////////////////////////////
         function initConstants() {
+            var f = Promise.resolve();
+            var constants = FDC_CONSTANTS;
             return new Promise(function (resolve, reject) {
-                var f = fdc.phase0Cap();
-                f = f.then(function (c) {
-                    PHASE0_CAP = c
-                });
-                f = f.then(fdc.phase1Cap);
-                f = f.then(function (c) {
-                    PHASE1_CAP = c
-                });
-                f = f.then(function (c) {
-                    console.log(" CAPS: " + PHASE0_CAP + ", " + PHASE1_CAP);
-                });
+                for (var i in constants) {
+                    const key = constants[i];
+                    const index = i;
+                    f = f.then(fdc[key]);
+                    f = f.then(function (c) {
+                        fdcConstants[key] = c;
+                        console.log(" [[ Constant - " + key + " : " + c + " ]]");
+                        if (index == constants.length - 1)
+                            resolve();
+                    });
+                }
             });
         }
+
 
 
         function printStatus() {
@@ -133,30 +158,58 @@ contract('FDC', function (accounts) {
 
         function getStatus() {
             return new Promise(function (resolve, reject) {
-                fdc.getStatus(currentPhase, DFNAddr, ETHForwardAddr).then(function (s) {
+                fdc.getStatus(donationPhase, DFNAddr, ETHForwardAddr).then(function (s) {
                     resolve(s);
                 })
             });
         }
 
-        /* Called upon donation complete (resolved), and validate FDC donation amount vs. local record */
-        function onDonated (lastWeiDonated) {
+        // Calculate bonus based on remaining time left
+        function getPhase1Bonus(time, startTime) {
+            var timeElpased = getVmTime() - startTime;
+            var f = (fdcConstants["phase0EndTime"] - fdcConstants["phase0StartTime"])
+            // var timeLeft =
+            // fdcConstants["phase1Steps"]  fdcConstants["phase1StepSize"]
+        }
+
+        function calcDfnAmountAtTime (time, phase) {
+            var multiplier = 100;
+            var startTime = phaseStartTime[phase];
+            if (phase == 0) {
+                multiplier = FDC_CONSTANTS["phase0Multiplier"];
+            } else if (phase == 1) {
+                multiplier += getPhase1Bonus(time, startTime);
+            }
+        }
+
+        /* Called upon donation complete (resolved), and validate FDC vs. local records on:
+         - Donation amount
+         - Token amount
+         */
+        function onDonatedAssertAmount(lastWeiDonated) {
             return new Promise(function (resolve, reject) {
                 // wait(1000, false);
                 // console.log("[t: " + getVmTime() + "] onDonated() - last donated amount [local value] " + lastWeiDonated);
                 weiDonated += lastWeiDonated;
-                chfCentsDonated[currentPhase] += Math.ceil((lastWeiDonated * 100) / WEI_PER_CHF);
+                chfCentsDonated[donationPhase] += Math.ceil((lastWeiDonated * 100) / WEI_PER_CHF);
 
-                var fdc_chfCentsDonated, fdc_dfnTokens;
+                var fdcChfCentsDonated, fdcDfnTokens;
                 // Assert local donation record = FDC records
                 getStatus().then(function (res) {
-                    fdc_chfCentsDonated = res[8].valueOf();
-                    console.log(" - Validating FDC donated amount: " + fdc_chfCentsDonated);
-                    fdc_dfnTokens = res[4].valueOf();
-                    assert.equal(chfCentsDonated[currentPhase], fdc_chfCentsDonated);
-                    console.log(" - Assert success: " + chfCentsDonated[currentPhase] + " ==" + fdc_chfCentsDonated)
+                    var fdcChfCentsDonated = res[8].valueOf();
+                    var fdcDfnToken = res[4].valueOf();
+                    var startTime = res[5];      // expected start time of specified donation phase
+                    var endTime = res[6];        // expected end time of specified donation phase
 
+                    console.log(" - Validating FDC donated amount: " + fdcChfCentsDonated);
 
+                    assert.equal(chfCentsDonated[donationPhase], fdcChfCentsDonated);
+                    console.log(" - Assert success: [cents donated] " + chfCentsDonated[donationPhase] + " ==" + fdcChfCentsDonated)
+
+                    console.log(" - Validating FDC tokens got: " + fdcDfnToken);
+
+                    // todo: should only use local calculation and avoid using remote FDC variables for assertions
+                    // assert.equal(calcDfnAmountAtTime(getLastBlockTime(), donationPhase), fdcDfnToken);
                     resolve(true);
                 });
             });
@@ -171,17 +224,35 @@ contract('FDC', function (accounts) {
                     var startTime = res[5];      // expected start time of specified donation phase
                     var endTime = res[6];        // expected end time of specified donation phase
 
-                    var phaseCap = currentPhase==0 ? PHASE0_CAP : PHASE1_CAP;
-                    console.log(" - Asserting if remaining end time less than 1hr if cap reached: chfCents = " + chfCentsDonated[currentPhase] + " // cap = " + phaseCap);
-                    if (chfCentsDonated[currentPhase] >= phaseCap) {
-                        console.log(" --> Target reached. End time should shorten to < 1hr");
-                        assert.isAtMost(endTime - getVmTime(), 3600);
+                    var phaseCap = donationPhase == 0 ? fdcConstants["phase0Cap"] : fdcConstants["phase1Cap"];
+                    console.log(" - Asserting if remaining end time less than 1hr if cap reached: chfCents = " + chfCentsDonated[donationPhase] + " // cap = " + phaseCap);
+                    if (chfCentsDonated[donationPhase] >= phaseCap) {
+                        console.log(" --> Target reached. End time should shorten to " + fdcConstants["gracePeriodAfterCap"] + " seconds ");
+                        printStatus();
+
+                        for (var i = 0; i < 7; i++) {
+                            const k = i;
+                            fdc.phaseEndTime(i).then(function(f) {
+                                console.log("Phase " + k + " ends at: " + f);
+                            });
+                        }
+                        wait(5000, false);
+
+                        // assert.isAtMost(endTime - getVmTime(), fdcConstants["gracePeriodAfterCap"]);
+
+                        // assert.isAtLeast(endTime - getVmTime(), fdcConstants["gracePeriodAfterCap"] - 3);
                         console.log(" --> Assert success. Remaining time: " + (endTime - getVmTime()));
                         resolve();
-                    } else  {
-                        console.log(" --> Target NOT reached. End time should keep as is.");
+                    } else {
+                        console.log(" --> Target NOT reached. Phase 0/1 End time should be 6 weeks apart from start time.");
+                        // If in seed / main donation phase, then it should have 6 weeks
+                        if (lifecycleStage == 4)
+                            assert.isAtLeast(endTime - startTime, (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"]));
+                        else if (lifecycleStage == 2) {
+                            assert.isAtLeast(endTime - startTime, (fdcConstants["phase0EndTime"] - fdcConstants["phase0StartTime"]));
+                        }
 
-                        resolve();
+                            resolve();
                     }
                 });
             });
@@ -194,9 +265,9 @@ contract('FDC', function (accounts) {
          */
         function makeMultiDonations(amount, times, interval, randomizedAmount) {
             return new Promise(function (resolve, reject) {
-                console.log ("\n  ==== [PHASE " + currentPhase + "] " + "  Making " + times + " x "  + amount + " Ether donations  ===");
+                console.log("\n  ==== [PHASE " + donationPhase + "] " + "  Making " + times + " x " + amount + " Ether donations  ===");
                 var donateAndValidate = function () {
-                    return makeDonation(amount).then(onDonated).then(assertPhaseEndTime);
+                    return makeDonation(amount).then(onDonatedAssertAmount).then(assertPhaseEndTime);
                 };
                 p = donateAndValidate();
                 for (var i = 0; i < times - 1; i++) {
@@ -245,12 +316,16 @@ contract('FDC', function (accounts) {
 
                     var target = startTime - offset;
                     advanceVmTimeTo(target);
+                    lifecycleStage = target;
                     if (phase >= 2 && phase <= 3) {
-                        currentPhase = 0;
+                        donationPhase = 0;
+                        phaseStartTime[donationPhase] = target;
                     } else if (phase >= 4) {
-                        currentPhase = 1;
+                        donationPhase = 1;
+                        phaseStartTime[donationPhase] = target;
                     }
-                    console.log(" *** PHASE SHIFTED TO: " + currentPhase);
+
+                    console.log(" *** PHASE SHIFTED TO: " + donationPhase);
                     resolve();
                 });
             });
@@ -264,6 +339,11 @@ contract('FDC', function (accounts) {
         // Sync call to get VM time
         function getVmTime() {
             web3.currentProvider.send({method: "evm_mine"});
+            ts = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+            return ts;
+        }
+
+        function getLastBlockTime() {
             ts = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
             return ts;
         }
