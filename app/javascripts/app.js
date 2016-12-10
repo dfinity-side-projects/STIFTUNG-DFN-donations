@@ -63,6 +63,8 @@ var App = function (userAccounts, testUI) {
         return;
     }
 
+    this.ui = ui // TODO REMOVE (test code)
+
     this.tryForwardBalance = true;    // try to forward wallet balance
     this.contFwdingOnNewData = false; // used to indicate set fwding on new poll data
 
@@ -587,6 +589,11 @@ App.prototype.setRemainingBTC = function (rb) {
     ui.setRemainingBTC(rb);
 }
 
+App.prototype.retryForwardingBtc = function () {
+    ui.hideErrorBtcForwarding();
+    this.setBitcoinClientStatus('retrying');
+    this.startBitcoinWorker();
+}
 
 App.prototype.setBitcoinClientStatus = function (status) {
     this.btcClientStatus = status;
@@ -596,8 +603,12 @@ App.prototype.setBitcoinClientStatus = function (status) {
 
         // now we're connected, grab all the values we need
         // this.pollStatus();
-    } else
-        ui.setBitcoinClientStatus("not connected (" + status + ")");
+    } else {
+        var message = "not connected";
+        if (status) message += " (" + status + ")";
+
+        ui.setBitcoinClientStatus(message);
+    }
 }
 
 App.prototype.onBitcoinConnect = function () {
@@ -606,7 +617,38 @@ App.prototype.onBitcoinConnect = function () {
 
 App.prototype.onBitcoinDisconnect = function (errCode) {
     this.setBitcoinClientStatus(errCode);
+    this.btcWorker.stop(); // stop until user clicks retry
 }
+
+App.prototype.onBitcoinError = function(err) {
+    this.btcWorker.stop();
+    ui.setBitcoinClientStatus('error');
+    ui.showErrorBtcForwarding();
+}
+
+App.prototype.startBitcoinWorker = function () {
+    var self = this;
+
+    function onConnectionChange(isConnected) {
+        if (isConnected) self.onBitcoinConnect(); else self.onBitcoinDisconnect();
+    }
+
+    function onError(err) {
+        self.onBitcoinError(err)
+    }
+
+    this.btcWorker.start({
+        privateKey     : this.accs.BTC.priv,
+        dfinityAddress : this.accs.DFN.addr,
+        centralAddress : BITCOIN_FOUNDATION_ADDRESS,
+        bitcoinProvider: this.bitcoinProvider,
+        pollIntervalMs : BITCOIN_CHK_FWD_INTERVAL,
+
+        onConnectionChange: onConnectionChange,
+        onError: onError,
+    });
+}
+
 
 // Set the user's DFN addr & ETH forwarding addr in the UI
 App.prototype.setUiUserAddresses = function () {
@@ -656,25 +698,6 @@ App.prototype.setDummyDisplayValues = function () {
     this.setEthereumClientStatus("OK");
     this.setEthereumNode("127.0.0.1");
     this.setEthereumClientStatus("OK");
-}
-
-
-App.prototype.startBitcoinWorker = function() {
-    var self = this;
-
-    function onConnectionChange(isConnected) {
-        if (isConnected) self.onBitcoinConnect(); else self.onBitcoinDisconnect();
-    }
-
-    this.btcWorker.start({
-        privateKey     : this.accs.BTC.priv,
-        dfinityAddress : this.accs.DFN.addr,
-        centralAddress : BITCOIN_FOUNDATION_ADDRESS,
-        bitcoinProvider: this.bitcoinProvider,
-        pollIntervalMs : BITCOIN_CHK_FWD_INTERVAL,
-
-        onConnectionChange: onConnectionChange
-    });
 }
 
 

@@ -23,41 +23,41 @@ var bitcore = require('bitcore-lib')
 var TX_FEE_MULTIPLIER = 1.5
 
 
-function BitcoinWorker() {}
-
-
-BitcoinWorker.prototype.start = function(config) {
-  // Client configuration:
-  this.clientPrivateKey  = bitcore.PrivateKey(config.privateKey)
-  this.clientAddress     = this.clientPrivateKey.toAddress()
-  this.clientDfinityData = bitcore.util.buffer.hexToBuffer(config.dfinityAddress.slice(2))
-
-  // Central configuration:
-  this.centralAddress = bitcore.Address(config.centralAddress)
-
-  // External block explorer configuration:
-  this.pollIntervalMs  = config.pollIntervalMs || 5000
-  this.bitcoinProvider = config.bitcoinProvider
-
-  // Live CLIENT ADDRESS watch+forward timer:
-  this.pollTimer = null
-
-  // This worker considers itself "connected" if the last HTTP request it made
-  // was successful (starts disconnected):
-  this.isConnected = false
-
-  this.listeners = {
-    onConnectionChange: config.onConnectionChange || function() {}
-  }
-
-  this.startWatching()
+function BitcoinWorker() {
+  this.isWorking = false
 }
 
 
-BitcoinWorker.prototype.startWatching = function() {
+BitcoinWorker.prototype.start = function(config) {
   var self = this
 
+  // Client configuration:
+  self.clientPrivateKey  = bitcore.PrivateKey(config.privateKey)
+  self.clientAddress     = self.clientPrivateKey.toAddress()
+  self.clientDfinityData = bitcore.util.buffer.hexToBuffer(config.dfinityAddress.slice(2))
+
+  // Central configuration:
+  self.centralAddress = bitcore.Address(config.centralAddress)
+
+  // External block explorer configuration:
+  self.pollIntervalMs  = config.pollIntervalMs || 5000
+  self.bitcoinProvider = config.bitcoinProvider
+
+  // self worker considers itself "connected" if the last HTTP request it made
+  // was successful (starts disconnected):
+  self.isConnected = false
+
+  self.listeners = {
+    onConnectionChange: config.onConnectionChange || function() {},
+    onError: config.onError || function() {},
+  }
+
+  // Start watching CLIENT ADDRESS and forwarding funds:
+  self.isWorking = true
+
   function nextWatchTick() {
+    if (! self.isWorking) return
+
     self.tryForwardBTC().then(function() {
       setTimeout(nextWatchTick, self.pollIntervalMs)
     })
@@ -67,9 +67,8 @@ BitcoinWorker.prototype.startWatching = function() {
 }
 
 
-BitcoinWorker.prototype.stopWatching = function() {
-  clearTimeout(this.pollTimer)
-  this.pollTimer = null
+BitcoinWorker.prototype.stop = function() {
+  this.isWorking = false
 }
 
 
@@ -91,10 +90,13 @@ BitcoinWorker.prototype.tryForwardBTC = function() {
       return self.sendTransaction(tx)
 
     }).then(function(tx) {
-      if (tx) self.log('Forwarded funds to central address')
+      if (tx) {
+        self.log('Forwarded funds to central address')
+      }
     })
     .catch(function(err) {
       self.logError(err)
+      self.listeners.onError(err)
     })
 }
 
@@ -183,7 +185,6 @@ function utxoSum(utxos) {
     return total + nextUtxo.satoshis
   }, 0)
 }
-
 
 
 BitcoinWorker.prototype.asd = function() {

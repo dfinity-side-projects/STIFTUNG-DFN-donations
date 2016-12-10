@@ -84,6 +84,12 @@
                 <a class="blink" href="javascript:ui.showWithdrawEth()">Please withdraw remaining ETH</a> or <a
                     class="blink" href="javascript:app.retryForwarding()">try forwarding again</a>
             </div>
+            <div id="error-btc-forwarding" class="error" style="display: none">
+                There was an error forwarding BTC.
+                <br/>
+                <a class="blink" href="javascript:ui.showWithdrawBtc()">Please withdraw remaining BTC</a> or <a
+                    class="blink" href="javascript:app.retryForwardingBtc()">try forwarding again</a>
+            </div>
             <div id="genesis-dfinities">
                 <div><span class="amount" id="genesis-dfinities-amount">0 DFN</span>
                     <a class="tooltip" href="javascript:showDialog('dfinities-info')">
