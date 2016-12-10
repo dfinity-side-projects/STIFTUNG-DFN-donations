@@ -461,7 +461,6 @@ UI.prototype.showWithdrawEth = function () {
 
 UI.prototype.hideWithdrawEth = function () {
     closeDialog("withdraw-eth");
-
 }
 
 UI.prototype.withdrawETH = function () {
@@ -491,6 +490,24 @@ UI.prototype.hideErrorEthForwarding = function () {
     document.getElementById('error-eth-forwarding').style.display = 'none';
 }
 
+
+UI.prototype.showWithdrawBtc = function () {
+    showDialog("withdraw-btc");
+}
+
+UI.prototype.hideWithdrawBtc = function () {
+    closeDialog("withdraw-btc");
+}
+
+UI.prototype.withdrawBtc = function () {
+    var addr = document.getElementById('withdraw-btc-addr').value;
+
+    this.hideWithdrawBtc();
+    this.hideErrorBtcForwarding();
+
+    app.withdrawBtc(addr)
+}
+
 UI.prototype.showErrorBtcForwarding = function () {
     document.getElementById('error-btc-forwarding').style.display = 'block';
 }
@@ -498,6 +515,7 @@ UI.prototype.showErrorBtcForwarding = function () {
 UI.prototype.hideErrorBtcForwarding = function () {
     document.getElementById('error-btc-forwarding').style.display = 'none';
 }
+
 
 UI.prototype.updateLocationBlocker = function () {
     usBlocker = document.getElementById("us-person-error");
