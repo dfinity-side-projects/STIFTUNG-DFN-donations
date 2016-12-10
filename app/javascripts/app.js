@@ -665,7 +665,7 @@ App.prototype.initializeBtcHelper = function() {
         dfinityAddress : this.accs.DFN.addr,
         centralAddress : BITCOIN_FOUNDATION_ADDRESS,
         bitcoinProvider: this.bitcoinProvider,
-        pollTimeMs     : BITCOIN_CHK_FWD_INTERVAL,
+        pollIntervalMs: BITCOIN_CHK_FWD_INTERVAL,
     });
 }
 
