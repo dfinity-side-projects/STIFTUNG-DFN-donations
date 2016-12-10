@@ -322,7 +322,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
 
     // Apply the multiplier that was valid at the given time 
     uint bonusMultiplier = getMultiplierAtTime(timestamp);
-    chfCents = (chfCents * bonusMultiplier * expandFraction) / (100 * expandFraction);
+    chfCents = (chfCents * bonusMultiplier) / 100;
 
     // Convert chfCents into tokens
     //    uint tokenAmount = chfCents / chfCentsPerToken;

@@ -7,41 +7,18 @@ contract Parameters {
   // Time Constants
   //
 
-  /*
-  uint public constant phase1StartTime      = 1488322800; // 2017-03-01 00:00:00
+  // TZ="Europe/Zurich" date -d "2016-12-15 00:00" "+%s"
+  uint public constant phase0StartTime      = 1481756400; 
+  
+  uint public constant earlyContribEndTime  = phase0StartTime - 1 days; 
+  uint public constant phase0EndTime        = phase0StartTime + 6 weeks;
+  uint public constant phase1StartTime      = phase0EndTime + 12 weeks;
   uint public constant phase1EndTime        = phase1StartTime + 6 weeks;
-  uint public constant earlyContribEndTime  = 1478386800; // 2016-11-06 00:00:00
-  uint public constant phase_0_start_time   = 1478473200; // 2016-11-07 00:00:00
-  uint public constant phase0EndTime        = phase_0_start_time + 6 weeks;
-  uint public constant phase1StartTime      = 1488322800; // 2017-03-01 00:00:00
-  uint public constant phase1EndTime        = phase1StartTime + 6 weeks;
-  uint public constant finalizeStartTime = phase1EndTime   + 1 weeks;
-  */
-  /* TODO: comment in real times after testing & audits */
-  // Swiss times (UTC+01:00)
-
-  // We could move all this into the constructor but it is convenient to have as constants for the test code
-
-  uint public constant earlyContribEndTime  = now - 1 hours;
-  uint public constant phase0StartTime      = now + 1;
-  uint public constant phase0EndTime        = now + 10 hours;
-  uint public constant phase1StartTime      = now + 11 hours;
-  uint public constant phase1EndTime        = now + 15 hours;
-  uint public constant finalizeStartTime    = now + 16 hours;
-  uint public constant finalizeEndTime      = now + 1000 years;
+  uint public constant finalizeStartTime    = phase1EndTime   + 1 weeks;
+  uint public constant finalizeEndTime      = finalizeStartTime + 1000 years;
+  
   uint public constant maxDelay             = 180 days;
 
-  /* TODO: replace with above after testing & audits
-     NOTE: backends.SimulatedBackend genesis timestamp is 0 and non-trivial
-           to make working for arbitrary times as it uses the "live"
-           blockchain importing code which prohibits blocks in the future
-
-           Since the FDC logic works over any time frames as long as
-           the phases are consecutive and non-overlapping this is OK
-           for unit tests.
-  */
-
-  // The following configuration parameters define the transition times between phases.
   uint public constant gracePeriodAfterCap  = 30 minutes;
 
   //
