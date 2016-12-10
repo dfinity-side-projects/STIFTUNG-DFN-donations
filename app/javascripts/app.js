@@ -63,8 +63,6 @@ var App = function (userAccounts, testUI) {
         return;
     }
 
-    this.ui = ui // TODO REMOVE (test code)
-
     this.tryForwardBalance = true;    // try to forward wallet balance
     this.contFwdingOnNewData = false; // used to indicate set fwding on new poll data
 
