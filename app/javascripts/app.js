@@ -104,10 +104,6 @@ var App = function (userAccounts, testUI) {
     // start forwarding any ETH we see!
     this.tryForwardETH();
 
-    // start forwarding any BTC we see!
-    // TODO: add this
-    //this.tryForwardBTC();
-
     ui.updateLocationBlocker();
 }
 
