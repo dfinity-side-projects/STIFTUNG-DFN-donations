@@ -10,14 +10,18 @@ contract StepFunction {
   uint public step;
 
   // constructor
-  function StepFunction(uint _phaseLength, uint _nSteps, uint _step) {
-    if (_nSteps > _phaseLength) { throw; } // throw if not enough room for <nSteps> steps 
+  function StepFunction(uint _phaseLength, uint _initialValue, uint _nSteps) {
+    // throw if not enough room for <nSteps> steps 
+    if (_nSteps > _phaseLength) { throw; } 
+   
+    step = _initialValue / _nSteps;
+    // throw if _initialValue is not divisible by _nSteps
+    if ( step * _nSteps != _initialValue) { throw; } 
 
     phaseLength = _phaseLength;
-    nSteps = _nSteps; // n steps means n+1 sub-phases
-    step = _step;
+    nSteps = _nSteps; 
   }
-
+  
   // edge cases:
   //  step = 0: is valid, will create the constant zero function
   //  nSteps = 0: is valid, will create the constant zero function (only 1 sub-interval)
