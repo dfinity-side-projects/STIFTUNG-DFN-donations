@@ -399,14 +399,14 @@ UI.prototype.setBitcoinClientStatus = function (status) {
 }
 
 UI.prototype.showSelectBitcoinNode = function () {
-    document.getElementById('select-full-node-btc').style.display = 'block';
+    showDialog("select-full-node-btc");
     onKeys(ui.hideSelectBitcoinNode, function () {
-        ui.onSelectEthereumNode(document.getElementById('custom-full-node-address-btc').value);
+        ui.onSelectBitcoinNode(document.getElementById('custom-full-node-address-btc').value);
     });
 }
 
 UI.prototype.hideSelectBitcoinNode = function (en) {
-    document.getElementById('select-full-node-btc').style.display = 'none';
+    closeDialog("select-full-node-btc");
 }
 
 UI.prototype.onSelectBitcoinNode = function (en) {
@@ -426,18 +426,18 @@ UI.prototype.setEthereumClientStatus = function (status) {
 }
 
 UI.prototype.showSelectEthereumNode = function () {
-    document.getElementById('select-full-node-eth').style.display = 'block';
+    showDialog("select-full-node-eth");
     onKeys(ui.hideSelectEthereumNode, function () {
         ui.onSelectEthereumNode(document.getElementById('custom-full-node-address-eth').value);
     });
 }
 
 UI.prototype.hideSelectEthereumNode = function (en) {
-    document.getElementById('select-full-node-eth').style.display = 'none';
+    closeDialog("select-full-node-eth");
 }
 
 UI.prototype.onSelectEthereumNode = function (en) {
-    this.hideSelectEthereumNode();
+    closeDialog("select-full-node-eth");
     app.setEthereumNode(en);
 }
 
