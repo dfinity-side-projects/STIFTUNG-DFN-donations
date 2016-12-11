@@ -357,7 +357,7 @@ App.prototype.pollStatus = function () {
             var totalTokenAmount = res[4];  // total DFN planned allocated to donors
             var startTime = res[5];         // expected start time of specified donation phase
             var endTime = res[6];           // expected end time of specified donation phase
-            var isCapReached = res[7];      // whether target cap specified phase reached
+            var isTargetReached = res[7];   // whether phase target has been reached
             var chfCentsDonated = res[8];   // total value donated in specified phase as CHF
             if (ethAddr != -1 && dfnAddr != -1) {
                 var tokenAmount = res[9];       // total DFN planned allocted to donor (user)
@@ -384,7 +384,7 @@ App.prototype.pollStatus = function () {
 
             // update user interface with status info
             self.updateUI(currentState, fxRate, donationCount, totalTokenAmount,
-                startTime, endTime, isCapReached, chfCentsDonated, tokenAmount,
+                startTime, endTime, isTargetReached, chfCentsDonated, tokenAmount,
                 self.ethBalance, donated);
         } finally {
             // do this all over again...
@@ -429,7 +429,7 @@ App.prototype.useNewSeed = function () {
 
 // Update the UI with retrieved status information
 App.prototype.updateUI = function (currentState, fxRate, donationCount,
-                                   totalTokenAmount, startTime, endTime, isCapReached, chfCentsDonated,
+                                   totalTokenAmount, startTime, endTime, isTargetReached, chfCentsDonated,
                                    tokenAmount, fwdBalance, donated) {
 
     ui.setGenesisDFN(tokenAmount);

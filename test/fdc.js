@@ -12,6 +12,33 @@ function addrWithChecksum(addr) {
     return addr + addrChecksum(addr).slice(2);
 }
 
+// mine n blocks
+function evmMine(blocks) {
+ for (var i = 0; i < blocks; i++) {
+    web3.currentProvider.send({method: 'evm_mine'});
+ } 
+}
+
+// jump seconds ahead with the EVM clock
+// Note: 
+// It is possible to call this with a fractional number of seconds (incl. from truffle console).
+// However, if it is fractional it breaks the whole test framework in the "before all" hook.
+// We prevent this here by rounding the argument. 
+// However, one can still break everything by calling evm_increaseTime from the console.
+function evmJump(seconds) {
+  var delta = Math.round(seconds);
+  return parseInt(web3.currentProvider.send({jsonrpc: '2.0', method: 'evm_increaseTime', params: [delta]}).result);
+}
+
+// return time of EVM clock in seconds since epoch
+function evmGetTime() {
+  return Date.now()/1000 + evmJump(0); 
+}
+
+// jump to time in seconds since epoch
+function evmJumpTo(targetTime) {
+  evmJump(targetTime - evmGetTime());
+}
 
 contract('FDC', function(accounts) {
 
@@ -38,7 +65,7 @@ contract('FDC', function(accounts) {
          var totalTokenAmount = res[3];// total DFN planned allocated to donors
          var startTime = res[4];      // expected start time of specified donation phase
          var endTime = res[5];        // expected end time of specified donation phase
-         var isCapReached = res[6];   // whether target cap specified phase reached
+         var isTargetReached = res[6];  // whether phase target has been reached
          var chfCentsDonated = res[7];// total value donated in specified phase as CHF
          var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
          var fwdBalance = res[9];     // total ETH (in Wei) waiting in fowarding address
@@ -51,91 +78,22 @@ contract('FDC', function(accounts) {
      });
   });
 
-
-    it("Phase 1 testing", function () {
-        /* Global Test variables  */
-        var ETHForwardAddr = accounts[4];
-        var DFNAddr = accounts[5];
-        var totalDonationCount = 0;  // total individual donations made (a count)
-        var fdc = FDC.deployed();
-        printStatus();
-        fdc.setWeiPerCHF(web3.toWei('0.1', 'ether'), {gas: 300000, from: accounts[2]}).then(function() {
-
-            setTimeout(function() {
-                printStatus();
-                makeMultiDonations(1.5,10, 1,1);
-            },2000);
-        });
-
-        function printStatus() {
-            fdc.getStatus(0,1,1).then(function(s) {
-                console.log(s);
-            })
-        }
-
-
-        /* Make multiple donations per */
-        function makeMultiDonations(amount, times, interval, randomizedAmount) {
-            p = makeDonation(amount);
-            for (var i = 0; i < times; i++) {
-                p = p.then(function(){ return makeDonation(amount); }); // or .bind
-            }
-        }
-
-        /* Fast forward system time to next phase */
-        function advancePhase(phase) {
-
-        }
-
-        /* Set current exchange rate for ETH:CHF */
-        function setExchangeRate() {
-
-        }
-
-
-        /* Make a single donation */
-        function makeDonation(amount) {
-            return new Promise (function (resolve, reject) {
-                // calculate gas & amount to forward
-                var gasPrice = web3.toBigNumber(20000000000); // 20 Shannon
-                var FDCMinDonation = web3.toWei('1', 'ether');
-                var FDCDonateGasMax = 500000; // highest measured gas cost: 138048
-                var gasCost = web3.toBigNumber(FDCDonateGasMax).mul(gasPrice);
-                var minBalance = web3.toBigNumber(FDCMinDonation).plus(gasCost);
-                var balance = web3.eth.getBalance(ETHForwardAddr);
-
-                if (ETHForwardAddr == null || web3.toBigNumber(balance).lt(minBalance)) {
-                    assert.isOk(false, 'not enough balance to forward');
-                } else {
-                    console.log("enough balance for forwarding: " + web3.fromWei(balance, 'ether') + " ETH");
-                    var accNonce = web3.eth.getTransactionCount(ETHForwardAddr);
-                    var txFee = web3.toBigNumber(gasPrice).mul(web3.toBigNumber(FDCDonateGasMax));
-                    var value = web3.toBigNumber(web3.toWei(amount, 'ether')).sub(txFee); // TODO: all ether: balance.sub(txFee);
-                    console.log("txFee: " + txFee);
-                    console.log("amount: " + value);
-                    //var txData     = "0x" + packArg(donateAs, app.DFNAcc.addr);
-                    fdc.donateAs(DFNAddr,  {
-                        from: ETHForwardAddr,
-                        value: value,
-                        gasPrice: gasPrice,
-                        gas: FDCDonateGasMax
-                    }).then(function (txID) {
-                        console.log("makeDonation()  tx id: " + txID);
-                        // verify donation was registered
-                        fdc.getStatus(2, DFNAddr, ETHForwardAddr).then(function (res) {
-                            var donationCount = res[3];  // total individual donations made (a count)
-                            assert.equal(donationCount.valueOf(), ++totalDonationCount, "Donation count not correct");
-                        });
-                        resolve();
-                    }).catch(function (e) {
-                        console.log("Error sending ETH forwarding tx: " + e);
-                        reject();
-                    });
-                }
-            });
-
-        }
-
-
-    });
+  it("We should be able to access the evm time", function() {
+    var ts = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+    console.log("Last block number: " + web3.eth.blockNumber + " at time " + ts);
+    console.log("Calling evmMine");
+    var blocks = 1;
+    evmMine(blocks);
+    var ts = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+    console.log("New block number after mining " + blocks + "blocks: " + web3.eth.blockNumber + " at time " + ts);
+    console.log("EVM is ahead of system clock by " + evmJump(0) + " seconds.");
+    console.log("Difference EVM time derived from system clock - block timestamp: " + (evmGetTime() - ts));
+    console.log("Jumping 100 seconds ahead"); 
+    evmJump(100);
+    console.log("EVM is ahead of system clock by " + evmJump(0) + " seconds.");
+    console.log("Jumping ahead to time " + (ts + 1000));
+    evmJumpTo(ts+1000);
+    console.log("EVM is ahead of system clock by " + evmJump(0) + " seconds.");
+    console.log("EVM current time: " + evmGetTime());
+  }); 
 });
