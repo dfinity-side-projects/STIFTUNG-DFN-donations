@@ -1,5 +1,4 @@
-// TODO: set to exact version before release
-pragma solidity >=0.4.1;
+pragma solidity ^0.4.6;
 
 import "TokenTracker.sol";
 import "Phased.sol";
