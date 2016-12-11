@@ -176,9 +176,10 @@ contract('FDC', function (accounts) {
 
             var timeLeft =  fdcConstants["phase1EndTime"] - time;
             var duration = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"])
-            console.log("phase1step: " + fdcConstants["phase1Steps"]);
-            var perPeriod = duration / (fdcConstants["phase1Steps"].valueOf());
-            var bonus = Math.ceil(timeLeft / perPeriod ) * fdcConstants["phase1StepSize"];
+            console.log("phase1InitialBonus: " + fdcConstants["phase1InitialBonus"]);
+            console.log("phase1BonusSteps: " + fdcConstants["phase1BonusSteps"]);
+            var perPeriod = duration / (fdcConstants["phase1BonusSteps"].valueOf());
+            var bonus = Math.ceil(timeLeft / perPeriod ) * (fdcConstants["phase1InitialBonus"] / fdcConstants["phase1BonusSteps"]);
             console.log(" - Using Phase 1 bonus of: " + bonus + " [ " + timeLeft + "/" + duration + "/" + perPeriod + "]");
             return bonus;
         }
