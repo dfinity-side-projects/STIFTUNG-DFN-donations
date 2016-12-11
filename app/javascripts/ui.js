@@ -491,6 +491,22 @@ UI.prototype.hideErrorEthForwarding = function () {
 }
 
 
+// -----------------------------------------------------------------------------
+// BITCOIN
+
+UI.prototype.setForwardedBTC = function(amount) {
+    var text = (amount != null) ? formatCurrency(amount, "BTC", 2) : '?';
+
+    document.getElementById('donated-btc').innerHTML = text;
+}
+
+UI.prototype.setRemainingBTC = function (amount) {
+    var text = (amount != null) ? formatCurrency(amount, "BTC", 2) : '?';
+
+    document.getElementById('waiting-btc').innerHTML = text;
+    document.getElementById('withdraw-waiting-btc').innerHTML = text;
+}
+
 UI.prototype.showWithdrawBtc = function () {
     showDialog("withdraw-btc");
 }
@@ -537,6 +553,9 @@ UI.prototype.updateLocationBlocker = function () {
         usBlocker.style.display = 'none';
     });
 }
+
+// -----------------------------------------------------------------------------
+
 
 /** Common UI functions */
 

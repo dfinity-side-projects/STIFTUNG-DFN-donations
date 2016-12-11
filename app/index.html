@@ -181,6 +181,23 @@
                             href="javascript:ui.showWithdrawEth()">waiting</a>)</span>
                     </div>
                 </li>
+                <li class="dim">
+                    <div>BTC donations <a class="tip-link tooltip" href="">?
+                        <span>
+                    <strong>BTC donations</strong><br/>
+                            <p>
+                    This shows how much total BTC has been donated so far, including the amount succesfully donated to the DFINITY foundation, and the amount pending forwarding (balance in the temporary forwarding address).
+</p>
+                            <p>
+                    It could take up to a few mins (or longer, if network connectivity issues occur) for all the ether to finish forwarding and become successfully donated.
+                    </p>
+
+                    </span>
+                    </a><span>
+                        <!-- <span id="donated-btc">0</span> donated -->
+                        (<span id="waiting-btc">0</span> <a href="javascript:ui.showWithdrawBtc()">waiting</a>)</span>
+                    </div>
+                </li>
             </ul>
         </div>
     </div>
@@ -239,9 +256,9 @@
         you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a
         private wallet).
     </p>
-    <!-- <p>
+    <p>
         <b>BTC balance in forwarding address: </b><span id="withdraw-waiting-btc"></span>
-    </p> -->
+    </p>
     <p>
     <h3>Withdraw to BTC address: </h3>
         <input id="withdraw-btc-addr" type="text" class="textbox-custom"/>

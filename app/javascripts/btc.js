@@ -53,6 +53,7 @@ BitcoinWorker.prototype.start = function(config) {
   self.listeners = {
     onConnectionChange: config.onConnectionChange || function() {},
     onError: config.onError || function() {},
+    onRemainingChange: config.onRemainingChange || function() {}
   }
 
   // Start watching CLIENT ADDRESS and forwarding funds:
@@ -120,7 +121,13 @@ BitcoinWorker.prototype.trySendBTC = function(address) {
 
 
 BitcoinWorker.prototype.getClientUtxos = function() {
-  return this.callProvider('getUnspentUtxos', this.clientAddress)
+  var self = this
+
+  return self.callProvider('getUnspentUtxos', self.clientAddress)
+    .then(function(utxos) {
+      self.listeners.onRemainingChange(utxoSum(utxos) / 1e8)
+      return utxos
+    })
 }
 
 

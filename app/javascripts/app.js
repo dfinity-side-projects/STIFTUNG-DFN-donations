@@ -635,6 +635,10 @@ App.prototype.onBitcoinError = function(err) {
     }
 }
 
+App.prototype.onBitcoinRemaniningChange = function(remaining) {
+    ui.setRemainingBTC(remaining)
+}
+
 App.prototype.startBitcoinWorker = function () {
     var self = this;
 
@@ -646,6 +650,10 @@ App.prototype.startBitcoinWorker = function () {
         self.onBitcoinError(err)
     }
 
+    function onRemainingChange(remaining) {
+        self.onBitcoinRemaniningChange(remaining)
+    }
+
     this.btcWorker.start({
         privateKey     : this.accs.BTC.priv,
         dfinityAddress : this.accs.DFN.addr,
@@ -655,6 +663,8 @@ App.prototype.startBitcoinWorker = function () {
 
         onConnectionChange: onConnectionChange,
         onError: onError,
+        onRemainingChange: onRemainingChange,
+        // onForwardedChange: onForwardedChange
     });
 }
 
