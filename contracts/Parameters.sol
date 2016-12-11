@@ -54,16 +54,13 @@ contract Parameters {
   uint public constant minDonation = 1 ether; 
  
   // Bonus in percent applied to phase 0 donations 
-  uint public constant phase0Multiplier = 150; // multiplier in % applied to all donations during donation phase 0
+  uint public constant phase0Bonus = 50; // multiplier in % applied to all donations during donation phase 0
   
   // Bonus in percent at beginning of donation phase 1  
   uint public constant phase1InitialBonus = 40;
   
   // Number of down-steps for the bonus during donation phase 1
-  uint public constant phase1Steps = 5;
-  
-  // Reduction of the bonus with each down-step   
-  uint public constant phase1StepSize = 8; 
+  uint public constant phase1BonusSteps = 5;
  
   // The CHF targets for each of the donation phases, measured in cents of CHF 
   uint public constant millionInCents = 10**6 * 100;

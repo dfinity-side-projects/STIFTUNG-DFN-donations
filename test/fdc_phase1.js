@@ -128,7 +128,7 @@ contract('FDC', function (accounts) {
             "phase1StartTime", "phase1EndTime", "finalizeStartTime",
             "finalizeEndTime",
             "phase0Target","phase1Target",
-            "phase0Multiplier", "phase1Steps", "phase1StepSize",
+            "phase0Bonus", "phase1InitialBonus", "phase1BonusSteps",
             "earlyContribShare", "gracePeriodAfterTarget",
             "tokensPerCHF", "phase0StartTime"
         ]
@@ -187,7 +187,7 @@ contract('FDC', function (accounts) {
             var multiplier = 100;
             var startTime = phaseStartTime[phase];
             if (phase == 0) {
-                multiplier = fdcConstants["phase0Multiplier"];
+                multiplier = 100 + fdcConstants["phase0Bonus"];
             } else if (phase == 1) {
                 multiplier += getPhase1Bonus(time);
                 console.log(" Using Phase 1 bonus multiplier: " + multiplier);

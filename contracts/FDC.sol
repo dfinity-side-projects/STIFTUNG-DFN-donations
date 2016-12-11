@@ -85,7 +85,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
                address _registrarAuth,
                address _exchangeRateAuth)
     TokenTracker(earlyContribShare)
-    StepFunction(phase1EndTime-phase1StartTime,phase1Steps,phase1StepSize) // phaseLength, nStep, step
+    StepFunction(phase1EndTime-phase1StartTime,phase1InitialBonus,phase1BonusSteps) // phaseLength, nStep, step
   {
     foundationWallet  = _foundationWallet;
     registrarAuth     = _registrarAuth;
@@ -147,7 +147,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
 
     // If time lies in donation phase 0 we return the constant multiplier 
     if (stateOfPhase[phase] == state.donPhase0) {
-      return phase0Multiplier;
+      return 100 + phase0Bonus;
     }
 
     // If time lies in donation phase 1 we return the step function
