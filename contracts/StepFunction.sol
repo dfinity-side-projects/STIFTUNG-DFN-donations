@@ -1,5 +1,4 @@
-// TODO: set to exact version before release
-pragma solidity >=0.4.1;
+pragma solidity ^0.4.6;
 
 // implements a step function going down in <nSteps> steps from a start value down to 0
 // each step reduces the function value by <step>
