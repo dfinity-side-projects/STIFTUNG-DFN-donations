@@ -38,7 +38,7 @@ contract('FDC', function (accounts) {
             var totalTokenAmount = res[3];// total DFN planned allocated to donors
             var startTime = res[4];      // expected start time of specified donation phase
             var endTime = res[5];        // expected end time of specified donation phase
-            var isCapReached = res[6];   // whether target cap specified phase reached
+            var isTargetReached = res[6];  // whether phase target has been reached
             var chfCentsDonated = res[7];// total value donated in specified phase as CHF
             var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
             var fwdBalance = res[9];     // total ETH (in Wei) waiting in fowarding address
@@ -124,9 +124,9 @@ contract('FDC', function (accounts) {
         var FDC_CONSTANTS = ["earlyContribEndTime", "phase0EndTime",
             "phase1StartTime", "phase1EndTime", "finalizeStartTime",
             "finalizeEndTime",
-            "phase0Cap","phase1Cap",
+            "phase0Target","phase1Target",
             "phase0Multiplier", "phase1Steps", "phase1StepSize",
-            "earlyContribShare", "gracePeriodAfterCap",
+            "earlyContribShare", "gracePeriodAfterTarget",
             "tokensPerCHF", "phase0StartTime"
         ]
 
@@ -243,7 +243,7 @@ contract('FDC', function (accounts) {
         };
 
         /*
-         * Check if the current phase end time has been adjusted based on the cap reached status
+         * Check if the current phase end time has been adjusted based on the target reached status
          */
         function assertPhaseEndTime() {
             return new Promise(function (resolve, reject) {
@@ -251,10 +251,10 @@ contract('FDC', function (accounts) {
                     var startTime = res[5];      // expected start time of specified donation phase
                     var endTime = res[6];        // expected end time of specified donation phase
 
-                    var phaseCap = donationPhase == 0 ? fdcConstants["phase0Cap"] : fdcConstants["phase1Cap"];
-                    console.log(" - Asserting if remaining end time less than 1hr if cap reached: chfCents = " + chfCentsDonated[donationPhase] + " // cap = " + phaseCap);
-                    if (chfCentsDonated[donationPhase].greaterThanOrEqualTo(phaseCap)) {
-                        console.log(" --> Target reached. End time should shorten to " + fdcConstants["gracePeriodAfterCap"] + " seconds ");
+                    var phaseTarget = donationPhase == 0 ? fdcConstants["phase0Target"] : fdcConstants["phase1Target"];
+                    console.log(" - Asserting if remaining end time less than 1hr if target reached: chfCents = " + chfCentsDonated[donationPhase] + " // target = " + phaseTarget);
+                    if (chfCentsDonated[donationPhase].greaterThanOrEqualTo(phaseTarget)) {
+                        console.log(" --> Target reached. End time should shorten to " + fdcConstants["gracePeriodAfterTarget"] + " seconds ");
                         printStatus();
 
                         for (var i = 0; i < 7; i++) {
@@ -266,9 +266,9 @@ contract('FDC', function (accounts) {
                         wait(5000, false);
                         var timeLeft = endTime - getVmTime();
 
-                        assert.isAtMost(timeLeft, fdcConstants["gracePeriodAfterCap"]);
+                        assert.isAtMost(timeLeft, fdcConstants["gracePeriodAfterTarget"]);
 
-                        assert.isAtLeast(timeLeft, fdcConstants["gracePeriodAfterCap"] - 10);
+                        assert.isAtLeast(timeLeft, fdcConstants["gracePeriodAfterTarget"] - 10);
                         console.log(" --> Assert success. Remaining time: " + (endTime - getVmTime()));
                         resolve();
                     } else {

@@ -39,7 +39,7 @@ contract Parameters {
   uint public constant maxDelay             = 180 days;
 
   // The time for which donation phases remain open after they reach their respective targets   
-  uint public constant gracePeriodAfterCap  = 30 minutes;
+  uint public constant gracePeriodAfterTarget  = 30 minutes;
 
   /**
    * Token issuance
@@ -67,8 +67,8 @@ contract Parameters {
  
   // The CHF targets for each of the donation phases, measured in cents of CHF 
   uint public constant millionInCents = 10**6 * 100;
-  uint public constant phase0Cap = 1 * millionInCents; 
-  uint public constant phase1Cap = 20 * millionInCents;
+  uint public constant phase0Target = 1 * millionInCents; 
+  uint public constant phase1Target = 20 * millionInCents;
 
   // Share of tokens eventually assigned to early contributors in % of all tokens eventually in existence
   uint public constant earlyContribShare = 20; 
