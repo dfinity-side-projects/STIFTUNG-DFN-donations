@@ -25,6 +25,9 @@ var TX_FEE_MULTIPLIER = 1.5
 
 function BitcoinWorker() {
   this.isWorking = false
+
+  // Real initialization happens in .start()
+  // This fits better with the expected usage in `app.js`.
 }
 
 
