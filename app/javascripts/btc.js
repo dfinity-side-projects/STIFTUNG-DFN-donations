@@ -36,7 +36,7 @@ BitcoinHelper.prototype.initialize = function(config) {
   this.centralAddress = bitcore.Address(config.centralAddress)
 
   // External block explorer configuration:
-  this.pollIntervalMs  = config.pollIntervalMs
+  this.pollIntervalMs  = config.pollIntervalMs || 5000
   this.bitcoinProvider = config.bitcoinProvider
 
   // Live CLIENT ADDRESS watch+forward timer:
