@@ -101,6 +101,9 @@ contract('FDC', function (accounts) {
             Promise.resolve("success")
                 .then(initConstants)
                 .then(function () {
+                    printStatus();
+                    advanceVmTimeTo(fdcConstants["phase0StartTime"]);
+                }).then(function () {
                 return makeMultiDonations(25000, 5, 1, 1)
             }).then(function () {
                 return advanceToPhase(4, 0)
@@ -124,7 +127,7 @@ contract('FDC', function (accounts) {
             "phase0Cap","phase1Cap",
             "phase0Multiplier", "phase1Steps", "phase1StepSize",
             "earlyContribShare", "gracePeriodAfterCap",
-            "tokensPerCHF"
+            "tokensPerCHF", "phase0StartTime"
         ]
 
 
@@ -415,10 +418,8 @@ contract('FDC', function (accounts) {
                         getStatus().then(function (res) {
                             var donationCount = res[3];  // total individual donations made (a count)
                             assert.equal(donationCount.valueOf(), ++totalDonationCount, "Donation count not correct");
-
                             resolve(amountWei);
                         });
-
                     }).catch(function (e) {
                         console.log("Error sending ETH forwarding tx: " + e);
                         reject();
