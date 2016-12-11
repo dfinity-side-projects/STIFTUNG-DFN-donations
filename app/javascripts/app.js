@@ -619,7 +619,6 @@ App.prototype.onBitcoinConnect = function () {
 
 App.prototype.onBitcoinDisconnect = function (errCode) {
     this.setBitcoinClientStatus(errCode);
-    this.btcWorker.stop(); // stop until user clicks retry
 }
 
 App.prototype.onBitcoinError = function(err) {
