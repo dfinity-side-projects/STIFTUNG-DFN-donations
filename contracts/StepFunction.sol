@@ -1,9 +1,9 @@
 pragma solidity ^0.4.6;
 
 /**
- * A step function used for the bonus in donation phase 1
+ * A configurable step function 
  *
- * The contract implements a step function going down over from an initialValue to 0 in a number of steps (nSteps).
+ * The contract implements a step function going down from an initialValue to 0 in a number of steps (nSteps).
  * The steps are distributed equally over a given time (phaseLength).
  * Having n steps means that the time phaseLength is divided into n+1 sub-intervalls of equal length during each of which the function value is constant. 
  * 
@@ -15,13 +15,13 @@ contract StepFunction {
   uint public step;
 
   function StepFunction(uint _phaseLength, uint _initialValue, uint _nSteps) {
-    // We throw if phaseLength does not leave enough room for number of steps
+    // Throw if phaseLength does not leave enough room for number of steps
     if (_nSteps > _phaseLength) { throw; } 
   
     // The reduction in value per step 
     step = _initialValue / _nSteps;
     
-    // We throw if _initialValue was not divisible by _nSteps
+    // Throw if _initialValue was not divisible by _nSteps
     if ( step * _nSteps != _initialValue) { throw; } 
 
     phaseLength = _phaseLength;
