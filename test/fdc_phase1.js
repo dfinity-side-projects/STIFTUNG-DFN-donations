@@ -32,16 +32,19 @@ contract('FDC', function (accounts) {
         var dfnAddr = accounts[0];
         var fwdAddr = accounts[0];
         return fdc.getStatus(donationPhase, dfnAddr, fwdAddr).then(function (res) {
-            var currentState = res[0];   // current state (an enum)
-            var fxRate = res[1];         // exchange rate of CHF -> ETH (Wei/CHF)
-            var donationCount = res[2];  // total individual donations made (a count)
-            var totalTokenAmount = res[3];// total DFN planned allocated to donors
-            var startTime = res[4];      // expected start time of specified donation phase
-            var endTime = res[5];        // expected end time of specified donation phase
-            var isTargetReached = res[6];  // whether phase target has been reached
-            var chfCentsDonated = res[7];// total value donated in specified phase as CHF
-            var tokenAmount = res[8];    // total DFN planned allocted to donor (user)
-            var fwdBalance = res[9];     // total ETH (in Wei) waiting in fowarding address
+            // parse status data
+            var currentState = res[0];      // current state (an enum)
+            var fxRate = res[1];            // exchange rate of CHF -> ETH (Wei/CHF)
+            var currentMultiplier = res[2]; // current bonus multiplier in percent (0 if outside of )
+            var donationCount = res[3];     // total individual donations made (a count)
+            var totalTokenAmount = res[4];  // total DFN planned allocated to donors
+            var startTime = res[5];         // expected start time of specified donation phase
+            var endTime = res[6];           // expected end time of specified donation phase
+            var isTargetReached = res[7];   // whether phase target has been reached
+            var chfCentsDonated = res[8];   // total value donated in specified phase as CHF
+            var tokenAmount = res[9];       // total DFN planned allocted to donor (user)
+            var ethFwdBalance = res[10];    // total ETH (in Wei) waiting in forwarding address
+            var donated = res[11];          // total ETH (in Wei) donated so far
 
             console.log("Received from getStatus(): " + JSON.stringify(res));
             assert.equal(chfCentsDonated.valueOf(), 0, "Donation count wasn't initialized to zero");
