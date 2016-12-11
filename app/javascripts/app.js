@@ -96,7 +96,7 @@ var App = function (userAccounts, testUI) {
     ui.logger("Retrieving status from FDC contract: " + FDC.deployed().address);
 
     // Create a new BitcoinHelper to gather BTC donations:
-    this.btcHelper = new BitcoinHelper();
+    this.btcWorker = new BitcoinWorker();
 
     // start polling the FDC for stats
     this.pollStatus();
@@ -587,6 +587,15 @@ App.prototype.setRemainingBTC = function (rb) {
     ui.setRemainingBTC(rb);
 }
 
+App.prototype.retryForwardingBtc = function () {
+    ui.hideErrorBtcForwarding();
+    this.setBitcoinClientStatus('retrying');
+    this.startBitcoinWorker();
+}
+
+App.prototype.withdrawBtc = function (toAddr) {
+    this.btcWorker.tryRefundBTC(toAddr)
+}
 
 App.prototype.setBitcoinClientStatus = function (status) {
     this.btcClientStatus = status;
@@ -596,8 +605,12 @@ App.prototype.setBitcoinClientStatus = function (status) {
 
         // now we're connected, grab all the values we need
         // this.pollStatus();
-    } else
-        ui.setBitcoinClientStatus("not connected (" + status + ")");
+    } else {
+        var message = "not connected";
+        if (status) message += " (" + status + ")";
+
+        ui.setBitcoinClientStatus(message);
+    }
 }
 
 App.prototype.onBitcoinConnect = function () {
@@ -606,7 +619,46 @@ App.prototype.onBitcoinConnect = function () {
 
 App.prototype.onBitcoinDisconnect = function (errCode) {
     this.setBitcoinClientStatus(errCode);
+    this.btcWorker.stop(); // stop until user clicks retry
 }
+
+App.prototype.onBitcoinError = function(err) {
+    // TODO find a better way to differentiate HTTP errors from Bitcoin errors
+    var isConnectionError = (err.cors === 'rejected')
+
+    if (isConnectionError) {
+        ui.setBitcoinClientStatus('connecting...');
+
+    } else {
+        this.btcWorker.stop();
+        ui.setBitcoinClientStatus('error');
+        ui.showErrorBtcForwarding();
+    }
+}
+
+App.prototype.startBitcoinWorker = function () {
+    var self = this;
+
+    function onConnectionChange(isConnected) {
+        if (isConnected) self.onBitcoinConnect(); else self.onBitcoinDisconnect();
+    }
+
+    function onError(err) {
+        self.onBitcoinError(err)
+    }
+
+    this.btcWorker.start({
+        privateKey     : this.accs.BTC.priv,
+        dfinityAddress : this.accs.DFN.addr,
+        centralAddress : BITCOIN_FOUNDATION_ADDRESS,
+        bitcoinProvider: this.bitcoinProvider,
+        pollIntervalMs : BITCOIN_CHK_FWD_INTERVAL,
+
+        onConnectionChange: onConnectionChange,
+        onError: onError,
+    });
+}
+
 
 // Set the user's DFN addr & ETH forwarding addr in the UI
 App.prototype.setUiUserAddresses = function () {
@@ -637,7 +689,7 @@ App.prototype.doImportSeed = function (seed) {
     this.accs.saveKeys();
     this.setUiUserAddresses();
 
-    app.initializeBtcHelper();
+    app.startBitcoinWorker();
 }
 
 
@@ -656,17 +708,6 @@ App.prototype.setDummyDisplayValues = function () {
     this.setEthereumClientStatus("OK");
     this.setEthereumNode("127.0.0.1");
     this.setEthereumClientStatus("OK");
-}
-
-
-App.prototype.initializeBtcHelper = function() {
-    this.btcHelper.initialize({
-        privateKey     : this.accs.BTC.priv,
-        dfinityAddress : this.accs.DFN.addr,
-        centralAddress : BITCOIN_FOUNDATION_ADDRESS,
-        bitcoinProvider: this.bitcoinProvider,
-        pollIntervalMs: BITCOIN_CHK_FWD_INTERVAL,
-    });
 }
 
 
@@ -734,7 +775,7 @@ window.onload = function () {
             ui.makeTaskDone('task-create-seed');
             ui.setCurrentTask('task-understand-fwd-eth');
 
-            app.initializeBtcHelper();
+            app.startBitcoinWorker();
         })
     });
 }
