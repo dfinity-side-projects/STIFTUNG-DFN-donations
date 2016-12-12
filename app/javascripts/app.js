@@ -1,3 +1,40 @@
+/*
+ * DFINITY Donation Chrome Extension
+ * (C) 2016 DFINITY Stiftung (http://dfinity.network)
+ *
+ * This Chrome extension provides a guided process for user to donate Bitcoin or
+ * Ether, in return for DFINITY Network Participation Token (DFN) recommendation from 
+ * DFINITY Stiftung, a Swiss non-profit dedicated to DFINITY Network research, 
+ * development and promotion. 
+ *
+ * This client: 
+ *   - generates new seed and derive DFN address
+ *   - forwards ETH/BTC from a temporary address (which is also derived from the same 
+ *     seed) to the Foundation Donation Contract(FDC). The FDC is a set of smart 
+ *     contracts running on Ethereum, which registers the donation and 
+ *     corresponding DFN token recommendation amount
+ *   - requires connecting to a Ethereum node (regardless of Ether or Bitcoin donation)
+ *   - requires connecting to a Bitcoin node for Bitcoin donation
+ *   - can withdrawal remaining Eth from the temporary withdrawal address 
+ *
+ * Refer to FDC code for detailed logic on donation.
+ *
+ * General structure: 
+ *
+ *  = app/index.html: main app html
+ *  = app/javascripts:
+ *   - app.js:  all the application logic are stored.
+ *   - ui.js: a light wrapper for all HTML interface updates and interactions
+ *   - btc.js:: handles bitcoin forwarding
+ *   - util.js: utility functions
+ *   - accounts.js: generates new seed and derive addresses
+ *  = contracts: FDC (Foundation Donation Contract) solidity code
+ *  = test
+ *   - fdc.js: test suite for various FDC functions
+ *  = migrations: truffle deployment code
+ *
+ */
+
 var accounts;
 var account;
 
@@ -10,6 +47,7 @@ var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Ethe
 var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically selected Ethereum provider
 var ETHEREUM_HOSTED_NODES = ["TODO"];
 var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
+
 
 
 // -----------------------------------------------------------------------------
