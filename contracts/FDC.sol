@@ -458,8 +458,6 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *
    *  - donateAs
    *  - bookDonation
-   *  -
-   *
    */
   
   /**
@@ -468,7 +466,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * This function is private because it shall only be called through its 
    * wrapper donateAsWithChecksum.
    */
-  function donateAs(address addr) private returns (bool) {
+  function donateAs(address addr) payable returns (bool) {
     // The current state
     state st = getState();
     
