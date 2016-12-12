@@ -1,41 +1,143 @@
 pragma solidity ^0.4.6;
 
+/**
+ * A contract that advances through multiple configurable phases over time.
+ * 
+ * Phases are defined by their transition times. The moment one phase ends the next one starts.
+ * Each time belongs to exactly one phase.
+ *
+ * The contract allows a limited set of changes to be applied to the phase transitions while the contract is active.
+ * As a matter of principle, changes are prohibited from effecting the past. They may only ever affect future phase transitions.
+ *
+ * The permitted changes are:
+ *   - add a new phase after the last one
+ *   - end the current phase right now and transition to the next phase immediately 
+ *   - delay the start of a future phase (thereby pushing out all subsequent phases by an equal amount of time)
+ *   - define a maximum delay for a specified phase 
+ */
+ 
 contract Phased {
-  // transition times between phases
+  /**
+   * Array of transition times defining the phases
+   *   
+   * phaseEndTime[i] is the time when phase i has just ended.
+   * Phase i is defined as the following time interval: [ phaseEndTime[i-1], phaseEndTime[i] )
+   */
   uint[] public phaseEndTime;
 
-  // N = phaseEndTime.length = number of phase transitions
-  // Transitions are numbered 0,..,N-1
-  // N+1 = number of phases 
-  // Phases are numbered 0,..,N
-  // phaseEndTime[i] means: end of phase i (exclusive), beginning of phase i+1 (inclusive)
+  /**
+   * Number of phase transitions N = phaseEndTime.length 
+   *
+   * There are N+1 phases, numbered 0,..,N.
+   * The first phase has no start and the last phase has no end.
+   */
   uint public N; 
 
-  // forward adjustability of phase end times
-  // maps i to the maximum time by which phaseEndTime[i] can be moved forward (i.e. adjusted to a later time) 
+  /**
+   *  Maximum delay for phase transitions
+   *
+   *  maxDelay[i] is the maximum amount of time by which the transition phaseEndTime[i] can be delayed.
+  */
   mapping(uint => uint) public maxDelay; 
 
-  // Constructor
-  // The constructor itself is empty. There are no phase transitions (N = 0) and one phase (N+1=1)
-  //
-  // The two functions setPhases() and setMaxDelay() are intended to be called only once. They make up the "constructor". 
+  /**
+   * The contract has no constructor.
+   * The contract initialized itself with no phase transitions (N = 0) and one phase (N+1=1).
+   *
+   * There are two PUBLIC functions (getters):
+   *  - getPhaseAtTime
+   *  - isPhase
+   *  - getPhaseStartTime
+   *
+   * Note that both functions are guaranteed to return the same value when called twice with the same argument (but at different times).
+   */
 
-  // Add a phase after the last phase. The time argument is the new endTime of the phase currently known as the last phase, or, in other words the start time of the newly introduced phase.
-  // All calls to addPhase() MUST be with strictly increasing time arguments.
-  function addPhase(uint time) internal {
-    // Enforce strictly increasing phase transition times
-    if (N > 0 && time <= phaseEndTime[N-1]) { throw; } 
-
-    // It is not allowed to add a phase transition now or in the past
-    // TODO turn back on (it is turned off for the first phase while we are testing with truffle)
-    //   if (time <= now) { throw; }
-    if (N > 0 && time <= now) { throw; }
+  /**
+   * Return the number of the phase to which the given time belongs.
+   *
+   * Return value i means phaseEndTime[i-1] <= time < phaseEndTime[i].
+   * The given time must not be in the future (because future phase numbers may still be subject to change).
+   */
+  function getPhaseAtTime(uint time) constant returns (uint n) {
+    // Throw if time is in the future
+    if (time > now) { throw; }
     
-    N++;
-    phaseEndTime.push(time);
+    // Loop until we have found the "active" phase
+    while (n < N && phaseEndTime[n] <= time) {
+      n++;
+    }
+  }
+
+  /**
+   * Return true if the given time belongs to the given phase.
+   *
+   * Returns the logical equivalent of the expression (phaseEndTime[i-1] <= time < phaseEndTime[i]).
+   *
+   * The given time must not be in the future (because future phase numbers may still be subject to change).
+   */
+  function isPhase(uint time, uint n) constant returns (bool) {
+    // Throw if time is in the future
+    if (time > now) { throw; }
+    
+    // Throw if index is out-of-range
+    if (n >= N) { throw; }
+    
+    // Condition 1
+    if (n > 0 && phaseEndTime[n-1] > time) { return false; } 
+    
+    // Condition 2
+    if (n < N && time >= phaseEndTime[n]) { return false; } 
+   
+    return true; 
   }
   
-  // Defines a limit on the delay that can later be imposed on the given phase. By default phases can not be delayed (limit = 0).
+  /**
+   * Return the start time of the given phase.
+   *
+   * This function is provided for convenience.
+   * The given phase number must not be 0, as the first phase has no start time.
+   */
+  function getPhaseStartTime(uint n) constant returns (uint) {
+    // Throw if phase is the first phase
+    if (n == 0) { throw; }
+    
+    return phaseEndTime[n-1];
+  }
+    
+  /**
+   *  There are 4 INTERNAL functions:
+   *    1. addPhase
+   *    2. setMaxDelay
+   *    3. delayPhaseEndBy
+   *    4. endCurrentPhaseIn
+   *
+   *  This contract does not implement access control to these function, so they are made internal.
+   */
+   
+  /**
+   * 1. Add a phase after the last phase.
+   *
+   * The argument is the new endTime of the phase currently known as the last phase, or, in other words the start time of the newly introduced phase.  
+   * All calls to addPhase() MUST be with strictly increasing time arguments.
+   * It is not allowed to add a phase transition that lies in the past relative to the current block time.
+   */
+  function addPhase(uint time) internal {
+    // Throw if new transition time is not strictly increasing
+    if (N > 0 && time <= phaseEndTime[N-1]) { throw; } 
+
+    // Throw if new transition time is not in the future
+    if (time <= now) { throw; }
+   
+    // Append new transition time to array 
+    phaseEndTime.push(time);
+    N++;
+  }
+  
+  /**
+   * 2. Define a limit on the amount of time by which the given transition (i) can be delayed.
+   *
+   * By default, transitions can not be delayed (limit = 0).
+   */
   function setMaxDelay(uint i, uint timeDelta) internal {
     // Throw if index is out-of-range
     if (i >= N) { throw; }
@@ -43,97 +145,51 @@ contract Phased {
     maxDelay[i] = timeDelta;
   }
 
-  //
-  // Public API for queries
-  //
+  /**
+   * 3. Delay the end of the given phase (n) by the given time delta. 
+   *
+   * The given phase must not have ended.
+   *
+   * This function can be called multiple times for the same phase. 
+   * The defined maximum delay will be enforced across multiple calls.
+   */
+  function delayPhaseEndBy(uint n, uint timeDelta) internal {
+    // Throw if index is out of range
+    if (n >= N) { throw; }
 
-  // Determine current phase (= index of next phaseEndTime)
-  // The returned value lies in the interval [0,N].
-  // 0 means time is before the first transition time.
-  // N means time is after or equal to the last transition time.
-  // phase i means phaseEndTime[i-1] <= time < phaseEndTime[i]
-  function getPhaseAtTime(uint time) constant returns (uint) {
-    uint i;
-    while (i < N && phaseEndTime[i] <= time) {
-      i++;
-    }
+    // Throw if phase has already ended
+    if (now >= phaseEndTime[n]) { throw; }
 
-    return i; 
-  }
+    // Throw if the requested delay is higher than the defined maximum for the transition
+    if (timeDelta > maxDelay[n]) { throw; }
 
-  // More efficiently than the loop in getPhaseAtTime() we can simply check if time lies in a given phase number or not
-  function isPhase(uint time, uint i) constant returns (bool) {
-    // Throw if index is out-of-range
-    if (i >= N) { throw; }
-   
-    // We want to return true iff phaseEndTime[i-1] <= time < phaseEndTime[i]
-    
-    // Condition 1
-    if (i > 0 && phaseEndTime[i-1] > time) { return false; } 
-    
-    // Condition 2
-    if (i < N && time >= phaseEndTime[i]) { return false; } 
-   
-    return true; 
-  }
-  
-  //
-  // Internal API to change phase end times
-  //   delayTransitionBy() and endCurrentPhaseIn()
-  // This contract does not implement access control to these
-  // function, so they are made internal.
-  //
-  
-  // adjust transition time forward
-  // this can be called multiple times throughout the lifetime of the contract
-  // i = phase number
-  function delayPhaseEndBy(uint i, uint timeDelta) internal {
-    // index out of range
-    if (i >= N) { throw; }
+    // Subtract from the current max delay, so maxDelay is honored across multiple calls
+    maxDelay[n] -= timeDelta;
 
-    // phase has already ended
-    if (phaseEndTime[i] >= now) { throw; }
-
-    // limit forwarding to allowed max 
-    // If beyond then we throw as the call is unlikely to be intentional.
-    if (timeDelta == 0 || timeDelta > maxDelay[i]) { throw; }
-
-    // subtract from the current max delay, so maxDelay is honored
-    // even when delayEndBy is called multiple times
-    maxDelay[i] -= timeDelta;
-
-    // delaying always pushes out all subsequent transitions by the same amount
-    for (uint j = i; j < N; j++) {
-      phaseEndTime[j] += timeDelta;
+    // Push out all subsequent transitions by the same amount
+    for (uint i = n; i < N; i++) {
+      phaseEndTime[i] += timeDelta;
     }
   }
 
-  // end the current phase early, at now + timeDelta
+  /**
+   * 4. End the current phase early.
+   *
+   * The current phase must not be the last phase, as the last phase has no end.
+   * The current phase will end at time now plus the given time delta.
+   */
   function endCurrentPhaseIn(uint timeDelta) internal {
-    uint phase = getPhaseAtTime(now);
+    // Get the current phase number
+    uint n = getPhaseAtTime(now);
 
-    // If we are past the last transition then we throw as it is unlikely to be intentional.
-    if (phase == N) { throw; }
+    // Throw if we are in the last phase
+    if (n >= N) { throw; }
     
-    // We can only ever end a phase earlier than intended before, never later.
-    // Adjust the next transition time unless timeDelta is too big 
-    if (now + timeDelta < phaseEndTime[phase]) { 
-      phaseEndTime[phase] = now + timeDelta;
+    // The new phase end should be earlier than the currently defined phase end, otherwise we don't change it.
+    if (now + timeDelta < phaseEndTime[n]) { 
+      phaseEndTime[n] = now + timeDelta;
     }
   }
-
-  //
-  // Getters
-  //
-
-  // i = phase number
-  function getPhaseStartTime(uint i) public constant returns (uint) {
-    // Phase 0 has no start time
-    if (i == 0) { throw; }
-    
-    return phaseEndTime[i-1];
-  }
-    
 }
 
     
