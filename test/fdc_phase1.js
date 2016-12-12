@@ -141,6 +141,23 @@ contract('FDC', function (accounts) {
     }
 
     it("Phase 1 testing", function () {
+            /* Test Parameters */
+            var EARLY_CONTRIBUTORS = 35;
+            var testSuites = [
+                {
+                    phase0: {
+                        target: "exceed",   // meet, exceed, below
+                        min_donations: 20  // over how many donations
+                    },
+                    phase1: {
+                        target: "below",   // meet, exceed, below
+                        min_donations: 15,  // over how many donations
+                        steps: 5 //  cover how many multiplier transitions
+                    }
+                }
+            ]
+
+
             /* Global Test variables  */
             var ETHForwardAddr = accounts[4];
             var DFNAddr = accounts[5];
@@ -163,7 +180,6 @@ contract('FDC', function (accounts) {
             var WEI_PER_CHF = web3.toWei("0.1", "ether");
 
             var phaseStartTime = [], phaseEndtime = [];
-            var EARLY_CONTRIBUTORS = 10;
 
             // printStatus();
 
@@ -174,19 +190,6 @@ contract('FDC', function (accounts) {
                 "phase0Bonus", "phase1InitialBonus", "phase1BonusSteps",
                 "earlyContribShare", "gracePeriodAfterTarget",
                 "tokensPerCHF", "phase0StartTime"
-            ]
-            var testSuites = [
-                {
-                    phase0: {
-                        target: "meet",   // meet, exceed, below
-                        min_donations: 1  // over how many donations
-                    },
-                    phase1: {
-                        target: "meet",   // meet, exceed, below
-                        min_donations: 1 ,  // over how many donations
-                        steps: 5 //  cover how many multiplier transitions
-                    }
-                }
             ]
 
 
@@ -219,9 +222,12 @@ contract('FDC', function (accounts) {
                         var etherTarget = fdcConstants["phase0Target"] / 100 / 10;
                         var target = phase0["target"];
                         var chunk = etherTarget / minDonations;
+                        var bonusSteps = fdcConstants["phase1BonusSteps"];
+                        var currentStep = 0;
                         console.log(" /////// ====   TEST SUITE:  Register early contribs  ==== \\\\\\\\\\ ")
                         for (var donationTx = 0; ; donationTx++) {
                             const amt = randomAmount(1, chunk);
+                            if 
                             if (target == "meet") {
                                 if (amountDonated + amt > etherTarget) {
                                     amountDonated += amt;
@@ -230,8 +236,8 @@ contract('FDC', function (accounts) {
                                     });
                                     break;
                                 }
-
                             } else if (target == "exceed") {
+                                // 50:50 probability of stopping if mission accomplished :)
                                 if (amountDonated > etherTarget && randomAmount(0, 100) > 50)
                                     break;
                             } else { // below target
@@ -308,8 +314,8 @@ contract('FDC', function (accounts) {
                     .then(fdcGetterPromise.bind(null, "restrictions", [address]))
                     .then(function () {
                         console.log(" - Asserting early contrib tokens / restricted:" + getterValues["tokens"] + " / " + getterValues["restrictions"]);
-                        assert.equal(amount, getterValues["tokens"]);
-                        assert.equal(amount, getterValues["restrictions"]);
+                        assert.equal(amount, getterValues["tokens"].toString());
+                        assert.equal(amount, getterValues["restrictions"].toString());
                     })
             }
 
@@ -327,7 +333,7 @@ contract('FDC', function (accounts) {
 
             function finalizeEarlyContrib(addr) {
                 return new Promise(function (r, e) {
-                    console.log(" Finalized tokens for " + addr );
+                    console.log(" Finalized tokens for " + addr);
                     fdc.finalize(addr).then(r);
                 });
             }
@@ -365,7 +371,7 @@ contract('FDC', function (accounts) {
                     (function (status) {
                         var tokensTotal = status[4];
                         console.log("Total tokens of early contrib: " + finalizedTotalEarlyContrib + "  [total: " + tokensTotal + "]");
-                        assert.isAtLeast(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (EARLY_CONTRIB_PERC ) / 100 - tokensTotal*.001, " Early contrib should be at least 19.99% of Total tokens");
+                        assert.isAtLeast(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (EARLY_CONTRIB_PERC ) / 100 - tokensTotal * .001, " Early contrib should be at least 19.99% of Total tokens");
                         assert.isAtMost(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (EARLY_CONTRIB_PERC ) / 100, " Early contrib should be no more than 20% of Total tokens");
 
 
@@ -394,7 +400,8 @@ contract('FDC', function (accounts) {
                     account.generateKeys(seed);
                     console.log(" Early contrib generated: " + addr);
                     var addr = account.DFN.addr;
-                    earlyContribs[addr] = {original: 10000000/EARLY_CONTRIBUTORS, finalized: -1, restricted: -1};
+                    var amount = Math.floor(10000000 / EARLY_CONTRIBUTORS);
+                    earlyContribs[addr] = {original: amount, finalized: -1, restricted: -1};
                     origTotalEarlyContrib += earlyContribs[addr]["original"];
                 }
 
