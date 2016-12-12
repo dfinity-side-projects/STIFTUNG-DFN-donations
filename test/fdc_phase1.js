@@ -150,7 +150,7 @@ contract('FDC', function (accounts) {
                         min_donations: 6  // over how many donations
                     },
                     phase1: {
-                        target: "below",   // meet, exceed, below
+                        target: "exceed",   // meet, exceed, below
                         min_donations: 10,  // over how many donations
                         steps: 5 //  cover how many multiplier transitions
                     }
@@ -209,9 +209,9 @@ contract('FDC', function (accounts) {
             function addPhase0Tests(p, phase0) {
                 var minDonations = phase0["min_donations"];
                 var amountDonated = 0;
-                var etherTarget = fdcConstants["phase0Target"] / 100 / 10;
+                var fdcTarget = fdcConstants["phase0Target"] / 100 / 10;
                 var target = phase0["target"];
-                var chunk = etherTarget / minDonations;
+                var chunk = fdcTarget / minDonations;
 
                 p = p.then(advanceToPhase.bind(null,2, 0));
 
@@ -219,7 +219,7 @@ contract('FDC', function (accounts) {
                     const amt = randomAmount(1, chunk);
 
                     if (target == "meet") {
-                        if (amountDonated + amt > etherTarget) {
+                        if (amountDonated + amt > fdcTarget) {
                             amountDonated += amt;
                             p = p.then(makeDonationAndValidate.bind(null, 0,0, chunk));
 
@@ -227,10 +227,10 @@ contract('FDC', function (accounts) {
                         }
                     } else if (target == "exceed") {
                         // 50:50 probability of stopping if mission accomplished :)
-                        if (amountDonated > etherTarget && randomAmount(0, 100) > 50)
+                        if (amountDonated > fdcTarget && randomAmount(0, 100) > 50)
                             break;
                     } else { // below target
-                        if (amountDonated + amt + minDonations >= etherTarget) {
+                        if (amountDonated + amt + minDonations >= fdcTarget) {
                             // Skip this round and get a new random number
                             donationTx--;
                             continue;
@@ -249,9 +249,9 @@ contract('FDC', function (accounts) {
             function addPhase1Tests(p, phase1) {
                 var minDonations = phase1["min_donations"];
                 var amountDonated = 0;
-                var etherTarget = fdcConstants["phase0Target"] / 100 / 10;
+                var fdcTarget = fdcConstants["phase1Target"] / 100 / 10;
                 var target = phase1["target"];
-                var chunk = etherTarget / minDonations;
+                var chunk = fdcTarget / minDonations;
 
                 var bonusSteps = fdcConstants["phase1BonusSteps"];
                 var requiredSteps = phase1["steps"];
@@ -266,17 +266,17 @@ contract('FDC', function (accounts) {
                     const amt = randomAmount(1, chunk);
 
                     if (target == "meet") {
-                        if (amountDonated + amt > etherTarget) {
+                        if (amountDonated + amt > fdcTarget) {
                             amountDonated += amt;
                             p = p.then(makeDonationAndValidate.bind(null, 1,currentStep, chunk));
                             break;
                         }
                     } else if (target == "exceed") {
                         // 50:50 probability of stopping if mission accomplished :)
-                        if (amountDonated > etherTarget && randomAmount(0, 100) > 50)
+                        if (amountDonated > fdcTarget && randomAmount(0, 100) > 50)
                             break;
                     } else { // below target
-                        if (amountDonated + amt + minDonations >= etherTarget) {
+                        if (amountDonated + amt + minDonations >= fdcTarget) {
                             // Skip this round and get a new random number
                             donationTx--;
                             continue;
@@ -475,7 +475,7 @@ contract('FDC', function (accounts) {
                     var addr = account.DFN.addr;
                     console.log(" Early contrib generated: " + addr);
 
-                    var amount = Math.floor(10000000 / EARLY_CONTRIBUTORS);
+                    var amount = Math.floor(300000000 / EARLY_CONTRIBUTORS);
                     earlyContribs[addr] = {original: amount, finalized: -1, restricted: -1};
                     origTotalEarlyContrib += earlyContribs[addr]["original"];
                 }
