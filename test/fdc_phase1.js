@@ -142,7 +142,7 @@ contract('FDC', function (accounts) {
 
     it("Phase 1 testing", function () {
             /* Test Parameters */
-            var EARLY_CONTRIBUTORS = 5;
+            var EARLY_CONTRIBUTORS = 37;
             var testSuites = [
                 {
                     phase0: {
@@ -227,7 +227,7 @@ contract('FDC', function (accounts) {
                         }
                     } else if (target == "exceed") {
                         // 50:50 probability of stopping if mission accomplished :)
-                        if (amountDonated > fdcTarget && randomAmount(0, 100) > 50)
+                        if (amountDonated > fdcTarget && randomAmount(0, 100) > 80)
                             break;
                     } else { // below target
                         if (amountDonated + amt + minDonations >= fdcTarget) {
@@ -272,8 +272,8 @@ contract('FDC', function (accounts) {
                             break;
                         }
                     } else if (target == "exceed") {
-                        // 50:50 probability of stopping if mission accomplished :)
-                        if (amountDonated > fdcTarget && randomAmount(0, 100) > 50)
+                        // 20% probability of stopping if mission accomplished :)
+                        if (amountDonated > fdcTarget && randomAmount(0, 100) > 80)
                             break;
                     } else { // below target
                         if (amountDonated + amt + minDonations >= fdcTarget) {
