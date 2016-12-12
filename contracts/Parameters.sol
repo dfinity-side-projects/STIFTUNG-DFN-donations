@@ -47,7 +47,6 @@ contract Parameters {
 
   // The start of phase 0 is set to 2016-12-19 19:00 of timezone Europe/Zurich
   // TZ="Europe/Zurich" date -d "2016-12-15 00:00" "+%s"
-  /*
   uint public constant phase0StartTime      = 1481756400; 
   
   // The other phase transitions are defined by offsets from the start of phase 0
@@ -56,14 +55,6 @@ contract Parameters {
   uint public constant phase1StartTime      = phase0EndTime + 12 weeks;
   uint public constant phase1EndTime        = phase1StartTime + 6 weeks;
   uint public constant finalizeStartTime    = phase1EndTime   + 1 weeks;
-  */
-  
-   uint public constant earlyContribEndTime  = now + 10 minutes;
-   uint public constant phase0StartTime      = earlyContribEndTime + 1 hours;
-   uint public constant phase0EndTime        = phase0StartTime + 1 hours;
-   uint public constant phase1StartTime      = phase0EndTime   + 3 hours;
-   uint public constant phase1EndTime        = phase1StartTime + 1 hours;
-   uint public constant finalizeStartTime    = phase1EndTime   + 0 hours; 
   
   // The finalization phase has a dummy end time because it is ended manually
   uint public constant finalizeEndTime      = finalizeStartTime + 1000 years;
