@@ -185,7 +185,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     phaseOfDonPhase1 = 4;
     
     // Maximum delay for start of donation phase 1 
-    setMaxDelay(phaseOfDonPhase1 - 1, maxDelay);
+    setMaxDelay(phaseOfDonPhase1 - 1, donPhase1MaxDelay);
 
     /*
      * Initialize base contract Targets
@@ -341,13 +341,13 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    
     // The phase specific status
     if (donationPhase == 0) {
-      startTime = phaseEndTime[phaseOfDonPhase0 - 1];
-      endTime = phaseEndTime[phaseOfDonPhase0];
+      startTime = getPhaseStartTime(phaseOfDonPhase0);
+      endTime = getPhaseStartTime(phaseOfDonPhase0 + 1);
       isTargetReached = targetReached(phaseOfDonPhase0);
       chfCentsDonated = counter[phaseOfDonPhase0];
     } else {
-      startTime = phaseEndTime[phaseOfDonPhase1 - 1];
-      endTime = phaseEndTime[phaseOfDonPhase1];
+      startTime = getPhaseStartTime(phaseOfDonPhase1);
+      endTime = getPhaseStartTime(phaseOfDonPhase1 + 1);
       isTargetReached = targetReached(phaseOfDonPhase1);
       chfCentsDonated = counter[phaseOfDonPhase1];
     }
