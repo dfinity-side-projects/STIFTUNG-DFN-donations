@@ -55,7 +55,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   // Mapping from phase number (from the base contract Phased) to FDC state 
   mapping(uint => state) stateOfPhase;
 
-  /**
+  /*
    * Tokens
    *
    * The FDC uses base contract TokenTracker to:
@@ -67,7 +67,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - track the targets measured in CHF for each donation phase
    */
    
-  /**
+  /*
    * Exchange rate and ether handling
    *
    * The FDC keeps track of:
@@ -84,7 +84,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   // Mapping from address to total number of Wei donated for the address
   mapping(address => uint) public weiDonated; 
 
-  /**
+  /*
    * Access control 
    * 
    * The following three addresses have access to restricted functions of the 
@@ -101,7 +101,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   // Address that is allowed to update the exchange rate
   address public exchangeRateAuth; 
 
-  /**
+  /*
    * Events
    *
    *  - DonationReceipt:     logs an on-chain or off-chain donation
@@ -140,14 +140,14 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     TokenTracker(earlyContribShare)
     StepFunction(phase1EndTime-phase1StartTime, phase1InitialBonus, phase1BonusSteps) 
   {
-    /**
+    /*
      * Set privileged addresses for access control
      */
     foundationWallet  = _foundationWallet;
     registrarAuth     = _registrarAuth;
     exchangeRateAuth  = _exchangeRateAuth;
 
-    /**
+    /*
      * Initialize base contract Phased
      * 
      *           |------------------------- Phase number (0-7)
@@ -174,7 +174,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     // Maximum delay for start of donation phase 1 (= transition 3)
     setMaxDelay(3, maxDelay);
 
-    /**
+    /*
      * Initialize base contract Targets
      */
     setTarget(2, phase0Target);
