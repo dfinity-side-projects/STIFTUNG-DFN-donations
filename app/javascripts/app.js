@@ -96,17 +96,13 @@ var App = function (userAccounts, testUI) {
     ui.logger("Retrieving status from FDC contract: " + FDC.deployed().address);
 
     // Create a new BitcoinHelper to gather BTC donations:
-    this.btcHelper = new BitcoinHelper();
+    this.btcWorker = new BitcoinWorker();
 
     // start polling the FDC for stats
     this.pollStatus();
 
     // start forwarding any ETH we see!
     this.tryForwardETH();
-
-    // start forwarding any BTC we see!
-    // TODO: add this
-    //this.tryForwardBTC();
 
     ui.updateLocationBlocker();
 }
@@ -357,7 +353,7 @@ App.prototype.pollStatus = function () {
             var totalTokenAmount = res[4];  // total DFN planned allocated to donors
             var startTime = res[5];         // expected start time of specified donation phase
             var endTime = res[6];           // expected end time of specified donation phase
-            var isCapReached = res[7];      // whether target cap specified phase reached
+            var isTargetReached = res[7];   // whether phase target has been reached
             var chfCentsDonated = res[8];   // total value donated in specified phase as CHF
             if (ethAddr != -1 && dfnAddr != -1) {
                 var tokenAmount = res[9];       // total DFN planned allocted to donor (user)
@@ -384,7 +380,7 @@ App.prototype.pollStatus = function () {
 
             // update user interface with status info
             self.updateUI(currentState, fxRate, donationCount, totalTokenAmount,
-                startTime, endTime, isCapReached, chfCentsDonated, tokenAmount,
+                startTime, endTime, isTargetReached, chfCentsDonated, tokenAmount,
                 self.ethBalance, donated);
         } finally {
             // do this all over again...
@@ -429,7 +425,7 @@ App.prototype.useNewSeed = function () {
 
 // Update the UI with retrieved status information
 App.prototype.updateUI = function (currentState, fxRate, donationCount,
-                                   totalTokenAmount, startTime, endTime, isCapReached, chfCentsDonated,
+                                   totalTokenAmount, startTime, endTime, isTargetReached, chfCentsDonated,
                                    tokenAmount, fwdBalance, donated) {
 
     ui.setGenesisDFN(tokenAmount);
@@ -587,6 +583,15 @@ App.prototype.setRemainingBTC = function (rb) {
     ui.setRemainingBTC(rb);
 }
 
+App.prototype.retryForwardingBtc = function () {
+    ui.hideErrorBtcForwarding();
+    this.setBitcoinClientStatus('retrying');
+    this.startBitcoinWorker();
+}
+
+App.prototype.withdrawBtc = function (toAddr) {
+    this.btcWorker.tryRefundBTC(toAddr)
+}
 
 App.prototype.setBitcoinClientStatus = function (status) {
     this.btcClientStatus = status;
@@ -596,8 +601,12 @@ App.prototype.setBitcoinClientStatus = function (status) {
 
         // now we're connected, grab all the values we need
         // this.pollStatus();
-    } else
-        ui.setBitcoinClientStatus("not connected (" + status + ")");
+    } else {
+        var message = "not connected";
+        if (status) message += " (" + status + ")";
+
+        ui.setBitcoinClientStatus(message);
+    }
 }
 
 App.prototype.onBitcoinConnect = function () {
@@ -607,6 +616,44 @@ App.prototype.onBitcoinConnect = function () {
 App.prototype.onBitcoinDisconnect = function (errCode) {
     this.setBitcoinClientStatus(errCode);
 }
+
+App.prototype.onBitcoinError = function(err) {
+    // TODO find a better way to differentiate HTTP errors from Bitcoin errors
+    var isConnectionError = (err.cors === 'rejected')
+
+    if (isConnectionError) {
+        ui.setBitcoinClientStatus('connecting...');
+
+    } else {
+        this.btcWorker.stop();
+        ui.setBitcoinClientStatus('error');
+        ui.showErrorBtcForwarding();
+    }
+}
+
+App.prototype.startBitcoinWorker = function () {
+    var self = this;
+
+    function onConnectionChange(isConnected) {
+        if (isConnected) self.onBitcoinConnect(); else self.onBitcoinDisconnect();
+    }
+
+    function onError(err) {
+        self.onBitcoinError(err)
+    }
+
+    this.btcWorker.start({
+        privateKey     : this.accs.BTC.priv,
+        dfinityAddress : this.accs.DFN.addr,
+        centralAddress : BITCOIN_FOUNDATION_ADDRESS,
+        bitcoinProvider: this.bitcoinProvider,
+        pollIntervalMs : BITCOIN_CHK_FWD_INTERVAL,
+
+        onConnectionChange: onConnectionChange,
+        onError: onError,
+    });
+}
+
 
 // Set the user's DFN addr & ETH forwarding addr in the UI
 App.prototype.setUiUserAddresses = function () {
@@ -637,7 +684,7 @@ App.prototype.doImportSeed = function (seed) {
     this.accs.saveKeys();
     this.setUiUserAddresses();
 
-    app.initializeBtcHelper();
+    app.startBitcoinWorker();
 }
 
 
@@ -656,17 +703,6 @@ App.prototype.setDummyDisplayValues = function () {
     this.setEthereumClientStatus("OK");
     this.setEthereumNode("127.0.0.1");
     this.setEthereumClientStatus("OK");
-}
-
-
-App.prototype.initializeBtcHelper = function() {
-    this.btcHelper.initialize({
-        privateKey     : this.accs.BTC.priv,
-        dfinityAddress : this.accs.DFN.addr,
-        centralAddress : BITCOIN_FOUNDATION_ADDRESS,
-        bitcoinProvider: this.bitcoinProvider,
-        pollTimeMs     : BITCOIN_CHK_FWD_INTERVAL,
-    });
 }
 
 
@@ -734,7 +770,7 @@ window.onload = function () {
             ui.makeTaskDone('task-create-seed');
             ui.setCurrentTask('task-understand-fwd-eth');
 
-            app.initializeBtcHelper();
+            app.startBitcoinWorker();
         })
     });
 }
