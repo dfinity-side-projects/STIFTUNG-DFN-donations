@@ -96,20 +96,14 @@ contract Phased {
    *
    * This function is provided for convenience.
    * The given phase number must not be 0, as the first phase has no start time.
-   * The phase start time must not be in the future, otherwise it may still be 
-   * subject to change.
+   * If calling for a future phase number the caller must be aware that future
+   * phase times can be subject to change.
    */
   function getPhaseStartTime(uint n) constant returns (uint) {
     // Throw if phase is the first phase
     if (n == 0) { throw; }
    
-    // Get the start time 
-    uint startTime = phaseEndTime[n-1];
-    
-    // Throw if start time is in the future
-//    if (startTime > now) { throw; }
-    
-    return startTime; 
+    return phaseEndTime[n-1];
   }
     
   /**
