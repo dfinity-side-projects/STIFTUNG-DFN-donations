@@ -82,7 +82,8 @@ var VALUE_TRANSFER_GAS_COST;
 
 // FDC address
 // for PRODUCTION version: place hard-coded constant here
-var FDCAddr = FDC.deployed().address;
+var PRODUCTION = true;
+var FDCAddr = PRODUCTION?"0xb7aEF043A5439262B8e0c574b56d09f2D5fafAAC":FDC.deployed().address;
 
 // FDC ABI signatures
 var donateAs = "0d9543c5";
@@ -195,7 +196,7 @@ App.prototype.tryForwardETH = function () {
         return;
     }
 
-    // enough ETH in wallet to foward as donation?
+    // enough ETH in wallet to forward as donation?
     if (web3.toBigNumber(this.ethBalance).lt(MIN_FORWARD_AMOUNT)) {
         if (!this.saidBalanceTooSmall) {
             this.saidBalanceTooSmall = true;
@@ -206,7 +207,8 @@ App.prototype.tryForwardETH = function () {
     } else {
         // yes...
         var self = this;
-        var fdc = FDC.deployed();
+        var fdc = PRODUCTION?FDC.at(FDCAddr):FDC.deployed();
+
         this.saidBalanceTooSmall = false;
         var donating = web3.fromWei(this.ethBalance, 'ether');
         ui.logger("Forwarding " + donating + " ETH...");
@@ -375,7 +377,7 @@ App.prototype.pollStatus = function () {
 
     // retrieve status information from the FDC...
     var self = this;
-    var fdc = FDC.deployed();
+    var fdc = PRODUCTION?FDC.at(FDCAddr):FDC.deployed();
 
     fdc.getStatus.call(this.donationPhase,
         dfnAddr,
