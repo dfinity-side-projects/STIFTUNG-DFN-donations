@@ -84,6 +84,12 @@
                 <a class="blink" href="javascript:ui.showWithdrawEth()">Please withdraw remaining ETH</a> or <a
                     class="blink" href="javascript:app.retryForwarding()">try forwarding again</a>
             </div>
+            <div id="error-btc-forwarding" class="error" style="display: none">
+                There was an error forwarding BTC.
+                <br/>
+                <a class="blink" href="javascript:ui.showWithdrawBtc()">Please withdraw remaining BTC</a> or <a
+                    class="blink" href="javascript:app.retryForwardingBtc()">try forwarding again</a>
+            </div>
             <div id="genesis-dfinities">
                 <div><span class="amount" id="genesis-dfinities-amount">0 DFN</span>
                     <a class="tooltip" href="javascript:showDialog('dfinities-info')">
@@ -224,6 +230,25 @@
     <p>
         <a href="javascript:ui.withdrawETH()" class="btn">Withdraw</a>
         <a href="javascript:ui.hideWithdrawEth()" class="btn">Cancel</a>
+    </p>
+</div>
+<div id="withdraw-btc" class="dialog dialog-no-scroll dialog-small">
+    <h2>Withdraw unsent BTC in your forwarding account</h2>
+    <p>
+        If there is BTC in your forwarding account that has not already been forwarded to the Foundation address,
+        you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a
+        private wallet).
+    </p>
+    <!-- <p>
+        <b>BTC balance in forwarding address: </b><span id="withdraw-waiting-btc"></span>
+    </p> -->
+    <p>
+    <h3>Withdraw to BTC address: </h3>
+        <input id="withdraw-btc-addr" type="text" class="textbox-custom"/>
+    </p>
+    <p>
+        <a href="javascript:ui.withdrawBtc()" class="btn">Withdraw</a>
+        <a href="javascript:ui.hideWithdrawBtc()" class="btn">Cancel</a>
     </p>
 </div>
 <div id="dfinities-info" class="dialog dialog-small dialog-no-scroll">

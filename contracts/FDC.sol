@@ -1,13 +1,12 @@
-// TODO: set to exact version before release
-pragma solidity >=0.4.1;
+pragma solidity ^0.4.6;
 
 import "TokenTracker.sol";
 import "Phased.sol";
 import "StepFunction.sol";
-import "Caps.sol";
+import "Targets.sol";
 import "Parameters.sol";
 
-contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
+contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
 
   //
   // States
@@ -23,8 +22,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   enum state {
     pause,          
     earlyContrib,  // Registration of early contribution
-    donPhase0,     // Capped on-chain-only donation phase
-    donPhase1,     // Uncapped donation phase for on- and off-chain donations 
+    donPhase0,     // 
+    donPhase1,     // 
     offChainReg,   // Grace period for registration of off-chain donations
     finalization,  // Adjustment of early contributions down to 20% of all tokens
     done           // Read-only phase
@@ -40,7 +39,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
 
   // see TokenTracker for token balances
   // see Phased for phase based on time
-  // see Caps for status of donation caps 
+  // see Targets for status of donation targets 
   uint public weiPerCHF;       // exchange rate between Eth and CHF 
   uint public totalWeiDonated; // total number of wei donated on-chain so far 
   mapping(address => uint) public weiDonated; // Wei donated per address
@@ -86,7 +85,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
                address _registrarAuth,
                address _exchangeRateAuth)
     TokenTracker(earlyContribShare)
-    StepFunction(phase1EndTime-phase1StartTime,phase1Steps,phase1StepSize) // phaseLength, nStep, step
+    StepFunction(phase1EndTime-phase1StartTime,phase1InitialBonus,phase1BonusSteps) // phaseLength, nStep, step
   {
     foundationWallet  = _foundationWallet;
     registrarAuth     = _registrarAuth;
@@ -126,9 +125,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
     // set max delay for start of donation phase 1
     setMaxDelay(3, maxDelay);
 
-    // initialize Caps base contract
-    setCap(2, phase0Cap);
-    setCap(4, phase1Cap);
+    // initialize Targets base contract
+    setTarget(2, phase0Target);
+    setTarget(4, phase1Target);
   }
   
   //
@@ -148,7 +147,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
 
     // If time lies in donation phase 0 we return the constant multiplier 
     if (stateOfPhase[phase] == state.donPhase0) {
-      return phase0Multiplier;
+      return 100 + phase0Bonus;
     }
 
     // If time lies in donation phase 1 we return the step function
@@ -312,12 +311,12 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
   // This function is agnostic to the source of the donation (on-chain or off-chain) and to the currency (the currency argument is passed through to the DonationReceipt)
   // The phase argument is redundant because it could be derived from the timestamp. However, it is passed in to save the gas of re-calculating it.
   function bookDonation(address addr, uint timestamp, uint chfCents, string currency, bytes32 memo) private {
-    // Log the tokens before applying multipliers towards the cap counter
-    // If cap first reached (= return value) then schedule early phase end 
+    // Log the tokens before applying multipliers towards the target counter
+    // If target first reached (= return value) then schedule early phase end 
     uint phase = getPhaseAtTime(timestamp);
-    bool capReached = addTowardsCap(phase, chfCents);
-    if (capReached && phase == getPhaseAtTime(now)) {
-      endCurrentPhaseIn(gracePeriodAfterCap);
+    bool targetReached = addTowardsTarget(phase, chfCents);
+    if (targetReached && phase == getPhaseAtTime(now)) {
+      endCurrentPhaseIn(gracePeriodAfterTarget);
     }
 
     // Apply the multiplier that was valid at the given time 
@@ -354,7 +353,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
       uint totalTokenAmount,  // total DFN planned allocated to donors
       uint startTime,         // expected start time of specified donation phase
       uint endTime,           // expected end time of specified donation phase
-      bool isCapReached,      // whether target cap specified phase reached
+      bool isTargetReached,   // whether phase target has been reached
       uint chfCentsDonated,   // total value donated in specified phase as CHF
       uint tokenAmount,       // total DFN planned allocted to donor (user)
       uint fwdBalance,        // total ETH (in Wei) waiting in fowarding address
@@ -372,13 +371,13 @@ contract FDC is TokenTracker, Phased, StepFunction, Caps, Parameters {
       // i = 2
       startTime = phaseEndTime[1];
       endTime = phaseEndTime[2];
-      isCapReached = capReached(2);
+      isTargetReached = targetReached(2);
       chfCentsDonated = counter[2];
     } else {
       // i = 4
       startTime = phaseEndTime[3];
       endTime = phaseEndTime[4];
-      isCapReached = capReached(4);
+      isTargetReached = targetReached(4);
       chfCentsDonated = counter[4];
     }
     
