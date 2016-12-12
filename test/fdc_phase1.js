@@ -1,5 +1,6 @@
 var EthJSUtil = require("../app/deps/ethereumjs-util.js");
 
+
 function addrChecksum(addr) {
     // convert to buffer
     var addrBuf = EthJSUtil.toBuffer(addr);
@@ -13,7 +14,75 @@ function addrWithChecksum(addr) {
 }
 
 
+var Accounts = function (seedStr) {
+
+    // single quote == hardened derivation
+    this.HDPathDFN = "m/44'/223'/0'/0/0"; // key controlling DFN allocation
+    this.HDPathETHForwarder = "m/44'/60'/0'/0/0";  // ETH key forwarding donation for HDPathDFN key
+    this.HDPathBTCForwarder = "m/44'/0'/0'/0/0";   // BTC key forwarding donation for HDPathDFN key
+
+    // this.seed = seedStr;
+    this.DFN = {};
+    this.ETH = {};
+    this.BTC = {};
+
+
+}
+
+var Mnemonic =  require('bitcore-mnemonic');
+var bitcore =  require('bitcore-lib');
+
+Accounts.prototype.HDPrivKeyToAddr = function (privHex) {
+    /* TODO: verify padding, sometimes we get:
+
+     ethereumjs-util.js:16925 Uncaught RangeError: private key length is invalid(…)
+     exports.isBufferLength	@	ethereumjs-util.js:16925
+     publicKeyCreate	@	ethereumjs-util.js:17454
+     exports.privateToPublic	@	ethereumjs-util.js:6400
+     exports.privateToAddress	@	ethereumjs-util.js:6501
+     Accounts.HDPrivKeyToAddr	@	app.js:57286
+     Accounts	@	app.js:57263
+
+     which likely is the common padding bug of privkey being less than 32 bytes
+     */
+    var addrBuf = EthJSUtil.privateToAddress(EthJSUtil.toBuffer(privHex));
+    return EthJSUtil.bufferToHex(addrBuf);
+}
+
+
+
+function padPrivkey(privHex) {
+    return ("0000000000000000" + privHex).slice(-64);
+}
+// Generate an HD seed string. Note that we *never* store the seed. With the
+// seed, an attacker can gain access to the user's DFN later.
+Accounts.prototype.generateSeed = function () {
+    var code = new Mnemonic(Mnemonic.Words.ENGLISH);
+    return code.toString();
+
+}
+
+// Generate 1. the user's DFINITY address 2. their forwarding addresses, and
+// 3. the private keys for the forwarding addresses. Note that we *never* store
+// the seed. With the seed, an attacker cn gain access to the user's DFN later.
+Accounts.prototype.generateKeys = function (seedStr) {
+    //var code = new this.Mnemonic(this.Mnemonic.Words.ENGLISH);
+    var code = new Mnemonic(seedStr);
+    var masterKey = code.toHDPrivateKey();
+    var DFNPriv = masterKey.derive(this.HDPathDFN);
+
+    var DFNPrivPadded = "0x" + padPrivkey(DFNPriv.toObject().privateKey);
+    this.DFN.addr = this.HDPrivKeyToAddr(DFNPrivPadded);
+
+
+}
+
+
 contract('FDC', function (accounts) {
+
+    function syncVmClock() {
+        web3.currentProvider.send({method: "evm_increaseTime", params: [time - getVmTime()]})
+    }
 
     it("We will set the Wei to CHF exchange rate", function () {
         var fdc = FDC.deployed();
@@ -78,7 +147,8 @@ contract('FDC', function (accounts) {
 
         // Keeping track of CHF donated so far
         var chfCentsDonated = [web3.toBigNumber(0), web3.toBigNumber(0)]
-        var weiDonated = web3.toBigNumber(0);
+        var totalWeiDonated = web3.toBigNumber(0);
+        var totalTokenExpected = web3.toBigNumber(0);
 
         // donation phase = {0, 1} of the donation stage
         // lifecycleStage = {0 .. 8} of all the possible stages of the FDC lifecycle
@@ -90,52 +160,122 @@ contract('FDC', function (accounts) {
         var lastAmount = 0;
         var WEI_PER_CHF = web3.toWei("0.1", "ether");
 
-        var phaseStartTime =[], phaseEndtime = [];
+        var phaseStartTime = [], phaseEndtime = [];
+        var EARLY_CONTRIBUTORS = 10;
 
         // printStatus();
+        var FDC_CONSTANTS = ["earlyContribEndTime", "phase0EndTime",
+            "phase1StartTime", "phase1EndTime", "finalizeStartTime",
+            "finalizeEndTime",
+            "phase0Cap", "phase1Cap",
+            "phase0Multiplier", "phase1Steps", "phase1StepSize",
+            "earlyContribShare", "gracePeriodAfterCap",
+            "tokensPerCHF", "phase0StartTime"
+        ]
+
+        var testSuites = [
+            {
+                phase0: {
+                    target: "meet",   // meet, exceed, below
+                    min_donations: 5  // over how many donations
+                },
+                phase1: {
+                    target: "meet",   // meet, exceed, below
+                    min_donations: 6,  // over how many donations
+                    steps: 5 //  cover how many multiplier transitions
+                }
+            }
+        ]
+
+
+
+
+
+        var fdcConstants = {}
+
+
+        /**
+         * Returns a random number between min (inclusive) and max (exclusive)
+         */
+        function randomAmount(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
 
         // Below's the main test flow.
-        var test = function () {
-            // printStatus();
-            Promise.resolve("success")
-                .then(initConstants)
-                .then(function () {
-                    printStatus();
+        var testSuite = function () {
+            return new Promise(function () {
+                printStatus();
+
+                var p = Promise.resolve();
+                p = p.then(generateAndRegisterEarlyContribs)
+                p = p.then(function() {
                     advanceVmTimeTo(fdcConstants["phase0StartTime"]);
-                }).then(function () {
-                return makeMultiDonations(25000, 5, 1, 1)
-            }).then(function () {
-                return advanceToPhase(4, 0)
-            }).then(function () {
-                return makeMultiDonations(600000, 5, 1, 1)
-            });
-        }
+                });
+                for (var i in testSuites) {
+                    const test = testSuites[i];
+                    const phase0 = test["phase0"];
+                    var minDonations = phase0["min_donations"];
+                    var amountDonated = 0;
+                    var etherCap = fdcConstants["phase0Cap"] / 100 / 10;
+                    var target = phase0["target"];
+                    var chunk = etherCap / minDonations;
+                    console.log(" /////// ====   TEST SUITE:  Register early contribs  ==== \\\\\\\\\\ ")
+
+
+                    console.log(" /////// ====   TEST SUITE:  PHASE 0, minDonations = " + minDonations + " , target = " + target + "  ==== \\\\\\\\\\ ")
+
+                    for (var donationTx = 0; ; donationTx++) {
+                        const amt = randomAmount(1, chunk);
+                        if (target == "meet") {
+                            if (amountDonated + amt > etherCap) {
+                                amountDonated += amt;
+                                p = p.then(function () {
+                                    return makeDonationAndValidate(chunk)
+                                });
+                                break;
+                            }
+
+                        } else if (target == "exceed") {
+                            if (amountDonated > etherCap && randomAmount(0, 100) > 50)
+                                break;
+                        } else { // below target
+                            if (amountDonated + amt + minDonations >= etherCap) {
+                                // Skip this round and get a new random number
+                                donationTx--;
+                                continue;
+                            }
+                            if (donationTx >= minDonations && randomAmount(0, 100) > 50) {
+                                break;
+                            }
+                        }
+                        amountDonated += amt;
+                        p = p.then(function () {
+                            return makeDonationAndValidate(amt);
+                        });
+                    }
+                }
+                return p;
+            })
+        };
+
+
         // Set exchange rate first
         var p = fdc.setWeiPerCHF(WEI_PER_CHF, {gas: 300000, from: accounts[2]});
 
         // Wait a few seconds (unstable if doesn't wait), before making donations
         p = p.then(function () {
             setTimeout(function () {
-                test();
+                printStatus();
+                Promise.resolve("success").then(initConstants).then(testSuite);
             }, 3000);
         });
 
-        var FDC_CONSTANTS = ["earlyContribEndTime", "phase0EndTime",
-            "phase1StartTime", "phase1EndTime", "finalizeStartTime",
-            "finalizeEndTime",
-            "phase0Cap","phase1Cap",
-            "phase0Multiplier", "phase1Steps", "phase1StepSize",
-            "earlyContribShare", "gracePeriodAfterCap",
-            "tokensPerCHF", "phase0StartTime"
-        ]
-
-
-        var fdcConstants = {}
 
         ///////////////  FUNCTIONS /////////////////////////////////
         function initConstants() {
             var f = Promise.resolve();
+            console.log("init constants");
             var constants = FDC_CONSTANTS;
             return new Promise(function (resolve, reject) {
                 for (var i in constants) {
@@ -153,7 +293,6 @@ contract('FDC', function (accounts) {
         }
 
 
-
         function printStatus() {
             fdc.getStatus(0, 1, 1).then(function (s) {
                 console.log(s);
@@ -168,19 +307,76 @@ contract('FDC', function (accounts) {
             });
         }
 
+        function validateEarlyContrib(address, amount) {
+            return fdcGetterPromise("tokens", [address])
+                .then(fdcGetterPromise.bind(null, "restrictions", [address]))
+                .then(function () {
+                    console.log(" - Asserting early contrib tokens / restricted:" + getterValues["tokens"] + " / " + getterValues["restrictions"]);
+                    assert.equal(amount, getterValues["tokens"]);
+                    assert.equal(amount, getterValues["restrictions"]);
+                })
+        }
+
+        function registerAndValidateEarlyContrib(address, amount, memo) {
+            return new Promise(function (resolve, reject) {
+                fdc.registerEarlyContrib(address, amount, memo, {gas: 300000, from: accounts[1]})
+                    .then(function (success) {
+                        console.log(" Early contrib addr registered: " + address + " - " + amount + " - " + memo);
+
+                        assert.notEqual(success, null, "Early Contrib Registration failed");
+                        validateEarlyContrib(address, amount).then(resolve);
+                    });
+            })
+        }
+
+        function validateFinalization() {
+            return new Promise(function(r, e) {
+                advanceVmTimeTo(fdcConstants["finalizeStartTime"])
+
+                r();
+            });
+        }
+
+        var earlyContribs = {};
+
+
+        function generateAndRegisterEarlyContribs() {
+            earlyContribs = {};
+            var p = Promise.resolve();
+
+
+            for (var i = 0; i < EARLY_CONTRIBUTORS; i++) {
+
+                var account = new Accounts();
+                var seed = account.generateSeed();
+                account.generateKeys(seed);
+
+                var addr = account.DFN.addr;
+                earlyContribs[addr] = 100000;
+            }
+
+            return new Promise(function (resolve, reject) {
+                for (var addr in earlyContribs) {
+                    p = p.then(registerAndValidateEarlyContrib.bind(null,addr,earlyContribs[addr], "Contributor"));
+                }
+                p.then(resolve);
+            });
+        }
+
+
         // Calculate bonus based on remaining time left
         function getPhase1Bonus(time) {
 
-            var timeLeft =  fdcConstants["phase1EndTime"] - time;
+            var timeLeft = fdcConstants["phase1EndTime"] - time;
             var duration = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"])
             console.log("phase1step: " + fdcConstants["phase1Steps"]);
             var perPeriod = duration / (fdcConstants["phase1Steps"].valueOf());
-            var bonus = Math.ceil(timeLeft / perPeriod ) * fdcConstants["phase1StepSize"];
+            var bonus = Math.ceil(timeLeft / perPeriod) * fdcConstants["phase1StepSize"];
             console.log(" - Using Phase 1 bonus of: " + bonus + " [ " + timeLeft + "/" + duration + "/" + perPeriod + "]");
             return bonus;
         }
 
-        function calcDfnAmountAtTime (cents, time, phase) {
+        function calcDfnAmountAtTime(cents, time, phase) {
             var multiplier = 100;
             var startTime = phaseStartTime[phase];
             if (phase == 0) {
@@ -191,12 +387,24 @@ contract('FDC', function (accounts) {
             }
             return Math.floor((cents.mul(multiplier).mul(fdcConstants["tokensPerCHF"]).div(10000)));
         }
-        function totalDfnAmountAtTime (cents, time, phase) {
+
+        function totalDfnAmountAtTime(cents, time, phase) {
             if (phase == 1) {
                 return calcDfnAmountAtTime(cents, time, phase) + calcDfnAmountAtTime(chfCentsDonated[0], time, 0);
             } else if (phase == 0) {
-                return calcDfnAmountAtTime (cents, time, phase);
+                return calcDfnAmountAtTime(cents, time, phase);
             }
+        }
+
+        var getterValues = {};
+
+        function fdcGetterPromise(getterFunction, params) {
+            return new Promise(function (resolve, reject) {
+                fdc[getterFunction].apply(this, params).then(function (res) {
+                    getterValues[getterFunction] = res;
+                    resolve();
+                })
+            });
         }
 
 
@@ -209,38 +417,43 @@ contract('FDC', function (accounts) {
             return new Promise(function (resolve, reject) {
                 // wait(1000, false);
                 // console.log("[t: " + getVmTime() + "] onDonated() - last donated amount [local value] " + lastWeiDonated);
-                weiDonated = weiDonated.add(lastWeiDonated);
+                totalWeiDonated = totalWeiDonated.add(lastWeiDonated);
 
-                var lastCentsDonated =  Math.floor((lastWeiDonated * 100) / WEI_PER_CHF);
+                var lastCentsDonated = lastWeiDonated.mul(100).div(WEI_PER_CHF);
                 console.log("Last wei donated: " + lastWeiDonated);
                 // chfCentsDonated[donationPhase] += Math.floor((lastWeiDonated * 100) / WEI_PER_CHF);
-                chfCentsDonated[donationPhase] = chfCentsDonated[donationPhase].add((lastWeiDonated).mul(100).div(WEI_PER_CHF));
+                chfCentsDonated[donationPhase] = chfCentsDonated[donationPhase].add(lastCentsDonated);
 
-                var fdcChfCentsDonated, fdcDfnTokens;
-                // Assert local donation record = FDC records
-                getStatus().then(function (res) {
-                    var fdcChfCentsDonated = res[8].valueOf();
-                    var fdcDfnToken = res[4].valueOf();
-                    var fdcWeiDonated = res[11].valueOf();
-                    var startTime = res[5];      // expected start time of specified donation phase
-                    var endTime = res[6];        // expected end time of specified donation phase
+                var values = getterValues;
+                var p = fdcGetterPromise("getStatus", [donationPhase, DFNAddr, ETHForwardAddr])
+                // .then(fdcGetterPromise.bind(null, "weiDonated", ETHForwardAddr, values))
+                // .then(fdcGetterPromise.bind(null, "tokens", DFNAddr, values))
+                    .then(fdcGetterPromise.bind(null, "restrictions", [DFNAddr], values));
+                p = p.then(function () {
+                    var fdcChfCentsDonated = values["getStatus"][8].valueOf();
+                    var fdcTotalDfnToken = values["getStatus"][4].valueOf();
+                    var fdcTokenAssigned = values["getStatus"][9].valueOf();
+                    var fdcWeiDonated = values["getStatus"][11].valueOf();
+                    console.log(" - Validating FDC donated amount in wei: " + totalWeiDonated + " == " + fdcWeiDonated);
 
-                    console.log(" - Validating FDC donated amount in wei: " + weiDonated + " == " + fdcWeiDonated);
-                    console.log(" - Validating FDC donated amount in chf: " + fdcChfCentsDonated );
+                    assert.equal(totalWeiDonated, fdcWeiDonated, "Donation in Wei doesn't match with FDC");
 
-                    assert.equal(chfCentsDonated[donationPhase], fdcChfCentsDonated);
-                    console.log(" - Assert success: [cents donated] " + chfCentsDonated[donationPhase] + " ==" + fdcChfCentsDonated)
+                    console.log(" - Validating FDC donated amount in chf: " + fdcChfCentsDonated);
+                    assert.equal(chfCentsDonated[donationPhase].valueOf(), fdcChfCentsDonated, "Total Donation in CHF doesn't match with FDC");
 
                     // todo: should only use local calculation and avoid using remote FDC variables for assertions
                     // var expectedToken = calcDfnAmountAtTime(chfCentsDonated[donationPhase], getLastBlockTime(), donationPhase);
-                    var expectedToken = totalDfnAmountAtTime(chfCentsDonated[donationPhase], getLastBlockTime(), donationPhase);
-                    console.log(" - Validating FDC tokens got: " + expectedToken + " == " + fdcDfnToken);
-
-                    assert.equal(expectedToken, fdcDfnToken);
+                    var expectedToken = calcDfnAmountAtTime(lastCentsDonated, getLastBlockTime(), donationPhase);
+                    totalTokenExpected = totalTokenExpected.add(expectedToken);
+                    console.log(" - Validating FDC tokens got: " + totalTokenExpected + " == " + fdcTokenAssigned);
+                    assert.equal(totalTokenExpected, fdcTotalDfnToken, "FDC Total DFN amount doesn't match with expectation");
+                    assert.equal(totalTokenExpected, fdcTokenAssigned, "FDC Assigned DFN amount doesn't match with expectation");
                     resolve(true);
+
                 });
             });
         };
+        // var targetReachTime= [];
 
         /*
          * Check if the current phase end time has been adjusted based on the cap reached status
@@ -255,11 +468,12 @@ contract('FDC', function (accounts) {
                     console.log(" - Asserting if remaining end time less than 1hr if cap reached: chfCents = " + chfCentsDonated[donationPhase] + " // cap = " + phaseCap);
                     if (chfCentsDonated[donationPhase].greaterThanOrEqualTo(phaseCap)) {
                         console.log(" --> Target reached. End time should shorten to " + fdcConstants["gracePeriodAfterCap"] + " seconds ");
+                        // targetReachTime[donationPhase] = getLastBlockTime();
                         printStatus();
 
                         for (var i = 0; i < 7; i++) {
                             const k = i;
-                            fdc.phaseEndTime(i).then(function(f) {
+                            fdc.phaseEndTime(i).then(function (f) {
                                 console.log("Phase " + k + " ends at: " + f);
                             });
                         }
@@ -268,8 +482,8 @@ contract('FDC', function (accounts) {
 
                         assert.isAtMost(timeLeft, fdcConstants["gracePeriodAfterCap"]);
 
-                        assert.isAtLeast(timeLeft, fdcConstants["gracePeriodAfterCap"] - 10);
-                        console.log(" --> Assert success. Remaining time: " + (endTime - getVmTime()));
+                        // assert.isAtLeast(timeLeft, fdcConstants["gracePeriodAfterCap"] - 30);
+                        console.log(" --> Assert success. Remaining time: " + (endTime - getLastBlockTime()));
                         resolve();
                     } else {
                         console.log(" --> Target NOT reached. Phase 0/1 End time should be 6 weeks apart from start time.");
@@ -280,9 +494,23 @@ contract('FDC', function (accounts) {
                             assert.isAtLeast(endTime - startTime, (fdcConstants["phase0EndTime"] - fdcConstants["phase0StartTime"]));
                         }
 
-                            resolve();
+                        resolve();
                     }
                 });
+            });
+        }
+
+
+        function makeDonationAndValidate(amount) {
+            return new Promise(function (resolve, reject) {
+                if (!amount)
+                    amount = 5000;
+                console.log("\n  ==== [PHASE " + donationPhase + "] " + "  Making " + amount + " Ether donations  ===");
+
+                makeDonation(amount)
+                    .then(onDonatedAssertAmount)
+                    .then(assertPhaseEndTime)
+                    .then(resolve);
             });
         }
 
@@ -291,15 +519,12 @@ contract('FDC', function (accounts) {
          *  TODO: Also support randomizedAmount if true.
          *
          */
-        function makeMultiDonations(amount, times, interval, randomizedAmount) {
+        function makeDonationsAndValidate(amount, times, interval, randomizedAmount) {
             return new Promise(function (resolve, reject) {
                 console.log("\n  ==== [PHASE " + donationPhase + "] " + "  Making " + times + " x " + amount + " Ether donations  ===");
-                var donateAndValidate = function () {
-                    return makeDonation(amount).then(onDonatedAssertAmount).then(assertPhaseEndTime);
-                };
-                p = donateAndValidate();
+                p = makeDonationAndValidate(amount);
                 for (var i = 0; i < times - 1; i++) {
-                    p = p.then(donateAndValidate);
+                    p = p.then(makeDonationAndValidate.bind(null, amount));
                 }
                 p.then(resolve);
             });
@@ -312,6 +537,13 @@ contract('FDC', function (accounts) {
         function advanceVmTimeTo(time) {
             console.log(" \n *** Time advanced to " + time);
             web3.currentProvider.send({method: "evm_increaseTime", params: [time - getVmTime()]})
+        }
+
+        function promisifySync(fn) {
+            return Promise.bind(null, function(resolve, reject) {
+                fn();
+                resolve();
+            });
         }
 
         /*
@@ -431,4 +663,5 @@ contract('FDC', function (accounts) {
 
 
     });
-});
+})
+;
