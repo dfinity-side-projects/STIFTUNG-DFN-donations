@@ -767,7 +767,7 @@ contract('FDC', function (accounts) {
                         var amountWei = web3.toBigNumber(web3.toWei(amount, 'ether'));
                         // console.log("\ntxFee: " + txFee + "  // amount: " + value);
                         //var txData     = "0x" + packArg(donateAs, app.DFNAcc.addr);
-                        fdc.donateAs(DFNAddr, {
+                        fdc.donateAsWithChecksum(DFNAddr, addrChecksum(DFNAddr), {
                             from: ETHForwardAddr,
                             value: amountWei,
                             gasPrice: gasPrice,
