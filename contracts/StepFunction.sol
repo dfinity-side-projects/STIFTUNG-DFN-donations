@@ -1,14 +1,38 @@
-pragma solidity ^0.4.6;
+/*
+The MIT License (MIT)
+
+Copyright (c) 2016 DFINITY Stiftung 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 /**
- * A configurable step function 
+ * @title:  A configurable step function 
+ * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  *
  * The contract implements a step function going down from an initialValue to 0 in a number of steps (nSteps).
  * The steps are distributed equally over a given time (phaseLength).
  * Having n steps means that the time phaseLength is divided into n+1 sub-intervalls of equal length during each of which the function value is constant. 
- * 
  */
  
+pragma solidity ^0.4.6;
+
 contract StepFunction {
   uint public phaseLength;
   uint public nSteps;
