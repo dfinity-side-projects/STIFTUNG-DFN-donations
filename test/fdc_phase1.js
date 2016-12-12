@@ -30,7 +30,7 @@ var Accounts = function (seedStr) {
 }
 
 var Mnemonic = require('bitcore-mnemonic');
-var bitcore = require('bitcore-lib');
+//var bitcore = require('bitcore-lib');
 
 Accounts.prototype.HDPrivKeyToAddr = function (privHex) {
     /* TODO: verify padding, sometimes we get:
