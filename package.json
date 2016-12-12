@@ -1,0 +1,30 @@
+{
+  "name": "stiftung-dfn-donations",
+  "version": "1.0.0",
+  "description": "DFINITY Donation Package",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "bitcore-lib": "^0.13.19",
+    "bitcore-mnemonic": "^1.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dfinity/STIFTUNG-DFN-donations.git"
+  },
+  "keywords": [
+    "dfinity"
+  ],
+  "author": "DFINITY Stiftung",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dfinity/STIFTUNG-DFN-donations/issues"
+  },
+  "homepage": "https://github.com/dfinity/STIFTUNG-DFN-donations#readme"
+}
