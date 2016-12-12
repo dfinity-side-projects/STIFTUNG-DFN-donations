@@ -102,6 +102,14 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   address public exchangeRateAuth; 
 
   /*
+   * Global variables
+   */
+ 
+  // The phase numbers of the donation phases (set by the constructor)
+  uint phaseOfDonPhase0;
+  uint phaseOfDonPhase1;
+  
+  /*
    * Events
    *
    *  - DonationReceipt:     logs an on-chain or off-chain donation
@@ -171,14 +179,19 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     addPhase(finalizeEndTime);     // 6 
     stateOfPhase[7] = state.done;
 
-    // Maximum delay for start of donation phase 1 (= transition 3)
-    setMaxDelay(3, maxDelay);
+    // Let the other functions know what phase numbers the donation phases were
+    // assigned to
+    phaseOfDonPhase0 = 2;
+    phaseOfDonPhase1 = 4;
+    
+    // Maximum delay for start of donation phase 1 
+    setMaxDelay(phaseOfDonPhase1 - 1, maxDelay);
 
     /*
      * Initialize base contract Targets
      */
-    setTarget(2, phase0Target);
-    setTarget(4, phase1Target);
+    setTarget(phaseOfDonPhase0, phase0Target);
+    setTarget(phaseOfDonPhase1, phase1Target);
   }
   
   /**
@@ -328,17 +341,15 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    
     // The phase specific status
     if (donationPhase == 0) {
-      // i = 2
-      startTime = phaseEndTime[1];
-      endTime = phaseEndTime[2];
-      isTargetReached = targetReached(2);
-      chfCentsDonated = counter[2];
+      startTime = phaseEndTime[phaseOfDonPhase0 - 1];
+      endTime = phaseEndTime[phaseOfDonPhase0];
+      isTargetReached = targetReached(phaseOfDonPhase0);
+      chfCentsDonated = counter[phaseOfDonPhase0];
     } else {
-      // i = 4
-      startTime = phaseEndTime[3];
-      endTime = phaseEndTime[4];
-      isTargetReached = targetReached(4);
-      chfCentsDonated = counter[4];
+      startTime = phaseEndTime[phaseOfDonPhase1 - 1];
+      endTime = phaseEndTime[phaseOfDonPhase1];
+      isTargetReached = targetReached(phaseOfDonPhase1);
+      chfCentsDonated = counter[phaseOfDonPhase1];
     }
     
     // The status specific to the DFN address
@@ -449,8 +460,10 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     // Require permission
     if (msg.sender != registrarAuth) { throw; }
 
-    // Pass the call on to base contract Phased 
-    delayPhaseEndBy(3, timedelta);
+    // Pass the call on to base contract Phased
+    // Delaying the start of donation phase 1 is the same as delaying the end 
+    // of the phase preceding donation phase 1 
+    delayPhaseEndBy(phaseOfDonPhase1 - 1, timedelta);
   }
 
   /**
