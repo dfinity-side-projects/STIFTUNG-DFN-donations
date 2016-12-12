@@ -1,9 +1,30 @@
-pragma solidity ^0.4.6;
+/*
+The MIT License (MIT)
 
-import "TokenInterface.sol";
+Copyright (c) 2016 DFINITY Stiftung 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 /**
- * A contract that tracks numbers of tokens assigned to addresses. 
+ * @title:  A contract that tracks numbers of tokens assigned to addresses. 
+ * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  *
  * Optionally, assignments can be chosen to be of "restricted type". 
  * Being "restricted" means that the token assignment may later be partially reverted (or the tokens "burned") by the contract. 
@@ -20,6 +41,11 @@ import "TokenInterface.sol";
  *   - totalSupply() is the total number of unrestricted tokens
  *   - balanceOf(addr) is the number of unrestricted tokens assigned to addr
  */
+ 
+pragma solidity ^0.4.6;
+
+import "TokenInterface.sol";
+
 contract TokenTracker is TokenInterface {
   // Share of formerly restricted tokens among all tokens in percent 
   uint public restrictedShare; 
