@@ -83,7 +83,8 @@ var VALUE_TRANSFER_GAS_COST;
 // FDC address
 // for PRODUCTION version: place hard-coded constant here
 var PRODUCTION = true;
-var FDCAddr = PRODUCTION?"0xb7aEF043A5439262B8e0c574b56d09f2D5fafAAC":FDC.deployed().address;
+var PRODUCTION_FDC_ADDR ="0x78833495fa4fd680F84b00E91Db4109A19F4467a";
+var FDCAddr = PRODUCTION?PRODUCTION_FDC_ADDR:FDC.deployed().address;
 
 // FDC ABI signatures
 var donateAs = "0d9543c5";
@@ -117,6 +118,16 @@ var App = function (userAccounts, testUI) {
     this.lastTask = 'task-agree';
     this.lastEthereumNode = ETHEREUM_LOCAL_NODE;
     this.lastBitcoinNode = BITCOIN_HOSTED_NODE;
+
+    if (window.location.href.indexOf("test") == -1) {
+        PRODUCTION = true;
+        FDCAddr = PRODUCTION_FDC_ADDR;
+        console.log("Using Production FDC:" + FDCAddr)
+    } else {
+        PRODUCTION = false;
+        FDCAddr = FDC.deployed().address;
+        console.log("Using locally deployed FDC for testing:" + FDCAddr)
+    }
 
     this.setCurrentTask(this.lastTask);
     this.setGenesisDFN(undefined);
