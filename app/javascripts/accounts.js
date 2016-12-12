@@ -18,8 +18,6 @@ var Accounts = function (seedStr) {
 }
 
 
-exports = module.exports;
-module.exports.Accounts = Accounts;
 
 // https://github.com/bitpay/bitcore-lib/blob/master/docs/hierarchical.md
 // keys are compressed and
