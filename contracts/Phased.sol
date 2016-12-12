@@ -107,7 +107,7 @@ contract Phased {
     uint startTime = phaseEndTime[n-1];
     
     // Throw if start time is in the future
-    if (startTime > now) { throw; }
+//    if (startTime > now) { throw; }
     
     return startTime; 
   }
