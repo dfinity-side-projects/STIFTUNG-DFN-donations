@@ -1,10 +1,34 @@
-pragma solidity ^0.4.6;
+/*
+The MIT License (MIT)
 
-/**
- * Configuration parameters for the FDC
- *
+Copyright (c) 2016 DFINITY Stiftung 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/*
+ * @title:  Configuration parameters for the FDC
+ * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  */
  
+pragma solidity ^0.4.6;
+
 contract Parameters {
 
   /**
@@ -23,6 +47,7 @@ contract Parameters {
 
   // The start of phase 0 is set to 2016-12-19 19:00 of timezone Europe/Zurich
   // TZ="Europe/Zurich" date -d "2016-12-15 00:00" "+%s"
+  /*
   uint public constant phase0StartTime      = 1481756400; 
   
   // The other phase transitions are defined by offsets from the start of phase 0
@@ -31,12 +56,20 @@ contract Parameters {
   uint public constant phase1StartTime      = phase0EndTime + 12 weeks;
   uint public constant phase1EndTime        = phase1StartTime + 6 weeks;
   uint public constant finalizeStartTime    = phase1EndTime   + 1 weeks;
+  */
+  
+   uint public constant earlyContribEndTime  = now + 10 minutes;
+   uint public constant phase0StartTime      = earlyContribEndTime + 1 hours;
+   uint public constant phase0EndTime        = phase0StartTime + 1 hours;
+   uint public constant phase1StartTime      = phase0EndTime   + 3 hours;
+   uint public constant phase1EndTime        = phase1StartTime + 1 hours;
+   uint public constant finalizeStartTime    = phase1EndTime   + 0 hours; 
   
   // The finalization phase has a dummy end time because it is ended manually
   uint public constant finalizeEndTime      = finalizeStartTime + 1000 years;
   
   // The maximum time by which donation phase 1 can be delayed from the start time defined above
-  uint public constant maxDelay             = 180 days;
+  uint public constant donPhase1MaxDelay    = 180 days;
 
   // The time for which donation phases remain open after they reach their respective targets   
   uint public constant gracePeriodAfterTarget  = 30 minutes;
