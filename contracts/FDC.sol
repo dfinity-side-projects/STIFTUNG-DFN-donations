@@ -185,6 +185,10 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * PUBLIC functions
    * 
    *  - getState
+   *  - getMultiplierAtTime
+   *  - donateAsWithChecksum
+   *  - finalize
+   *  - empty
    */
 
   /**
@@ -197,11 +201,13 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   /**
    * Return the bonus multiplier at a given time
    *
-   * The given must lie in one of the donation phases because otherwise there
-   * is no valid multiplier.
+   * The given time must  
+   *  - lie in one of the donation phases, 
+   *  - not lie in the future.
+   * Otherwise there is no valid multiplier.
    */
   function getMultiplierAtTime(uint time) constant returns (uint) {
-    // Get phase number
+    // Get phase number (will throw if time lies in the future)
     uint n = getPhaseAtTime(time);
 
     // If time lies in donation phase 0 we return the constant multiplier 
@@ -218,53 +224,21 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     throw;
   }
 
-  //
-  // PUBLIC API
-  //
-
-  /* `donateAsWithChecksum` is useful for and integrated with flows
-     where the user manually enters the tx data, e.g. when sending
-     directly from an exchange.
-
-     `donate` is used when the sender is the recipient and `donateFor`
-     can be used by e.g. contracts that have already validated the
-     recipient address and do not need a checksum.
-  */
+  /**
+   * Send donation in the name a the given address with checksum
+   *
+   * The second argument is a checksum which must equal the first 4 bytes of the
+   * SHA-256 digest of the byte representation of the address.
+   */
   function donateAsWithChecksum(address addr, bytes4 checksum) payable returns (bool) {
-    // SHA256 is used as more readily available outside Ethereum libs
+    // Calculate SHA-256 digest of the address 
     bytes32 hash = sha256(addr);
+    
+    // Throw is the checksum does not match the first 4 bytes
     if (bytes4(hash) != checksum) { throw ; }
 
+    // Call un-checksummed donate function 
     return donateAs(addr);
-  }
-
-  // Give an on-chain donation
-  function donateAs(address addr) payable returns (bool) {
-    // Reject donations outside the donation phases
-    state st = getState();
-    if (st != state.donPhase0 && st != state.donPhase1) { throw; }
-
-    // Reject donation amounts outside the allowed interval
-    if (msg.value < minDonation) { throw; }
-
-    // The exchange rate must have been set first before donations can be accepted
-    if (weiPerCHF == 0) { throw; } 
-
-    // Accept donation, defer forwarding to the end of this function
-    totalWeiDonated += msg.value;
-    weiDonated[addr] += msg.value;
-
-    // Convert Wei to CHF cents
-    uint chfCents = (msg.value * 100) / weiPerCHF;
-    
-    // Do the book-keeping
-    bookDonation(addr, now, chfCents, "ETH", "");
-
-    // Now do the deferred forwarding call
-    // TODO is the if clause needed? can the call fail but not throw itself?
-    if (!foundationWallet.call.value(this.balance)()) { throw; }
-
-    return true;
   }
 
   function finalize(address addr) returns (bool) {
@@ -288,16 +262,6 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     return foundationWallet.call.value(this.balance)();
   }
 
-  // Delay donation phase 1
-  function delayDonPhase1(uint timedelta) returns (bool) {
-    // Require permission
-    if (msg.sender != registrarAuth) { throw; }
-
-    delayPhaseEndBy(3, timedelta);
-    
-    return true;
-  }
- 
   //
   // AUTHENTICATED API
   //
@@ -361,9 +325,48 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     return true;
   }
 
-  //
-  // Internal Functions
-  //
+  // Delay donation phase 1
+  function delayDonPhase1(uint timedelta) returns (bool) {
+    // Require permission
+    if (msg.sender != registrarAuth) { throw; }
+
+    delayPhaseEndBy(3, timedelta);
+    
+    return true;
+  }
+
+  // PRIVATE functions
+  
+  /**
+   * Process donation in the name of the given address 
+   */
+  function donateAs(address addr) private returns (bool) {
+    // Reject donations outside the donation phases
+    state st = getState();
+    if (st != state.donPhase0 && st != state.donPhase1) { throw; }
+
+    // Reject donation amounts outside the allowed interval
+    if (msg.value < minDonation) { throw; }
+
+    // The exchange rate must have been set first before donations can be accepted
+    if (weiPerCHF == 0) { throw; } 
+
+    // Accept donation, defer forwarding to the end of this function
+    totalWeiDonated += msg.value;
+    weiDonated[addr] += msg.value;
+
+    // Convert Wei to CHF cents
+    uint chfCents = (msg.value * 100) / weiPerCHF;
+    
+    // Do the book-keeping
+    bookDonation(addr, now, chfCents, "ETH", "");
+
+    // Now do the deferred forwarding call
+    // TODO is the if clause needed? can the call fail but not throw itself?
+    if (!foundationWallet.call.value(this.balance)()) { throw; }
+
+    return true;
+  }
 
   // Put an accepted donation in the books.
   // This function cannot throw as all checks have been done before. 
