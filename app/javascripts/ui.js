@@ -152,7 +152,7 @@ UI.prototype.setFunderPercProgress = function (perc) {
 // It is possible that some money might have been donated before the official start (for example we could
 // report fiat donations that had already been made, although we might choose to do this during the funder).
 // The FDC will give the extension a number - 0, or whatever - and this can be displayed. A question mark
-// is designed to show that the extension _doesn't_know_ something i.e. that it is uninitialized, not 
+// is designed to show that the extension _doesn't_know_ something i.e. that it is uninitialized, not
 // connected to Ethereum or whatever
 UI.prototype.setFunderChfReceived = function (chf) {
     var e = document.getElementById("total-received");
@@ -213,7 +213,7 @@ UI.prototype.logger = function (text) {
 }
 
 
-// Tasks can only move forward if previous tasks completed. 
+// Tasks can only move forward if previous tasks completed.
 UI.prototype.isTaskReady = function (taskId) {
     k = this.tasks.indexOf(taskId);
     console.log("taskId " + taskId + ": index " + k)
@@ -461,7 +461,6 @@ UI.prototype.showWithdrawEth = function () {
 
 UI.prototype.hideWithdrawEth = function () {
     closeDialog("withdraw-eth");
-
 }
 
 UI.prototype.withdrawETH = function () {
@@ -490,6 +489,33 @@ UI.prototype.showErrorEthForwarding = function () {
 UI.prototype.hideErrorEthForwarding = function () {
     document.getElementById('error-eth-forwarding').style.display = 'none';
 }
+
+
+UI.prototype.showWithdrawBtc = function () {
+    showDialog("withdraw-btc");
+}
+
+UI.prototype.hideWithdrawBtc = function () {
+    closeDialog("withdraw-btc");
+}
+
+UI.prototype.withdrawBtc = function () {
+    var addr = document.getElementById('withdraw-btc-addr').value;
+
+    this.hideWithdrawBtc();
+    this.hideErrorBtcForwarding();
+
+    app.withdrawBtc(addr)
+}
+
+UI.prototype.showErrorBtcForwarding = function () {
+    document.getElementById('error-btc-forwarding').style.display = 'block';
+}
+
+UI.prototype.hideErrorBtcForwarding = function () {
+    document.getElementById('error-btc-forwarding').style.display = 'none';
+}
+
 
 UI.prototype.updateLocationBlocker = function () {
     usBlocker = document.getElementById("us-person-error");
@@ -545,15 +571,15 @@ function enableButton(buttonId) {
 
 function formatCurrency(n, symbol, d) {
   // round it
-  if (d > 0) { 
-    n = Math.round(n*Math.pow(10, d)) / Math.pow(10, d);		
+  if (d > 0) {
+    n = Math.round(n*Math.pow(10, d)) / Math.pow(10, d);
   }
 
   // cut off and/or pad
   var s = n.toFixed(d);
 
   // insert comma separators into the whole part
-  var parts = s.split("."); 
+  var parts = s.split(".");
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   // re-combine parts
