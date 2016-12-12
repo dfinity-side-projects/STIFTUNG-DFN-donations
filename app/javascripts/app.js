@@ -81,10 +81,7 @@ var VALUE_TRANSFER_GAS_COST;
 // this better or leave sufficent margin cannot fail
 
 // FDC address
-// for PRODUCTION version: place hard-coded constant here
-var PRODUCTION = true;
-var PRODUCTION_FDC_ADDR ="0x78833495fa4fd680F84b00E91Db4109A19F4467a";
-var FDCAddr = PRODUCTION?PRODUCTION_FDC_ADDR:FDC.deployed().address;
+var FDCAddr = null;
 
 // FDC ABI signatures
 var donateAs = "0d9543c5";
@@ -119,12 +116,10 @@ var App = function (userAccounts, testUI) {
     this.lastEthereumNode = ETHEREUM_LOCAL_NODE;
     this.lastBitcoinNode = BITCOIN_HOSTED_NODE;
 
-    if (window.location.href.indexOf("test") == -1) {
-        PRODUCTION = true;
-        FDCAddr = PRODUCTION_FDC_ADDR;
-        console.log("Using Production FDC:" + FDCAddr)
+    if (window.location.href.indexOf("fdc") != -1) {
+        FDCAddr = getParameterByName("fdc", window.location.href);
+        console.log("Using Custom FDC:" + FDCAddr)
     } else {
-        PRODUCTION = false;
         FDCAddr = FDC.deployed().address;
         console.log("Using locally deployed FDC for testing:" + FDCAddr)
     }
@@ -218,7 +213,7 @@ App.prototype.tryForwardETH = function () {
     } else {
         // yes...
         var self = this;
-        var fdc = PRODUCTION?FDC.at(FDCAddr):FDC.deployed();
+        var fdc = FDC.at(FDCAddr);
 
         this.saidBalanceTooSmall = false;
         var donating = web3.fromWei(this.ethBalance, 'ether');
@@ -388,7 +383,7 @@ App.prototype.pollStatus = function () {
 
     // retrieve status information from the FDC...
     var self = this;
-    var fdc = PRODUCTION?FDC.at(FDCAddr):FDC.deployed();
+    var fdc = FDC.at(FDCAddr);
 
     fdc.getStatus.call(this.donationPhase,
         dfnAddr,
