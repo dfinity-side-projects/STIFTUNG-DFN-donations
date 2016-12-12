@@ -17,11 +17,16 @@ var Accounts = function (seedStr) {
 
 }
 
+
+exports = module.exports;
+module.exports.Accounts = Accounts;
+
 // https://github.com/bitpay/bitcore-lib/blob/master/docs/hierarchical.md
 // keys are compressed and
 // https://github.com/ethereumjs/ethereumjs-util/blob/master/docs/index.md#pubtoaddress
 // expects the 32 bytes without the leading compression-indicating
 // byte (see YP eq 213)
+
 Accounts.prototype.HDPrivKeyToAddr = function (privHex) {
     /* TODO: verify padding, sometimes we get:
 
@@ -39,7 +44,6 @@ Accounts.prototype.HDPrivKeyToAddr = function (privHex) {
     return EthJSUtil.bufferToHex(addrBuf);
 }
 
-//exports = module.exports = {Accounts};
 
 // Generate an HD seed string. Note that we *never* store the seed. With the
 // seed, an attacker can gain access to the user's DFN later.
