@@ -1,25 +1,6 @@
 pragma solidity ^0.4.6;
 
 import "TokenInterface.sol";
-
-/**
- * A contract that tracks numbers of tokens assigned to addresses. 
- *
- * Optionally, assignments can be chosen to be of "restricted type". 
- * Being "restricted" means that the token assignment may later be partially reverted (or the tokens "burned") by the contract. 
- *
- * After all token assignments are completed the contract
- *   - burns some restricted tokens
- *   - releases the restriction on the remaining tokens
- * The percentage of tokens that burned out of each assignment of restricted tokens is calculated to achieve the following condition:
- *   - the remaining formerly restricted tokens combined have a pre-configured share (percentage) among all remaining tokens.
- *
- * Once the conversion process has started the contract enters a state in which no more assignments can be made.
- *
- * The contract also implements the TokenInterface as follows:
- *   - totalSupply() is the total number of unrestricted tokens
- *   - balanceOf(addr) is the number of unrestricted tokens assigned to addr
- */
  
 contract TokenTracker is TokenInterface {
   // Share of formerly restricted tokens among all tokens in percent 
@@ -48,12 +29,6 @@ contract TokenTracker is TokenInterface {
   uint public burnMultDen;
   uint public burnMultNom;
 
-  /**
-   * Constructor.
-   *
-   * Configures the share (in percent) of remaining formerly restricted tokens among all remaining tokens.
-   * The argument must be in [0,100) 
-   */
   function TokenTracker(uint _restrictedShare) {
     // Throw if restricted share >= 100
     if (_restrictedShare >= 100) { throw; }
@@ -75,7 +50,7 @@ contract TokenTracker is TokenInterface {
    * PUBLIC functions
    *
    *  - isUnrestricted (getter)
-   *  - fractionalMultCeiling (library function)
+   *  - multFracCeiling (library function)
    */
   
   /**
@@ -139,7 +114,7 @@ contract TokenTracker is TokenInterface {
    * A call triggers the calculation of what fraction of restricted tokens should be burned by subsequent calls to the unrestrict() function.
    * The result of this calculation is a multiplication factor whose nominator and denominator are stored in the contract variables burnMultNom, burnMultDen.
    */
-  function closeAssignments() private {
+  function closeAssignments() internal {
     // Throw if assignments were already closed before
     if (assignmentsClosed) { throw; } 
     
@@ -198,7 +173,7 @@ contract TokenTracker is TokenInterface {
 
     // Apply the burn multiplier to the balance of restricted tokens
     // The result is the ceiling of the value: (restrictionForAddr * burnMultNom) / burnMultDen
-    uint burn = fractionalMultCeiling(restrictionsForAddr, burnMultNom, burnMultDen);
+    uint burn = multFracCeiling(restrictionsForAddr, burnMultNom, burnMultDen);
 
     // Remove the tokens to be burned from the address's balance
     tokens[addr] -= burn;

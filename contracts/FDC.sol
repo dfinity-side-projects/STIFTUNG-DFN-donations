@@ -6,64 +6,108 @@ import "StepFunction.sol";
 import "Targets.sol";
 import "Parameters.sol";
 
+/**
+ * The DFINITY foundation donation contract (FDC).
+ *
+ * This contract 
+ *  - accepts on-chain donations for the foundation in ether 
+ *  - tracks on-chain and off-chain donations made to the foundation
+ *  - assigns unrestricted tokens to addresses provided by donors
+ *  - assigns restricted tokens to itself and to early contributors
+ *    
+ * On-chain donations are received in ether are converted to Swiss francs (CHF).
+ * Off-chain donations are received and recorded directly in Swiss francs.
+ * Tokens are assigned at a rate of 10 tokens per CHF. 
+ *
+ * There are two types of tokens intially. Unrestricted tokens are assigned to 
+ * donors and restricted tokens are assigned to the foundation and early 
+ * contributors. Restricted tokens are converted to unrestricted tokens in the 
+ * finalization phase, after which only unrestricted tokens exist.
+ *
+ * After the finalization phase, tokens assigned to the foundation and early 
+ * contributors will make up a pre-defined share of all tokens. This is achieved
+ * through burning excess restricted tokens before their restriction is removed.
+ */
+
 contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
 
-  //
-  // States
-  //
-  
-  // The FDC over its lifetime runs through a number of states. We let
-  // the base contract track the states over time (phases). However,
-  // the FDC defines the following convenient phase names and provides
-  // a mapping to translate the internal numbering of the base
-  // contract phases to the semantic state names. The mapping will be
-  // defined in the constructor.
+  /*
+   * Phases
+   *
+   * The FDC over its lifetime runs through a number of phases. These phases are
+   * tracked by the base contract Phased.
+   *
+   * The FDC maps the chronologically defined phase numbers to semantically 
+   * defined states.
+   */
 
+  // The FDC states
   enum state {
-    pause,          
-    earlyContrib,  // Registration of early contribution
-    donPhase0,     // 
-    donPhase1,     // 
+    pause,         // Pause without any activity 
+    earlyContrib,  // Registration of early contributions
+    donPhase0,     // Donation phase 0  
+    donPhase1,     // Donation phase 1 
     offChainReg,   // Grace period for registration of off-chain donations
-    finalization,  // Adjustment of early contributions down to 20% of all tokens
+    finalization,  // Adjustment of early contributions down to their share
     done           // Read-only phase
   }
 
+  // Mapping from phase number (from the base contract Phased) to FDC state 
   mapping(uint => state) stateOfPhase;
 
-  //
-  // FDC State
-  //
+  /**
+   * Tokens
+   *
+   * The FDC uses base contract TokenTracker to:
+   *  - track token assignments for donors (unrestricted tokens)
+   *  - track token assignments for early contributors (restricted tokens)
+   *  - convert early contributor tokens down to the right amount
+   *
+   * The FDC uses the base contract Targets to:
+   *  - track the targets measured in CHF for each donation phase
+   */
+   
+  /**
+   * Exchange rate and ether handling
+   *
+   * The FDC keeps track of:
+   *  - the exchange rate between ether and Swiss francs
+   *  - the total and per address ether donations
+   */
+   
+  // Exchange rate between ether and Swiss francs
+  uint public weiPerCHF;       
+  
+  // Total number of Wei donated on-chain so far 
+  uint public totalWeiDonated; 
+  
+  // Mapping from address to total number of Wei donated for the address
+  mapping(address => uint) public weiDonated; 
 
-  // The global state is defined by the following base contracts and global variables.
+  /**
+   * Access control 
+   * 
+   * The following three addresses have access to restricted functions of the 
+   * FDC and to the donated funds.
+   */
+   
+  // Wallet address to which on-chain donations are being forwarded
+  address public foundationWallet; 
+  
+  // Address that is allowed to register early contributions and off-chain 
+  // donations and delay donation phase 1
+  address public registrarAuth; 
+  
+  // Address that is allowed to update the exchange rate
+  address public exchangeRateAuth; 
 
-  // see TokenTracker for token balances
-  // see Phased for phase based on time
-  // see Targets for status of donation targets 
-  uint public weiPerCHF;       // exchange rate between Eth and CHF 
-  uint public totalWeiDonated; // total number of wei donated on-chain so far 
-  mapping(address => uint) public weiDonated; // Wei donated per address
-
-  //
-  // Access control 
-  //
-
-  // The following configuration parameters define the permissions for
-  // all access restricted functionality of the FDC. They are set by
-  // the constructor.
-
-  address public foundationWallet; // wallet address to which on-chain donations are being forwarded
-  address public registrarAuth; // address of contract that is allowed to register early contributions and off-chain donations
-  address public exchangeRateAuth; // address of contract that is allowed to update weiPerCHF (the Eth-CHF exchange rate)
-
-  //
-  // Events
-  //
-
-  // The following events are logged to produce a receipt.
-  // DonationReceipt:    token amount assigned for an on-chain or off-chain contribution 
-  // EarlyContribRecipt: token amount assigned for an early contribution 
-  // BurnReceipt:        token amount that got burned during finalization
+  /**
+   * Events
+   *
+   *  - DonationReceipt:     logs an on-chain or off-chain donation
+   *  - EarlyContribReceipt: logs the registration of an early contribution 
+   *  - BurnReceipt:         logs the burning of token during finalization
+   */
 
   event DonationReceipt (address indexed addr,
                          string indexed currency,
@@ -77,82 +121,97 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   event BurnReceipt (address indexed addr,
                      uint tokenAmountBurned);
 
-  //
-  // Constructor
-  //
-
+  /**
+   * Constructor
+   *
+   * The constructor defines 
+   *  - the privileged addresses for access control
+   *  - the phases in base contract Phased
+   *  - the mapping between phase numbers and states
+   *  - the targets in base contract Targets 
+   *  - the share for early contributors in base contract TokenTracker
+   *  - the step function for the bonus calculation in donation phase 1 
+   *
+   * All configuration parameters are taken from base contract Parameters.
+   */
   function FDC(address _foundationWallet,
                address _registrarAuth,
                address _exchangeRateAuth)
     TokenTracker(earlyContribShare)
-    StepFunction(phase1EndTime-phase1StartTime,phase1InitialBonus,phase1BonusSteps) // phaseLength, nStep, step
+    StepFunction(phase1EndTime-phase1StartTime, phase1InitialBonus, phase1BonusSteps) 
   {
+    /**
+     * Set privileged addresses for access control
+     */
     foundationWallet  = _foundationWallet;
     registrarAuth     = _registrarAuth;
     exchangeRateAuth  = _exchangeRateAuth;
 
-    // initialize phased base contract
-      stateOfPhase[0] = state.earlyContrib;
+    /**
+     * Initialize base contract Phased
+     * 
+     *           |------------------------- Phase number (0-7)
+     *           |    |-------------------- State name
+     *           |    |               |---- Transition number (0-6)
+     *           V    V               V
+     */
+    stateOfPhase[0] = state.earlyContrib; 
+    addPhase(earlyContribEndTime); // 0
+    stateOfPhase[1] = state.pause;
+    addPhase(phase0StartTime);     // 1
+    stateOfPhase[2] = state.donPhase0;
+    addPhase(phase0EndTime);       // 2 
+    stateOfPhase[3] = state.offChainReg;
+    addPhase(phase1StartTime);     // 3
+    stateOfPhase[4] = state.donPhase1;
+    addPhase(phase1EndTime);       // 4 
+    stateOfPhase[5] = state.offChainReg;
+    addPhase(finalizeStartTime);   // 5 
+    stateOfPhase[6] = state.finalization;
+    addPhase(finalizeEndTime);     // 6 
+    stateOfPhase[7] = state.done;
 
-    addPhase(earlyContribEndTime); // transition 0
-    
-      stateOfPhase[1] = state.pause;
-
-    addPhase(phase0StartTime); // transition 1
-    
-      stateOfPhase[2] = state.donPhase0;
-
-    addPhase(phase0EndTime); // transition 2
-    
-      stateOfPhase[3] = state.offChainReg;
-
-    addPhase(phase1StartTime); // transition 3
-    
-      stateOfPhase[4] = state.donPhase1;
-
-    addPhase(phase1EndTime); // transition 4
-    
-      stateOfPhase[5] = state.offChainReg;
-
-    addPhase(finalizeStartTime); // transition 5
-    
-      stateOfPhase[6] = state.finalization;
-
-    addPhase(finalizeEndTime); // transition 6
-    
-      stateOfPhase[7] = state.done;
-
-    // set max delay for start of donation phase 1
+    // Maximum delay for start of donation phase 1 (= transition 3)
     setMaxDelay(3, maxDelay);
 
-    // initialize Targets base contract
+    /**
+     * Initialize base contract Targets
+     */
     setTarget(2, phase0Target);
     setTarget(4, phase1Target);
   }
   
-  //
-  // Helpers
-  //
+  /**
+   * PUBLIC functions
+   * 
+   *  - getState
+   */
 
-  // get current state (now)
+  /**
+   * Get current state at the current block time 
+   */
   function getState() constant returns (state) {
     return stateOfPhase[getPhaseAtTime(now)];
   }
   
-  // return the bonus multiplier at the specified time
-  // at times outside of the donation phases there is no valid multiplier
-  // we have to handle that error gracefully instead of throw
+  /**
+   * Return the bonus multiplier at a given time
+   *
+   * The given must lie in one of the donation phases because otherwise there
+   * is no valid multiplier.
+   */
   function getMultiplierAtTime(uint time) constant returns (uint) {
-    uint phase = getPhaseAtTime(time);
+    // Get phase number
+    uint n = getPhaseAtTime(time);
 
     // If time lies in donation phase 0 we return the constant multiplier 
-    if (stateOfPhase[phase] == state.donPhase0) {
+    if (stateOfPhase[n] == state.donPhase0) {
       return 100 + phase0Bonus;
     }
 
     // If time lies in donation phase 1 we return the step function
-    if (stateOfPhase[phase] == state.donPhase1) {
-      return 100 + getStepFunction(time - getPhaseStartTime(phase));
+    if (stateOfPhase[n] == state.donPhase1) {
+      return 100 + getStepFunction(time - getPhaseStartTime(n));
     }
 
     // Throw outside of donation phases
