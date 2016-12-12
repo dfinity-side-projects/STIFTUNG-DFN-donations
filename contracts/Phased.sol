@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/**
+/*
  * @title:  A contract that advances through multiple configurable phases over time.
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  * 

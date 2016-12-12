@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/**
+/*
  * @title:  An arbitrary number of counters that can flag when a pre-configured target is reached.
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  *

@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/**
+/*
  * @title:  A contract that tracks numbers of tokens assigned to addresses. 
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  *
