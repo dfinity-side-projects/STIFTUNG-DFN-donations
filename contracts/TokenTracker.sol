@@ -1,7 +1,25 @@
 pragma solidity ^0.4.6;
 
 import "TokenInterface.sol";
- 
+
+/**
+ * A contract that tracks numbers of tokens assigned to addresses. 
+ *
+ * Optionally, assignments can be chosen to be of "restricted type". 
+ * Being "restricted" means that the token assignment may later be partially reverted (or the tokens "burned") by the contract. 
+ *
+ * After all token assignments are completed the contract
+ *   - burns some restricted tokens
+ *   - releases the restriction on the remaining tokens
+ * The percentage of tokens that burned out of each assignment of restricted tokens is calculated to achieve the following condition:
+ *   - the remaining formerly restricted tokens combined have a pre-configured share (percentage) among all remaining tokens.
+ *
+ * Once the conversion process has started the contract enters a state in which no more assignments can be made.
+ *
+ * The contract also implements the TokenInterface as follows:
+ *   - totalSupply() is the total number of unrestricted tokens
+ *   - balanceOf(addr) is the number of unrestricted tokens assigned to addr
+ */
 contract TokenTracker is TokenInterface {
   // Share of formerly restricted tokens among all tokens in percent 
   uint public restrictedShare; 
@@ -121,20 +139,20 @@ contract TokenTracker is TokenInterface {
     // Set the state to "closed"
     assignmentsClosed = true;
 
-    /**
-     * Calculate the total number of tokens that should remain after conversion.
-     * This is based on the total number of unrestricted tokens assigned so far 
-     * and the pre-configured share that the remaining formerly restricted tokens should have.
-     */
+    /*
+      Calculate the total number of tokens that should remain after conversion.
+      This is based on the total number of unrestricted tokens assigned so far 
+      and the pre-configured share that the remaining formerly restricted tokens should have.
+    */
     uint totalTokensTarget = (totalUnrestrictedTokens * 100) / (100 - restrictedShare);
     
     // The total number of tokens in existence now.
     uint totalTokensExisting = totalRestrictedTokens + totalUnrestrictedTokens;
       
-    /**
-     * The total number of tokens that need to be burned to bring the existing number down to the target number. 
-     * If the existing number is lower than the target then we won't burn anything.
-     */
+    /*
+      The total number of tokens that need to be burned to bring the existing number down to the target number. 
+      If the existing number is lower than the target then we won't burn anything.
+    */
     uint totalBurn = 0; 
     if (totalTokensExisting > totalTokensTarget) {
       totalBurn = totalTokensExisting - totalTokensTarget; 
@@ -144,7 +162,7 @@ contract TokenTracker is TokenInterface {
     burnMultNom = totalBurn;
     burnMultDen = totalRestrictedTokens;
     
-    /**
+    /*
      * For verifying the correctness of the above calculation it may help to note:
      * Given 0 <= restrictedShare < 100, we have:
      *  - totalTokensTarget >= totalUnrestrictedTokens
