@@ -179,6 +179,12 @@ contract Phased {
    *
    * The current phase must not be the last phase, as the last phase has no end.
    * The current phase will end at time now plus the given time delta.
+   *
+   * The minimal allowed time delta is 1. This is avoid a race condition for 
+   * other transactions that are processed in the same block. 
+   * Setting phaseEndTime[n] to now would push all later transactions from the 
+   * same block into the next phase.
+   * If the specified timeDelta is 0 the function gracefully bumps it up to 1.
    */
   function endCurrentPhaseIn(uint timeDelta) internal {
     // Get the current phase number
@@ -186,6 +192,11 @@ contract Phased {
 
     // Throw if we are in the last phase
     if (n >= N) { throw; }
+   
+    // Set timeDelta to the minimal allowed value
+    if (timeDelta == 0) { 
+      timeDelta = 1; 
+    }
     
     // The new phase end should be earlier than the currently defined phase end, otherwise we don't change it.
     if (now + timeDelta < phaseEndTime[n]) { 
