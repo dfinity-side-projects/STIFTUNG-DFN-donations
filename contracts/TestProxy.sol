@@ -16,7 +16,12 @@ contract TestProxy {
   }
 
   function testDonate() payable returns (bool) {
-    bool res = fdc.donateAs.value(msg.value).gas(200000)(msg.sender);
+    // Calculate SHA-256 digest of the address 
+    bytes4 checksum = bytes4(sha256(msg.sender));
+    
+
+    // Call checksummed donate function 
+    bool res = fdc.donateAsWithChecksum.value(msg.value).gas(200000)(msg.sender, checksum);
     return res;
   }
 

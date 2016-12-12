@@ -30,7 +30,7 @@ var Accounts = function (seedStr) {
 }
 
 var Mnemonic = require('bitcore-mnemonic');
-var bitcore = require('bitcore-lib');
+//var bitcore = require('bitcore-lib');
 
 Accounts.prototype.HDPrivKeyToAddr = function (privHex) {
     /* TODO: verify padding, sometimes we get:
@@ -767,7 +767,7 @@ contract('FDC', function (accounts) {
                         var amountWei = web3.toBigNumber(web3.toWei(amount, 'ether'));
                         // console.log("\ntxFee: " + txFee + "  // amount: " + value);
                         //var txData     = "0x" + packArg(donateAs, app.DFNAcc.addr);
-                        fdc.donateAs(DFNAddr, {
+                        fdc.donateAsWithChecksum(DFNAddr, addrChecksum(DFNAddr), {
                             from: ETHForwardAddr,
                             value: amountWei,
                             gasPrice: gasPrice,

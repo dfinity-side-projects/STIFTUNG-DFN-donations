@@ -102,6 +102,14 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   address public exchangeRateAuth; 
 
   /*
+   * Global variables
+   */
+ 
+  // The phase numbers of the donation phases (set by the constructor)
+  uint phaseOfDonPhase0;
+  uint phaseOfDonPhase1;
+  
+  /*
    * Events
    *
    *  - DonationReceipt:     logs an on-chain or off-chain donation
@@ -171,24 +179,37 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     addPhase(finalizeEndTime);     // 6 
     stateOfPhase[7] = state.done;
 
-    // Maximum delay for start of donation phase 1 (= transition 3)
-    setMaxDelay(3, maxDelay);
+    // Let the other functions know what phase numbers the donation phases were
+    // assigned to
+    phaseOfDonPhase0 = 2;
+    phaseOfDonPhase1 = 4;
+    
+    // Maximum delay for start of donation phase 1 
+    setMaxDelay(phaseOfDonPhase1 - 1, maxDelay);
 
     /*
      * Initialize base contract Targets
      */
-    setTarget(2, phase0Target);
-    setTarget(4, phase1Target);
+    setTarget(phaseOfDonPhase0, phase0Target);
+    setTarget(phaseOfDonPhase1, phase1Target);
   }
   
   /**
    * PUBLIC functions
    * 
+   * Un-authenticated:
    *  - getState
    *  - getMultiplierAtTime
    *  - donateAsWithChecksum
    *  - finalize
    *  - empty
+   *  - getStatus
+   *
+   * Authenticated:
+   *  - registerEarlyContrib
+   *  - registerOffChainDonation
+   *  - setExchangeRate
+   *  - delayDonPhase1
    */
 
   /**
@@ -241,176 +262,64 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     return donateAs(addr);
   }
 
-  function finalize(address addr) returns (bool) {
-    // The function is only available during the finalization phase
+  /**
+   * Finalize the balance for the given address
+   *
+   * This function triggers the conversion (and burn) of the restricted tokens
+   * that are assigned to the given address.
+   *
+   * This function is only available during the finalization phase. It manages
+   * the calls to closeAssignments() and unrestrict() of TokenTracker.
+   */
+  function finalize(address addr) {
+    // Throw if we are not in the finalization phase 
     if (getState() != state.finalization) { throw; }
 
     // Close down further assignments in TokenTracker
-    if (!assignmentsClosed) { closeAssignments(); }
+    if (!assignmentsClosed) { 
+      closeAssignments(); 
+    }
 
-    // Burn and issue burn receipt
+    // Burn tokens
     uint tokensBurned = unrestrict(addr); 
+    
+    // Issue burn receipt
     BurnReceipt(addr, tokensBurned);
 
-    // close finalization phase
-    if (isUnrestricted()) { endCurrentPhaseIn(0); }
-    
-    return true;
+    // If no restricted tokens left
+    if (isUnrestricted()) { 
+      // then end the finalization phase immediately
+      endCurrentPhaseIn(0); 
+    }
   }
 
+  /**
+   * Send any remaining balance to the foundation wallet
+   */
   function empty() returns (bool) {
     return foundationWallet.call.value(this.balance)();
   }
 
-  //
-  // AUTHENTICATED API
-  //
-
-  // Set the exchange rate for Eth-CHF in wei per CHF
-  // TODO Change this function to setWeiPerCHF
-  function setWeiPerCHF(uint weis) returns (bool) {
-    // Require permission
-    if (msg.sender != exchangeRateAuth) { throw; }
-
-    // Set the global state variable for exchange rate 
-    weiPerCHF = weis;
-    return true;
-  }
-
-  // Register an early contribution
-  function registerEarlyContrib(address addr, uint tokenAmount, bytes32 memo) returns (bool) {
-    // Require permission
-    if (msg.sender != registrarAuth)      { throw; }
-
-    // Reject registrations outside the early contribution phase
-    if (getState() != state.earlyContrib) { throw; }
-
-    // assign tokens in TokenTracker
-    assign(addr, tokenAmount, true);
-    
-    // Issue early contribution receipt
-    EarlyContribReceipt(addr, tokenAmount, memo);
-    return true;
-  }
-
-  // Register an off-chain donation
-  // TODO document what happens if timestamp is invalid
-  function registerOffChainDonation(address addr, uint timestamp, uint chfCents, string currency, bytes32 memo) returns (bool) {
-    // Require permission
-    if (msg.sender != registrarAuth) { throw; }
-
-    // We need the current phase and state
-    uint currentPhase = getPhaseAtTime(now);
-    state currentState = stateOfPhase[currentPhase];
-    
-    // Reject registrations outside the two donation phases (incl. their extended registration periods for off-chain donations)
-    if (currentState != state.donPhase0 && currentState != state.donPhase1 && currentState != state.offChainReg) { throw; }
-   
-    // The timestamp defines the donation phase and the multiplier.
-    // It can't be in the future because future phase times might still change
-    if (timestamp > now) { throw; }
-   
-    // We need phase and state of the timestamp  
-    uint timestampPhase = getPhaseAtTime(timestamp);
-    state timestampState = stateOfPhase[timestampPhase];
-   
-    // Reject timestamps outside (the correct) donation phase 
-    if (currentState == state.donPhase0 && timestampState != currentState) { throw; }
-    if (currentState == state.donPhase1 && timestampState != currentState) { throw; }
-    if (currentState == state.offChainReg && timestampPhase != currentPhase - 1) { throw; }
-
-    // Do the book-keeping
-    bookDonation(addr, timestamp, chfCents, currency, memo);
-
-    return true;
-  }
-
-  // Delay donation phase 1
-  function delayDonPhase1(uint timedelta) returns (bool) {
-    // Require permission
-    if (msg.sender != registrarAuth) { throw; }
-
-    delayPhaseEndBy(3, timedelta);
-    
-    return true;
-  }
-
-  // PRIVATE functions
-  
   /**
-   * Process donation in the name of the given address 
+   * Get status information from the FDC
+   *
+   * This function returns a mix of
+   *  - global status of the FDC
+   *  - global status of the FDC specific for one of the two donation phases
+   *  - status related to a specific token address (DFINITY address)
+   *  - status (balance) of an external Ethereum account 
+   *
+   * Arguments are:
+   *  - donationPhase: donation phase to query (0 or 1)
+   *  - dfnAddr: token address to query
+   *  - fwdAddr: external Ethereum address to query
    */
-  function donateAs(address addr) private returns (bool) {
-    // Reject donations outside the donation phases
-    state st = getState();
-    if (st != state.donPhase0 && st != state.donPhase1) { throw; }
-
-    // Reject donation amounts outside the allowed interval
-    if (msg.value < minDonation) { throw; }
-
-    // The exchange rate must have been set first before donations can be accepted
-    if (weiPerCHF == 0) { throw; } 
-
-    // Accept donation, defer forwarding to the end of this function
-    totalWeiDonated += msg.value;
-    weiDonated[addr] += msg.value;
-
-    // Convert Wei to CHF cents
-    uint chfCents = (msg.value * 100) / weiPerCHF;
-    
-    // Do the book-keeping
-    bookDonation(addr, now, chfCents, "ETH", "");
-
-    // Now do the deferred forwarding call
-    // TODO is the if clause needed? can the call fail but not throw itself?
-    if (!foundationWallet.call.value(this.balance)()) { throw; }
-
-    return true;
-  }
-
-  // Put an accepted donation in the books.
-  // This function cannot throw as all checks have been done before. 
-  // This function is agnostic to the source of the donation (on-chain or off-chain) and to the currency (the currency argument is passed through to the DonationReceipt)
-  // The phase argument is redundant because it could be derived from the timestamp. However, it is passed in to save the gas of re-calculating it.
-  function bookDonation(address addr, uint timestamp, uint chfCents, string currency, bytes32 memo) private {
-    // Log the tokens before applying multipliers towards the target counter
-    // If target first reached (= return value) then schedule early phase end 
-    uint phase = getPhaseAtTime(timestamp);
-    bool targetReached = addTowardsTarget(phase, chfCents);
-    if (targetReached && phase == getPhaseAtTime(now)) {
-      endCurrentPhaseIn(gracePeriodAfterTarget);
-    }
-
-    // Apply the multiplier that was valid at the given time 
-    uint bonusMultiplier = getMultiplierAtTime(timestamp);
-    chfCents = (chfCents * bonusMultiplier) / 100;
-
-    // Convert chfCents into tokens
-    //    uint tokenAmount = chfCents / chfCentsPerToken;
-    uint tokenAmount = (chfCents * tokensPerCHF) / 100;
-
-    // assign unrestricted tokens in TokenTracker
-    assign(addr,tokenAmount,false);
-
-    // Issue donation receipt
-    DonationReceipt(addr, currency, bonusMultiplier, timestamp, tokenAmount, memo);
-  }
-
-  //
-  // External getters
-  //
-
-  // Not used internally. Utility function that retrieves general status of the
-  // funder and information specific to a donor.
-  //  donationPhase - phase of the funder. 0=seed, 1=main
-  //  dfnAddr       - public key address of donor's DFN proposed account
-  //  fwdAddr       - public key address of donor's donation forwarding app
   function getStatus(uint donationPhase, address dfnAddr, address fwdAddr)
     public constant
     returns (
       state currentState,     // current state (an enum)
       uint fxRate,            // exchange rate of CHF -> ETH (Wei/CHF)
-      uint currentMultiplier, // current bonus multiplier in percent (0 if outside of)
+      uint currentMultiplier, // current bonus multiplier (0 if invalid)
       uint donationCount,     // total individual donations made (a count)
       uint totalTokenAmount,  // total DFN planned allocated to donors
       uint startTime,         // expected start time of specified donation phase
@@ -421,35 +330,219 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
       uint fwdBalance,        // total ETH (in Wei) waiting in fowarding address
       uint donated)           // total ETH (in Wei) donated by DFN address 
   {
-    // global state
+    // The global status
     currentState = getState();
-    
-    // phase dependent state
     if (currentState == state.donPhase0 || currentState == state.donPhase1) {
       currentMultiplier = getMultiplierAtTime(now);
     } 
-    
-    if (donationPhase == 0) {
-      // i = 2
-      startTime = phaseEndTime[1];
-      endTime = phaseEndTime[2];
-      isTargetReached = targetReached(2);
-      chfCentsDonated = counter[2];
-    } else {
-      // i = 4
-      startTime = phaseEndTime[3];
-      endTime = phaseEndTime[4];
-      isTargetReached = targetReached(4);
-      chfCentsDonated = counter[4];
-    }
-    
     fxRate = weiPerCHF;
     donationCount = totalUnrestrictedAssignments;
     totalTokenAmount = totalUnrestrictedTokens;
-
-    // addr dependent state
+   
+    // The phase specific status
+    if (donationPhase == 0) {
+      startTime = phaseEndTime[phaseOfDonPhase0 - 1];
+      endTime = phaseEndTime[phaseOfDonPhase0];
+      isTargetReached = targetReached(phaseOfDonPhase0);
+      chfCentsDonated = counter[phaseOfDonPhase0];
+    } else {
+      startTime = phaseEndTime[phaseOfDonPhase1 - 1];
+      endTime = phaseEndTime[phaseOfDonPhase1];
+      isTargetReached = targetReached(phaseOfDonPhase1);
+      chfCentsDonated = counter[phaseOfDonPhase1];
+    }
+    
+    // The status specific to the DFN address
     tokenAmount = tokens[dfnAddr];
-    fwdBalance = fwdAddr.balance;
     donated = weiDonated[dfnAddr];
+    
+    // The status specific to the Ethereum address
+    fwdBalance = fwdAddr.balance;
+  }
+  
+  /**
+   * Set the exchange rate between ether and Swiss francs in Wei per CHF
+   *
+   * Must be called from exchangeRateAuth.
+   */
+  function setWeiPerCHF(uint weis) {
+    // Require permission
+    if (msg.sender != exchangeRateAuth) { throw; }
+
+    // Set the global state variable for exchange rate 
+    weiPerCHF = weis;
+  }
+
+  /**
+   * Register early contribution in the name of the given address
+   *
+   * Must be called from registrarAuth.
+   *
+   * Arguments are:
+   *  - addr: address to the tokens are assigned
+   *  - tokenAmount: number of restricted tokens to assign
+   *  - memo: optional 32 bytes of data to appear in the receipt
+   */
+  function registerEarlyContrib(address addr, uint tokenAmount, bytes32 memo) {
+    // Require permission
+    if (msg.sender != registrarAuth) { throw; }
+
+    // Reject registrations outside the early contribution phase
+    if (getState() != state.earlyContrib) { throw; }
+
+    // Assign restricted tokens in TokenTracker
+    assign(addr, tokenAmount, true);
+    
+    // Issue early contribution receipt
+    EarlyContribReceipt(addr, tokenAmount, memo);
+  }
+
+  /**
+   * Register off-chain donation in the name of the given address
+   *
+   * Must be called from registrarAuth.
+   *
+   * Arguments are:
+   *  - addr: address to the tokens are assigned
+   *  - timestamp: time when the donation came in (determines phase and bonus)
+   *  - chfCents: value of the donation in cents of Swiss francs
+   *  - currency: the original currency of the donation (three letter string)
+   *  - memo: optional 32 bytes of data to appear in the receipt
+   *
+   * The timestamp must not be in the future. This is because the timestamp 
+   * defines the donation phase and the multiplier and future phase times are
+   * still subject to change.
+   *
+   * If called during a donation phase then the timestamp must lie in the same 
+   * phase and if called during the extended period for off-chain donations then
+   * the timestamp must lie in the immediately preceding donation phase. 
+   */
+  function registerOffChainDonation(address addr, uint timestamp, uint chfCents, string currency, bytes32 memo) {
+    // Require permission
+    if (msg.sender != registrarAuth) { throw; }
+
+    // The current phase number and state corresponding state
+    uint currentPhase = getPhaseAtTime(now);
+    state currentState = stateOfPhase[currentPhase];
+    
+    // Reject registrations outside the two donation phases (incl. their extended registration periods for off-chain donations)
+    if (currentState != state.donPhase0 && currentState != state.donPhase1 && currentState != state.offChainReg) { throw; }
+   
+    // Throw if timestamp is in the future
+    if (timestamp > now) { throw; }
+   
+    // Phase number and corresponding state of the timestamp  
+    uint timestampPhase = getPhaseAtTime(timestamp);
+    state timestampState = stateOfPhase[timestampPhase];
+   
+    // Throw if called during a donation phase and the timestamp does not match
+    // that phase.
+    if (currentState == state.donPhase0 && timestampState != currentState) { throw; }
+    if (currentState == state.donPhase1 && timestampState != currentState) { throw; }
+    
+    // Throw if called during the extended period for off-chain donations and
+    // the timestamp does not lie in the immediately preceding donation phase.
+    if (currentState == state.offChainReg && timestampPhase != currentPhase - 1) { throw; }
+
+    // Do the book-keeping
+    bookDonation(addr, timestamp, chfCents, currency, memo);
+  }
+
+  /**
+   * Delay donation phase 1
+   *
+   * Must be called from registrarAuth.
+   *
+   * This function delays the start of donation phase 1 by the given time delta
+   * unless the time delta is bigger than the configured maximum delay.
+   */
+  function delayDonPhase1(uint timedelta) {
+    // Require permission
+    if (msg.sender != registrarAuth) { throw; }
+
+    // Pass the call on to base contract Phased
+    // Delaying the start of donation phase 1 is the same as delaying the end 
+    // of the phase preceding donation phase 1 
+    delayPhaseEndBy(phaseOfDonPhase1 - 1, timedelta);
+  }
+
+  /**
+   * PRIVATE functions
+   *
+   *  - donateAs
+   *  - bookDonation
+   */
+  
+  /**
+   * Process on-chain donation in the name of the given address 
+   *
+   * This function is private because it shall only be called through its 
+   * wrapper donateAsWithChecksum.
+   */
+  function donateAs(address addr) private returns (bool) {
+    // The current state
+    state st = getState();
+    
+    // Throw if current state is not a donation phase
+    if (st != state.donPhase0 && st != state.donPhase1) { throw; }
+
+    // Throw if donation amount is below minimum
+    if (msg.value < minDonation) { throw; }
+
+    // Throw if the exchange rate is not yet defined
+    if (weiPerCHF == 0) { throw; } 
+
+    // Update counters for ether donations
+    totalWeiDonated += msg.value;
+    weiDonated[addr] += msg.value;
+
+    // Convert ether to Swiss francs
+    uint chfCents = (msg.value * 100) / weiPerCHF;
+    
+    // Do the book-keeping
+    bookDonation(addr, now, chfCents, "ETH", "");
+
+    // Forward balance to the foundation wallet
+    return foundationWallet.call.value(this.balance)();
+  }
+
+  /**
+   * Put an accepted donation in the books.
+   *
+   * This function
+   *  - cannot throw as all checks have been done before, 
+   *  - is agnostic to the source of the donation (on-chain or off-chain)
+   *  - is agnostic to the currency 
+   *    (the currency argument is simply passed through to the DonationReceipt)
+   *
+   * The phase argument is redundant because it could be derived from the 
+   * timestamp. However, it is passed in to save the gas of re-calculating it.
+   */
+  function bookDonation(address addr, uint timestamp, uint chfCents, string currency, bytes32 memo) private {
+    // The current phase
+    uint phase = getPhaseAtTime(timestamp);
+    
+    // Add amount to the counter of the current phase
+    bool targetReached = addTowardsTarget(phase, chfCents);
+    
+    // If the target was crossed then start the grace period
+    if (targetReached && phase == getPhaseAtTime(now)) {
+      endCurrentPhaseIn(gracePeriodAfterTarget);
+    }
+
+    // Bonus multiplier that was valid at the given time 
+    uint bonusMultiplier = getMultiplierAtTime(timestamp);
+    
+    // Apply bonus to amount in Swiss francs
+    chfCents = (chfCents * bonusMultiplier) / 100;
+
+    // Convert Swiss francs to amount of tokens
+    uint tokenAmount = (chfCents * tokensPerCHF) / 100;
+
+    // Assign unrestricted tokens in TokenTracker
+    assign(addr,tokenAmount,false);
+
+    // Issue donation receipt
+    DonationReceipt(addr, currency, bonusMultiplier, timestamp, tokenAmount, memo);
   }
 }
