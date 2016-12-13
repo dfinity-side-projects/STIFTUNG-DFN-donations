@@ -824,6 +824,7 @@ window.onload = function () {
         // First initialize UI wrapper so we can report errors to user
         console.log("Wiring up HTML DOM...");
         ui = new UI();
+        ui.wireUpDOM();
         console.log("User interface ready.");
 
         // Initialize constants
@@ -863,6 +864,7 @@ window.onload = function () {
         app = new App(userAccounts);
         //app = new App(account, account, true);
 
+        ui.afterAppLoaded();
         // First attempt to load stored keys if any.
         // If loading fails, then simply wait user to generate new seed or import seed
 

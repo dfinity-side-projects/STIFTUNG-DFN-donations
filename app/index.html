@@ -1,3 +1,5 @@
+
+
 <html>
 
 <head>
@@ -76,15 +78,15 @@
         <div class="box-content">
 
             <div id="error-donation-not-started" class="error" style="display: none">
-            The seed donation phase has not yet started. Before the donation start, this application will not forward any ETH/BTC transaction.
-            <br>
+                The seed donation phase has not yet started. Before the donation start, this application will not forward any ETH/BTC transaction.
+                <br>
                 Donation expected start time: <span id="donation-start-time">?</span>
 
                 <br>
                 Visit official <a href="http://dfinity.network">DFINITY project site</a> for more details.
             </div>
             <div id="error-donation-over" class="error" style="display: none">
-                 The seed donation phase has already ended.
+                The seed donation phase has already ended.
                 <a class="blink" href="">Please withdraw any remaining ETH that could not be forwarded.</a>
                 <br>
 
@@ -96,18 +98,18 @@
             <div id="error-eth-forwarding" class="error" style="display: none">
                 There was an error forwarding ETH.
                 <br/>
-                <a class="blink" href="javascript:ui.showWithdrawEth()">Please withdraw remaining ETH</a> or <a
-                    class="blink" href="javascript:app.retryForwarding()">try forwarding again</a>
+                <a class="blink" id="withdraw-eth-link" href="#">Please withdraw remaining ETH</a> or <a
+                    class="blink" id="retry-forward-link" href="#">try forwarding again</a>
             </div>
             <div id="error-btc-forwarding" class="error" style="display: none">
                 There was an error forwarding BTC.
                 <br/>
-                <a class="blink" href="javascript:ui.showWithdrawBtc()">Please withdraw remaining BTC</a> or <a
-                    class="blink" href="javascript:app.retryForwardingBtc()">try forwarding again</a>
+                <a class="blink" id="show-withdraw-btc-link" href="#">Please withdraw remaining BTC</a> or <a
+                    class="blink" id="retry-forward-btc-link" href="#">try forwarding again</a>
             </div>
             <div id="genesis-dfinities">
                 <div><span class="amount" id="genesis-dfinities-amount">0 DFN</span>
-                    <a class="tooltip" href="javascript:showDialog('dfinities-info')">
+                    <a class="tooltip" id="show-dfinities-info" href="#">
                         <p class="icon info hidden" id="genesis-dfinities-info-icon"></p>
                     </a>
 
@@ -167,7 +169,7 @@
                     <p>However, you can also connect to your own remote or local Ethereum node. Make sure the node you connect to is trustworthy.</p>
                     </span>
                     </a>
-                        <span><a id="btn-ethereum-node" href="javascript:ui.showSelectEthereumNode()">...</a>&nbsp; | &nbsp;<span
+                        <span><a id="btn-ethereum-node">...</a>&nbsp; | &nbsp;<span
                                 id="eth-client-status">?</span></span>
                     </div>
                 </li>
@@ -176,7 +178,7 @@
                         <span>
                     <strong>Bitcoin explorer</strong><br/>
                     </a>
-                        <span><a id="btn-bitcoin-node" href="javascript:ui.showSelectBitcoinNode()">...</a>&nbsp; | &nbsp;<span
+                        <span><a id="btn-bitcoin-node" >...</a>&nbsp; | &nbsp;<span
                                 id="btc-client-status">?</span></span>
                     </div>
                 </li>
@@ -193,7 +195,7 @@
 
                     </span>
                     </a><span><span id="donated-eth">0</span> donated (<span id="waiting-eth">0</span> <a
-                            href="javascript:ui.showWithdrawEth()">waiting</a>)</span>
+                            href="#" id="remaining-eth-link">waiting</a>)</span>
                     </div>
                 </li>
             </ul>
@@ -243,8 +245,8 @@
     <input id="withdraw-eth-addr" type="text" class="textbox-custom"/>
     </p>
     <p>
-        <a href="javascript:ui.withdrawETH()" class="btn">Withdraw</a>
-        <a href="javascript:ui.hideWithdrawEth()" class="btn">Cancel</a>
+        <a id="withdraw-eth-link2" href="#" class="btn">Withdraw</a>
+        <a id="hide-withdraw-eth-button" href="#" class="btn">Cancel</a>
     </p>
 </div>
 <div id="withdraw-btc" class="dialog dialog-no-scroll dialog-small">
@@ -259,11 +261,11 @@
     </p> -->
     <p>
     <h3>Withdraw to BTC address: </h3>
-        <input id="withdraw-btc-addr" type="text" class="textbox-custom"/>
+    <input id="withdraw-btc-addr" type="text" class="textbox-custom"/>
     </p>
     <p>
-        <a href="javascript:ui.withdrawBtc()" class="btn">Withdraw</a>
-        <a href="javascript:ui.hideWithdrawBtc()" class="btn">Cancel</a>
+        <a id="do-withdraw-btc-button" href="#" class="btn">Withdraw</a>
+        <a id="hide-withdraw-btc-button" href="#" class="btn">Cancel</a>
     </p>
 </div>
 <div id="dfinities-info" class="dialog dialog-small dialog-no-scroll">
@@ -276,7 +278,7 @@
     <p>Dfinities recorded: <span class="textbox-custom" id="genesis-dfinities-amount-2"></span></p>
     <p>Dfinities address: This is the address you will hold your Dfinities once DFINITY network gets live. <span
             class="textbox-custom" id="dfn-address"></span></p>
-    <a href="javascript:closeDialog('dfinities-info')" class="btn">Got it</a>
+    <a id="close-dfinities-info"  class="btn">Got it</a>
     </p>
 </div>
 <div id="create-dfn-seed" class="dialog ">
@@ -298,14 +300,14 @@
     <p>
         <details>
             <summary>Advanced Function</summary>
-    <p><a href="javascript:ui.showImportSeed()">Import seed</a></p>
+    <p><a id="show-import-seed-button" href="#">Import seed</a></p>
     </details>
     </p>
     <!-- <p id="download-seed"><a href="data:application/octet-stream;charset=utf-16le;base64,//5mAG8AbwAgAGIAYQByAAoA">Optionally, download your seed as a file</a></p> -->
     <p>
-        <a id="after-create-seed-button" href="javascript:javascript:ui.afterCreateSeed()" class="btn">OK, I have now
+        <a id="after-create-seed-button" href="#" class="btn">OK, I have now
             saved my seed and will never lose it</a>
-        <a href="javascript:ui.cancelCreateSeed()" class="btn">Cancel</a>
+        <a id="cancel-create-seed-button" href="#" class="btn">Cancel</a>
     </p>
 </div>
 <div id="verify-dfn-seed" class="dialog ">
@@ -325,8 +327,8 @@
     </div>
     </p>
     <p>
-        <a href="javascript:ui.doValidateSeed()" class="btn">Validate Seed and ERASE</a>
-        <a href="javascript:ui.beforeValidateSeed()" class="btn">Back</a>
+        <a id="do-validate-seed-button" href="#" class="btn">Validate Seed and ERASE</a>
+        <a id="before-validate-seed-button" href="#" class="btn">Back</a>
     </p>
 </div>
 <div id="import-dfn-seed" class="dialog ">
@@ -348,8 +350,8 @@
     </div>
     </p>
     <p>
-        <a href="javascript:ui.doImportSeed()" class="btn">Import Seed</a>
-        <a href="javascript:ui.hideImportSeed()" class="btn">Cancel</a>
+        <a id="do-import-seed-button" class="btn">Import Seed</a>
+        <a id="hide-import-seed-button"  class="btn">Cancel</a>
     </p>
 </div>
 <div id="explain-eth-forwarding" class="dialog">
@@ -396,7 +398,7 @@
         <!--</details>-->
         <!--</div>-->
         <p>
-            <a href="javascript:ui.doneExplainForwarding()" class="btn">OK I'm Ready!</a>
+            <a id="done-explain-forwarding-button" href="#" class="btn">OK I'm Ready!</a>
         </p>
     </div>
 </div>
@@ -407,40 +409,40 @@
     <p>Choose one of the following options for this application to connect to the Ethereum network:</p>
     <ul>
         <li>
-        <h3>Recommended: Hosted Node (DFINITY Stiftung)</h3>
-        <p>
-            This is the recommended and easiest option, withou need to setup any Ethereum instance.
-            If you are not sure what Ethereum node means, just go with this.
-        </p>
+            <h3>Recommended: Hosted Node (DFINITY Stiftung)</h3>
+            <p>
+                This is the recommended and easiest option, withou need to setup any Ethereum instance.
+                If you are not sure what Ethereum node means, just go with this.
+            </p>
             <a id="connect-hosted" class="eth-host btn"
-              href="javascript:ui.onSelectEthereumNode('hosted')">
+               href="#">
                 Hosted node
-        </a>
+            </a>
         </li>
         <li>
-        <h3>Local node (http://localhost:8545) </h3>
-        <p>
-            Select this option if you run a Ethereum full node locally and would prefer this software to connect to it.
-        </p>
+            <h3>Local node (http://localhost:8545) </h3>
+            <p>
+                Select this option if you run a Ethereum full node locally and would prefer this software to connect to it.
+            </p>
             <a id="connect-localhost" class="eth-host btn"
-               href="javascript:ui.onSelectEthereumNode('http://localhost:8545')">Local node</a>
+               href="#">Local node</a>
         </li>
-    <li>
-        <h3>Custom Node</h3>
-        <p>
-            Enter an alternative custom node that you trust, for example a full node that your company runs, or which
-            DFINITY Stiftung announced on its Twitter feed:
-            <input id='custom-full-node-address-eth' placeholder="http://server:port/" type='text' class="textbox-custom"/>
-            <a id='btn-custom-full-node-eth' class="btn"
-               href="javascript:ui.onSelectEthereumNode(document.getElementById('custom-full-node-address-eth').value)">Connect to this
-                node </a>
-        </p>
-    </li>
+        <li>
+            <h3>Custom Node</h3>
+            <p>
+                Enter an alternative custom node that you trust, for example a full node that your company runs, or which
+                DFINITY Stiftung announced on its Twitter feed:
+                <input id='custom-full-node-address-eth' placeholder="http://server:port/" type='text' class="textbox-custom"/>
+                <a id='btn-custom-full-node-eth' class="btn"
+                   href="#">Connect to this
+                    node </a>
+            </p>
+        </li>
     </ul>
     <p>
 
 
-        <a href="javascript:closeDialog('select-full-node-eth')" class="btn">Cancel</a>
+        <a id="close-select-full-node-eth" href="#" class="btn">Cancel</a>
 
     </p>
 </div>
@@ -451,40 +453,40 @@
     <p>Choose one of the following options for this application to connect to the Bitcoin network:</p>
     <ul>
         <li>
-        <h3>Recommended: Hosted Node (DFINITY Stiftung)</h3>
-        <p>
-            This is the recommended and easiest option, withou need to setup any Bitcoin instance.
-            If you are not sure what Bitcoin node means, just go with this.
-        </p>
-            <a id="connect-hosted" class="btc-host btn"
-              href="javascript:ui.onSelectBitcoinNode('hosted')">
+            <h3>Recommended: Hosted Node (DFINITY Stiftung)</h3>
+            <p>
+                This is the recommended and easiest option, withou need to setup any Bitcoin instance.
+                If you are not sure what Bitcoin node means, just go with this.
+            </p>
+            <a id="connect-hosted-btc" class="btc-host btn"
+               href="#">
                 Hosted node
-        </a>
+            </a>
         </li>
         <li>
-        <h3>Local node (http://localhost:3001) </h3>
-        <p>
-            Select this option if you run a Bitcoin block explorer locally and would prefer this software to connect to it.
-        </p>
-            <a id="connect-localhost" class="btc-host btn"
-               href="javascript:ui.onSelectBitcoinNode('http://localhost:3001')">Local node</a>
+            <h3>Local node (http://localhost:3001) </h3>
+            <p>
+                Select this option if you run a Bitcoin block explorer locally and would prefer this software to connect to it.
+            </p>
+            <a id="connect-localhost-btc" class="btc-host btn"
+               href="#">Local node</a>
         </li>
-    <li>
-        <h3>Custom Node</h3>
-        <p>
-            Enter an alternative custom node that you trust, for example a full node that your company runs, or which
-            DFINITY Stiftung announced on its Twitter feed:
-            <input id='custom-full-node-address-btc' placeholder="http://server:port/" type='text' class="textbox-custom"/>
-            <a id='btn-custom-full-node-btc' class="btn"
-               href="javascript:ui.onSelectBitcoinNode(document.getElementById('custom-full-node-address-btc').value)">Connect to this
-                node </a>
-        </p>
-    </li>
+        <li>
+            <h3>Custom Node</h3>
+            <p>
+                Enter an alternative custom node that you trust, for example a full node that your company runs, or which
+                DFINITY Stiftung announced on its Twitter feed:
+                <input id='custom-full-node-address-btc' placeholder="http://server:port/" type='text' class="textbox-custom"/>
+                <a id='btn-custom-full-node-btc' class="btn"
+                   href="#">Connect to this
+                    node </a>
+            </p>
+        </li>
     </ul>
     <p>
 
 
-        <a href="javascript:closeDialog('select-full-node-btc')" class="btn">Cancel</a>
+        <a id="close-select-full-node-btc" href="#" class="btn">Cancel</a>
 
     </p>
 </div>
@@ -494,36 +496,36 @@
         <p>
 
         <h3>OVERVIEW OF DONATING TO DFINITY STIFTUNG</h3></p>
-            <p class="c2 c3"><h3></h3></p><p class="c2">
-            <h3>The DFINITY Network and DFN</h3></p>
-            <p class="c2 c3"><h3></h3></p>
-            <p class="c2"><span>Research, designs, cryptography and proof-of-concept software has been created and
+        <p class="c2 c3"><h3></h3></p><p class="c2">
+        <h3>The DFINITY Network and DFN</h3></p>
+        <p class="c2 c3"><h3></h3></p>
+        <p class="c2"><span>Research, designs, cryptography and proof-of-concept software has been created and
                 proposed in relation to an open and decentralized cloud computing platform (the &ldquo;DFINTY Network&rdquo;)
                 that involves advanced blockchain technology and techniques. It is necessary for the DFINITY Network
                 to host special cryptographic digital information units (&ldquo;DFN&rdquo;) that mediate participation
                 in its functions and access to its resources. At the current time, the DFINITY Network concept involves
                 the DFN participation tokens enabling and mediating participation in four ways:</span></p>
-            <p class="c2 c3"><span></span></p><ul class="c4 lst-kix_sqrltz50h3q6-0 start"><li class="c1">
-                <span>Deploying and running software code.</span></li><li class="c1">
+        <p class="c2 c3"><span></span></p><ul class="c4 lst-kix_sqrltz50h3q6-0 start"><li class="c1">
+        <span>Deploying and running software code.</span></li><li class="c1">
                 <span>Creating &ldquo;mining identities&rdquo; that enable participation in mining the network
                     using special client software.</span></li><li class="c1"><span>Creating &ldquo;neurons&rdquo;
-                that enable participation in decentralized governance created by a &ldquo;Blockchain Nervous System&rdquo;
-                .</span></li><li class="c1"><span>Connecting private cloud compute platforms created using DFINITY technology
+        that enable participation in decentralized governance created by a &ldquo;Blockchain Nervous System&rdquo;
+        .</span></li><li class="c1"><span>Connecting private cloud compute platforms created using DFINITY technology
                 to the DFINITY Network so the software they host can interact with public systems.</span></li></ul>
-            <p class="c2 c3"><span></span></p><p class="c2"><h3>The DFINITY Foundation</h3></p><p class="c2 c3">
-            <h3></h3></p><p class="c2"><span>Numerous parties and organizations (&ldquo;Participants&rdquo;)
+        <p class="c2 c3"><span></span></p><p class="c2"><h3>The DFINITY Foundation</h3></p><p class="c2 c3">
+        <h3></h3></p><p class="c2"><span>Numerous parties and organizations (&ldquo;Participants&rdquo;)
                 wish for the DFINITY Network to come into existence so that they can build applications on a
                 decentralized compute cloud platform, so they can create private compute clouds using its technology
                 that that might be connected to the DFINITY Network, so they can run computations using the software
                 that other parties have installed on the DFINITY Network, or so that they can participate in mining
                 the network or participate in its governance. </span></p><p class="c2 c3"><span></span></p>
-            <p class="c2"><span>To support the development of the network&rsquo;s protocols and technology,
+        <p class="c2"><span>To support the development of the network&rsquo;s protocols and technology,
                 a not-for-profit foundation has been created (the &ldquo;Foundation&rdquo;) in Zug, Switzerland,
                 that is tax exempt. The Foundation will be funded by donations. Participants may wish to make donations
                 to the Foundation to support the pursuit of its objectives. The Foundation will accept donations from
                 Participants in three automated funding rounds performed using the Ethereum network and other mechanisms.
             </span></p><p class="c2 c3"><span></span></p><p class="c2"><h3>Collecting Donations and Allocating DFN
-                </span></p><p class="c2 c3"><h3></h3></p><p class="c2"><span>Since the network requires Participants
+        </span></p><p class="c2 c3"><h3></h3></p><p class="c2"><span>Since the network requires Participants
                 to hold DFN in order to function, donations to the Foundation will be recorded in a special smart
                 contract hosted on Ethereum (the &ldquo;FDC&rdquo;, or &ldquo;Foundation Donations Contract&rdquo;).
                 &nbsp;The hope of the Foundation is that the FDC will define the initial allocations of DFN made to
@@ -531,23 +533,23 @@
                 required to create the network is sufficiently mature, and other factors make launch of the network
                 possible, the Foundation will recommend that the FDC is used as part of an initial state
                 (&ldquo;Genesis State&rdquo;) of the DFINITY Network.</span></p><p class="c2 c3"><span></span></p>
-            <p class="c2"><span>It is important to understand that an open decentralized network results from the
+        <p class="c2"><span>It is important to understand that an open decentralized network results from the
                 activities of independent participants performing mining activities around the world. Because such
-                &ldquo;miners&rdquo; are independent, the Foundation cannot guarantee that its recommendation to
+            &ldquo;miners&rdquo; are independent, the Foundation cannot guarantee that its recommendation to
                 use the FDC as the basis of initial allocations of DFN in the Genesis State will be adopted. It is
                 merely hoped that this will be the case because miners generally have an incentive to agree on some
                 logical Genesis State that reflects contributions made to the project.</span></p><p class="c2 c3">
-                <span></span></p><p class="c2"><span>Donations (&ldquo;Donations&rdquo;) will be collected from donors
+        <span></span></p><p class="c2"><span>Donations (&ldquo;Donations&rdquo;) will be collected from donors
                 (&ldquo;Donors&rdquo;) in ETH/&rdquo;ether&rdquo;, BTC/&rdquo;bitcoin&rdquo; and CHF/&rdquo;Swiss
                 francs&rdquo;. The FDC will record the nominal value of each Donation in CHF. The current exchange rate
                 used to calculate the nominal value of a Donation is at the sole discretion of the Foundation.
                 Furthermore, the value of a Donation recorded will be the product of the actual money value calculated
                 using the exchange rate and a current multiplier (&ldquo;Multiplier&rdquo;) designed to reflect that
                 earlier Donations are more valuable for the project.</span></p><p class="c2 c3"><span></span></p>
-            <p class="c2"><span>The Foundation will make available an official software system that can enable Donors
+        <p class="c2"><span>The Foundation will make available an official software system that can enable Donors
                 to make Donations. Only this system should be used to make Donations.</span></p><p class="c2 c3">
-                <span></span></p><p class="c2"><h3>The Donation Collection Rounds</span></p><p class="c2 c3"><h3></h3>
-            </p><p class="c2"><span>Donations will be collected in three rounds: The first round (&ldquo;Bootstrap
+        <span></span></p><p class="c2"><h3>The Donation Collection Rounds</span></p><p class="c2 c3"><h3></h3>
+        </p><p class="c2"><span>Donations will be collected in three rounds: The first round (&ldquo;Bootstrap
                 Round&rdquo;) will be restricted to those who have already made early contributions to the project
                 in the form of enabling technologies and other forms of support. The Foundation intends to recommend
                 that Donations made in the Bootstrap Round are matched to allocations of DFN in the Genesis State that
@@ -562,7 +564,7 @@
                 The Seed Round has a Funding Target of 1,000,000 CHF and the Main Round has a Funding Target of
                 20,000,000 CHF. Because these funding rounds will continue to run for 1 hour after their Funding
                 Targets have been met, they may collect more value than the Funding Targets.</span></p><p class="c2 c3">
-                <span></span></p><p class="c2"><span>The Foundation intends to recommend that 80% of the total DFN allocated
+        <span></span></p><p class="c2"><span>The Foundation intends to recommend that 80% of the total DFN allocated
                 in the Genesis State are allocated in consideration of Donations made in the Seed Round and Main Round.
         As a baseline, 10 DFN will be allocated for every 1 CHF in value that is recorded as donated by the FDC.
         During the Seed Round, the Multiplier will be 2.5X. During the Main Round, a different Multiplier will be
@@ -584,7 +586,7 @@
         <span></span></p><p class="c2"><h3>Terms &amp; Conditions</span></p><p class="c2 c3"><h3></span></p>
         <p class="c2"><span>If you donate, you must carefully agree to the Terms &amp; Conditions.</span></p>
         <p class="c2 c3"><span></span></p><p class="c2"><span>&hellip;</h3></p><p class="c2 c3">
-                <span></span></p>
+        <span></span></p>
 
         </p>
         <p>
@@ -599,9 +601,9 @@
                 of the United States of America.</label>
         </p>
         <p>
-            <a disabled id="agree-terms-button" class="btn " href="javascript:ui.readTerms()">I Agree Terms &amp;
+            <a disabled id="agree-terms-button" class="btn " href="#">I Agree Terms &amp;
                 Conditions </a>
-            <a id="disagree-terms-button" class="btn " href="javascript:ui.hideTerms()">Cancel</a>
+            <a id="disagree-terms-button" class="btn " href="#">Cancel</a>
         </p>
     </div>
     <script type="text/javascript" src="./deps/bitcore-lib.js"></script>
