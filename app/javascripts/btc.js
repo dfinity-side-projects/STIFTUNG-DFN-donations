@@ -210,15 +210,15 @@ BitcoinWorker.prototype.calculateFee = function(utxos) {
   return Math.ceil(bitcoreFee * TX_FEE_MULTIPLIER)
 }
 
-
-BitcoinWorker.prototype.log = function(...args) {
-  console.log('[BTC]', ...args)
-}
-
-
-BitcoinWorker.prototype.logError = function(...args) {
-  console.error('[BTC]', ...args)
-}
+//
+// BitcoinWorker.prototype.log = function(...args) {
+//   console.log('[BTC]', ...args)
+// }
+//
+//
+// BitcoinWorker.prototype.logError = function(...args) {
+//   console.error('[BTC]', ...args)
+// }
 
 
 function utxoSum(utxos) {
