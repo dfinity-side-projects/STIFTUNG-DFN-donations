@@ -83,6 +83,7 @@ contract TokenTracker is TokenInterface {
   /**
    * TokenInterface 
    */ 
+  uint8  public constant decimals = 0;  
   function totalSupply() constant returns (uint256 balance) { return totalUnrestrictedTokens; }
   function balanceOf(address owner) constant returns (uint256 balance) { return tokens[owner] - restrictions[owner]; }
   function transfer(address to, uint256 amount) returns (bool success)                    { throw; }

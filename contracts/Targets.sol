@@ -47,7 +47,7 @@ contract Targets {
     return (counter[id] >= target[id]);
   }
   
-  /**
+  /*
    * Modifying counter or target are internal functions.
    */
   
