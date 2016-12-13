@@ -142,21 +142,22 @@ contract('FDC', function (accounts) {
 
     it("Phase 1 testing", function () {
             /* Test Parameters */
-            var EARLY_CONTRIBUTORS = 37;
+            var EARLY_CONTRIBUTORS = 1;
             var testSuites = [
                 {
                     phase0: {
-                        target: "exceed",   // meet, exceed, below
-                        min_donations: 6  // over how many donations
+//                        target: "exceed",   // meet, exceed, below
+                        target: "min",   // meet, exceed, below
+                        min_donations: 1  // over how many donations
                     },
                     phase1: {
-                        target: "exceed",   // meet, exceed, below
-                        min_donations: 10,  // over how many donations
+                        target: "meet",   // meet, exceed, below
+                        min_donations: 5,  // over how many donations
                         steps: 5 //  cover how many multiplier transitions
                     }
                 }
             ]
-
+            var DELAY = 90 * 24 * 3600; // n days 
 
             /* Global Test variables  */
             var ETHForwardAddr = accounts[4];
@@ -211,7 +212,7 @@ contract('FDC', function (accounts) {
                 var amountDonated = 0;
                 var fdcTarget = fdcConstants["phase0Target"] / 100 / 10;
                 var target = phase0["target"];
-                var chunk = fdcTarget / minDonations;
+                var chunk = fdcTarget / minDonations / 2; // TODO made chunk artificially smaller
 
                 p = p.then(advanceToPhase.bind(null,2, 0));
 
@@ -256,8 +257,14 @@ contract('FDC', function (accounts) {
                 var bonusSteps = fdcConstants["phase1BonusSteps"];
                 var requiredSteps = phase1["steps"];
 
+                p = p.then(delayPhase1.bind(null, DELAY)).then(onDelayAssertStartTime);
+                p = p.then(initConstants);
+                p = p.then(printStatus.bind(null, 1));
+                p = p.then(delayPhase1.bind(null, DELAY)).then(onDelayAssertStartTime);
+                p = p.then(initConstants);
+                p = p.then(printStatus.bind(null, 1));
 
-                const multiplierInterval = (fdcConstants["phase1EndTime"] -  fdcConstants["phase1StartTime"]) / fdcConstants["phase1BonusSteps"];
+                const multiplierInterval = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"]) / (fdcConstants["phase1BonusSteps"] + 1);
                 p = p.then(advanceToPhase.bind(null,4, 0));
 
                 var currentStep = 0;
@@ -289,14 +296,17 @@ contract('FDC', function (accounts) {
                     p = p.then(makeDonationAndValidate.bind(null, 1,currentStep, amt));
 
 
-                    if (currentStep < bonusSteps - 1) {
-                        if (currentStep < requiredSteps - 1 && randomAmount(0, 100) > 50) {
+                    if (currentStep < bonusSteps) {
+                        if (currentStep < requiredSteps && randomAmount(0, 100) > 50) {
                             currentStep++;
                             const s = currentStep;
-                            const targetTime = multiplierInterval * s + fdcConstants["phase1StartTime"];
+                            const offset = multiplierInterval * s;
+                            const targetTime = fdcConstants["phase1StartTime"] + offset;
                             p = p.then(function () {
-                                console.log("  Multiplier Step " + s + " time:" + targetTime)
-                                advanceVmTimeTo(targetTime);
+                                console.log("  Total delay :" + totalDelay);
+                                console.log("  Multiplier Step " + s + " offset:" + offset);
+                                console.log("  Multiplier Step " + s + " time target:" + (targetTime + totalDelay));
+                                advanceVmTimeTo(targetTime + totalDelay);
                                 console.log(" *** Advancing to Phase 1 bonus multiplier step " + s);
                             });
                         } else {
@@ -362,13 +372,16 @@ contract('FDC', function (accounts) {
                             if (index == constants.length - 1)
                                 resolve();
                         });
-                    }
+                    }                   
                 });
             }
 
 
-            function printStatus() {
-                fdc.getStatus(0, 1, 1).then(function (s) {
+            function printStatus(phase) {
+                if (phase == null || phase == undefined)
+                    phase = 0;
+                console.log(" ==> Status for Phase " + phase);
+                fdc.getStatus(phase, 1, 1).then(function (s) {
                     console.log(s);
                 })
             }
@@ -425,7 +438,7 @@ contract('FDC', function (accounts) {
                 return new Promise(function (r, e) {
                     // printStatus();
                     console.log(" //////=====  FINALIZING & VALIDATING EARLY CONTRIBUTOR TOKENS ==== \\\\\\\\ ")
-                    advanceVmTimeTo(fdcConstants["finalizeStartTime"])
+                    advanceVmTimeTo(fdcConstants["finalizeStartTime"] + totalDelay);
                     p = Promise.resolve();
                     for (var addr in earlyContribs) {
                         p = p.then(finalizeEarlyContrib.bind(null, addr));
@@ -451,7 +464,31 @@ contract('FDC', function (accounts) {
 
                 });
             }
-
+            
+            var totalDelay = 0;
+            
+            function delayPhase1(timeDelta) {
+                return new Promise(function (resolve, reject) {
+                    printStatus(1);
+                    fdc.delayDonPhase1(timeDelta, {gas: 100000, from: accounts[1]})
+                        .then(function (success) {
+                            console.log(" Donation phase 1 delayed by: " + timeDelta  + " seconds");
+                            resolve(timeDelta);
+                        });
+                })
+            }
+            
+            function onDelayAssertStartTime(delay) {
+                return new Promise(function (resolve, reject) {
+                   totalDelay += delay; 
+                   fdc.getPhaseStartTime(4).then(function (startTime) {
+                       assert.equal(startTime, fdcConstants["phase1StartTime"] + totalDelay, "Phase 1 start time in FDC should be equal to initial constant + " + totalDelay);
+                       console.log("start time after delay: " + fdcConstants["phase1StartTime"] + " / " + totalDelay + "/" + startTime);
+                       resolve();
+                   });
+                });
+            }
+           
             var EARLY_CONTRIB_PERC = 20;
 
             var earlyContribs = {};
@@ -492,13 +529,16 @@ contract('FDC', function (accounts) {
             // Calculate bonus based on remaining time left
             function getPhase1Bonus(time) {
 
-                var timeLeft = fdcConstants["phase1EndTime"] - time;
+                var timeLeft = fdcConstants["phase1EndTime"] + totalDelay - time;
                 var duration = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"])
 
+                var nSteps = fdcConstants["phase1BonusSteps"].valueOf() + 1;
+                var perPeriod = duration / nSteps;
+                var step = fdcConstants["phase1InitialBonus"] / fdcConstants["phase1BonusSteps"]; // should be an integer
+                var bonus = (Math.ceil(timeLeft / perPeriod) - 1) * step; 
                 console.log("phase1InitialBonus: " + fdcConstants["phase1InitialBonus"]);
                 console.log("phase1BonusSteps: " + fdcConstants["phase1BonusSteps"]);
-                var perPeriod = duration / (fdcConstants["phase1BonusSteps"].valueOf());
-                var bonus = Math.ceil(timeLeft / perPeriod) * (fdcConstants["phase1InitialBonus"] / fdcConstants["phase1BonusSteps"]);
+                console.log("Time: " + time);
                 console.log(" - Using Phase 1 bonus of: " + bonus + " [ " + timeLeft + "/" + duration + "/" + perPeriod + "]");
                 return bonus;
             }
@@ -572,9 +612,9 @@ contract('FDC', function (accounts) {
                         // var expectedToken = calcDfnAmountAtTime(chfCentsDonated[donationPhase], getLastBlockTime(), donationPhase);
                         var expectedToken = calcDfnAmountAtTime(lastCentsDonated, getLastBlockTime(), donationPhase);
                         totalTokenExpected = totalTokenExpected.add(expectedToken);
-                        console.log(" - Validating FDC tokens got: " + totalTokenExpected + " == " + fdcTokenAssigned);
-                        assert.equal(totalTokenExpected, fdcTotalDfnToken, "FDC Total DFN amount doesn't match with expectation");
-                        assert.equal(totalTokenExpected, fdcTokenAssigned, "FDC Assigned DFN amount doesn't match with expectation");
+                        console.log(" - Validating FDC tokens got (expected == FDC): " + totalTokenExpected + " == " + fdcTokenAssigned);
+                        assert.equal(fdcTotalDfnToken, totalTokenExpected.valueOf(), "FDC Total DFN amount doesn't match with expectation");
+                        assert.equal(fdcTokenAssigned, totalTokenExpected.valueOf(), "FDC Assigned DFN amount doesn't match with expectation");
                         resolve(true);
 
                     });
@@ -713,7 +753,7 @@ contract('FDC', function (accounts) {
                             donationPhase = 1;
                             phaseStartTime[donationPhase] = target;
                         }
-                        console.log(" *** PHASE SHIFTED TO: " + donationPhase);
+                        console.log(" *** PHASE SHIFTED TO: " + phase + "(donation phase " + donationPhase + ")");
                         resolve();
                     });
                 });
