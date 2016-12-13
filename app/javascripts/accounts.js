@@ -1,3 +1,26 @@
+/**
+ *  DFINITY Donation Chrome Extension
+ *  (C) 2016 DFINITY Stiftung (http://dfinity.network)
+ *
+ *  This Chrome extension provides a guided process for user to donate Bitcoin or
+ *  Ether, in return for DFINITY Network Participation Token (DFN) recommendation from
+ *  DFINITY Stiftung, a Swiss non-profit dedicated to DFINITY Network research,
+ *  development and promotion.
+ *
+ *  This client:
+ *    - generates new seed and derive DFN address
+ *    - forwards ETH/BTC from a temporary address (which is also derived from the same
+ *      seed) to the Foundation Donation Contract(FDC). The FDC is a set of smart
+ *      contracts running on Ethereum, which registers the donation and
+ *      corresponding DFN token recommendation amount
+ *    - requires connecting to a Ethereum node (regardless of Ether or Bitcoin donation)
+ *    - requires connecting to a Bitcoin node for Bitcoin donation
+ *    - can withdrawal remaining Eth from the temporary withdrawal address
+ *
+ *  Refer to FDC code for detailed logic on donation.
+ *
+ */
+
 // if seedStr == null then a new seed is generated, otherwise
 // keys are derived deterministically from the passed seed if it's valid
 var Accounts = function (seedStr) {
