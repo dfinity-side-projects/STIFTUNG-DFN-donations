@@ -157,7 +157,7 @@ contract('FDC', function (accounts) {
                     }
                 }
             ]
-            var DELAY = 180 * 24 * 3600; // n days 
+            var DELAY = 90 * 24 * 3600; // n days 
 
             /* Global Test variables  */
             var ETHForwardAddr = accounts[4];
@@ -260,6 +260,9 @@ contract('FDC', function (accounts) {
                 p = p.then(delayPhase1.bind(null, DELAY)).then(onDelayAssertStartTime);
                 p = p.then(initConstants);
                 p = p.then(printStatus.bind(null, 1));
+                p = p.then(delayPhase1.bind(null, DELAY)).then(onDelayAssertStartTime);
+                p = p.then(initConstants);
+                p = p.then(printStatus.bind(null, 1));
 
                 const multiplierInterval = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"]) / (fdcConstants["phase1BonusSteps"] + 1);
                 p = p.then(advanceToPhase.bind(null,4, 0));
@@ -302,7 +305,7 @@ contract('FDC', function (accounts) {
                             p = p.then(function () {
                                 console.log("  Total delay :" + totalDelay);
                                 console.log("  Multiplier Step " + s + " offset:" + offset);
-                                console.log("  Multiplier Step " + s + " time target:" + targetTime + totalDelay);
+                                console.log("  Multiplier Step " + s + " time target:" + (targetTime + totalDelay));
                                 advanceVmTimeTo(targetTime + totalDelay);
                                 console.log(" *** Advancing to Phase 1 bonus multiplier step " + s);
                             });
