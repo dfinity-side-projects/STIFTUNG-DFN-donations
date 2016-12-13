@@ -75,23 +75,31 @@ Accounts.prototype.generateKeys = function (seedStr) {
 }
 
 // Write the user's keys to storage e.g. Chrome storage
-Accounts.prototype.saveKeys = function () {
-    saveToStorage({
-        "dfn-address": this.DFN.addr,
-        "eth-address": this.ETH.addr,
-        "eth-private-key": this.ETH.priv,
-        "btc-address": this.BTC.addr,
-        "btc-private-key": this.BTC.priv,
-    }, function () {
-        ui.logger("DFN, BTC and ETH address successfully saved in Chrome storage.");
-        console.log("DFN, BTC and ETH address successfully saved in Chrome storage.");
-    });
+Accounts.prototype.saveStates = function () {
+    if (this.DFN.addr != undefined &&
+        this.ETH.addr != undefined &&
+        this.ETH.priv != undefined &&
+        this.BTC.addr != undefined &&
+        this.BTC.priv != undefined
+    ) {
+        saveToStorage({
+            "dfn-address": this.DFN.addr,
+            "eth-address": this.ETH.addr,
+            "eth-private-key": this.ETH.priv,
+            "btc-address": this.BTC.addr,
+            "btc-private-key": this.BTC.priv,
+
+        }, function () {
+            ui.logger("DFN, BTC and ETH address successfully saved in Chrome storage.");
+            console.log("DFN, BTC and ETH address successfully saved in Chrome storage.");
+        });
+    }
 }
 
 // Load the user's keys from storage e.g. Chrome storage. If the operate fails,
 // an exception is thrown. If no keys were previously saved, no keys are loaded
 // and the key values will be undefined
-Accounts.prototype.loadKeys = function (successFn) {
+Accounts.prototype.loadStates = function (successFn) {
     var self = this;
     loadfromStorage([
         "dfn-address",
@@ -101,10 +109,11 @@ Accounts.prototype.loadKeys = function (successFn) {
         "btc-private-key",
     ], function (s) {
         console.log(s);
-        if (s["dfn-address"]
-            && s["eth-address"] && s["eth-private-key"]
-            && s["btc-address"] && s["btc-private-key"]
+        if (s["dfn-address"] != null && s["dfn-address"] != undefined
+            && s["eth-address"]!= null && s["eth-private-key"]!=null
+            && s["btc-address"] != null && s["btc-private-key"]!= null
            ) {
+            console.log(" *** keys exist from storage *** ");
             self.DFN.addr = s["dfn-address"];
             self.ETH.addr = s["eth-address"];
             self.ETH.priv = s["eth-private-key"];
@@ -112,6 +121,7 @@ Accounts.prototype.loadKeys = function (successFn) {
             self.BTC.priv = s["btc-private-key"];
             successFn();
         }
+
         ui.logger("DFN, BTC and ETH address loaded successfully: " + self.DFN.addr   + " / " + self.BTC.addr + " / " + self.ETH.addr);
     });
 }

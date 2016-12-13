@@ -84,6 +84,7 @@ function ajaxGet(url, successFn, errFn) {
 }
 
 
+
 // Write the user's keys to storage e.g. Chrome storage
 function saveToStorage(values, successFn) {
     if (typeof(chrome.storage) !== "undefined") {

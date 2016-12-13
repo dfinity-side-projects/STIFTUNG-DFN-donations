@@ -261,6 +261,42 @@ UI.prototype.isTaskReady = function (taskId) {
     return true;
 }
 
+UI.prototype.setDonationState = function(state, startTime) {
+    console.log("Donation state = " + state);
+
+    // Reset state
+    removeClass("donation-state", "in-progress");
+    removeClass("donation-state", "not-in-progress");
+
+    if (state== STATE_PAUSE || state == STATE_EARLY_CONTRIB) {
+        setElementText("donation-state", "DONATION NOT STARTED");
+
+        addClass("donation-state", "not-in-progress");
+
+        showElement("error-donation-not-started");
+        if (startTime != undefined && startTime !=0)
+            setElementText("donation-start-time", new Date(startTime*1000).toString());
+        hideElement("error-donation-over");
+    }
+    else if  (state== STATE_OFFCHAIN_REG || state== STATE_FINALIZATION ||state== STATE_DONE) {
+
+        addClass("donation-state", "not-in-progress");
+        if (state == STATE_OFFCHAIN_REG) {
+            setElementText("donation-state", "SEED DONATION OVER");
+        } else if (state == STATE_FINALIZATION ||state== STATE_DONE) {
+            setElementText("donation-state", "DONATION ENDED");
+        }
+
+        showElement("error-donation-over");
+        hideElement("error-donation-not-started");
+    }else if  (state== STATE_DON_PHASE0 || state==STATE_DON_PHASE1) {
+        setElementText("donation-state", "DONATION NOT STARTED");
+        addClass("donation-state", "in-progress");
+        hideElement("error-donation-over");
+        hideElement("error-donation-not-started");
+    }
+}
+
 UI.prototype.cancelCreateSeed = function () {
     if (app.accs.ETH.addr == undefined || app.accs.DFN.addr == undefined) {
         setElementText("seed", "");
@@ -391,8 +427,12 @@ UI.prototype.hideValidateSeed = function () {
     document.getElementById('verify-dfn-seed').style.display = 'none';
 }
 
+function addClass(element, className) {
+    document.getElementById(element).className+=className + " " ;
+}
+
 function removeClass(element, className) {
-    document.getElementById(element).className.replace(className, '');
+    document.getElementById(element).className = document.getElementById(element).className.replace(className, '');
 }
 function showDialog(dialogId) {
     showElement(dialogId);

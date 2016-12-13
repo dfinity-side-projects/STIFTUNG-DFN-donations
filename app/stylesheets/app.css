@@ -28,6 +28,13 @@ input, button {
     background-color: white;
 }
 
+#donation-state.in-progress{
+    color: #2ab58a;
+}
+#donation-state.not-in-progress {
+    color: #ffd322;
+}
+
 #content {
     width: 975px;
     margin: auto;
