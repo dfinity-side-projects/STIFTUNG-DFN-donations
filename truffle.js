@@ -17,18 +17,23 @@ module.exports = {
   networks: {
   "live": {
     network_id: 1, // Ethereum public network
-    // optional config values
-    // host - defaults to "localhost"
-    // port - defaults to 8545
-    // gas
-    // gasPrice
-    // from - default address to use for any transaction Truffle makes during migrations
+    host: "ec2-54-149-199-242.us-west-2.compute.amazonaws.com",
+    port: 80,
+      gas: 4000000,
+      from: "0x0a6e23d3a9d6a1ed31f4791614bbc44c04930c66",
   },
   "morden": {
     network_id: 2,        // Official Ethereum test network
     host: "178.25.19.88", // Random IP for example purposes (do not use)
     port: 80
   },
+    "ropsten": {
+      network_id:3,
+      host:"127.0.0.1",
+      gas: 4000000,
+      from: "0x882ED121Ea15230251af7d84C595A4864b3BBCCc",
+      port:8545
+    },
   "staging": {
     network_id: 1337 // custom private network
     // use default rpc settings
@@ -36,7 +41,7 @@ module.exports = {
   "development": {
     network_id: "default",
     host: "localhost",
-    port: 8545
+    port: 7000
   }
 }
 };
