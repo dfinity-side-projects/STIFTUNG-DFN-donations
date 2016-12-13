@@ -151,13 +151,13 @@ contract('FDC', function (accounts) {
                         min_donations: 1  // over how many donations
                     },
                     phase1: {
-                        target: "min",   // meet, exceed, below
-                        min_donations: 10,  // over how many donations
+                        target: "meet",   // meet, exceed, below
+                        min_donations: 5,  // over how many donations
                         steps: 5 //  cover how many multiplier transitions
                     }
                 }
             ]
-            var DELAY = 2 * 24 * 3600; // n days 
+            var DELAY = 180 * 24 * 3600; // n days 
 
             /* Global Test variables  */
             var ETHForwardAddr = accounts[4];
@@ -298,12 +298,12 @@ contract('FDC', function (accounts) {
                             currentStep++;
                             const s = currentStep;
                             const offset = multiplierInterval * s;
-                            const targetTime = fdcConstants["phase1StartTime"] + totalDelay + offset;
+                            const targetTime = fdcConstants["phase1StartTime"] + offset;
                             p = p.then(function () {
                                 console.log("  Total delay :" + totalDelay);
                                 console.log("  Multiplier Step " + s + " offset:" + offset);
-                                console.log("  Multiplier Step " + s + " time:" + targetTime);
-                                advanceVmTimeTo(targetTime);
+                                console.log("  Multiplier Step " + s + " time target:" + targetTime + totalDelay);
+                                advanceVmTimeTo(targetTime + totalDelay);
                                 console.log(" *** Advancing to Phase 1 bonus multiplier step " + s);
                             });
                         } else {
@@ -529,12 +529,13 @@ contract('FDC', function (accounts) {
                 var timeLeft = fdcConstants["phase1EndTime"] + totalDelay - time;
                 var duration = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"])
 
-                console.log("phase1InitialBonus: " + fdcConstants["phase1InitialBonus"]);
-                console.log("phase1BonusSteps: " + fdcConstants["phase1BonusSteps"]);
                 var nSteps = fdcConstants["phase1BonusSteps"].valueOf() + 1;
                 var perPeriod = duration / nSteps;
                 var step = fdcConstants["phase1InitialBonus"] / fdcConstants["phase1BonusSteps"]; // should be an integer
                 var bonus = (Math.ceil(timeLeft / perPeriod) - 1) * step; 
+                console.log("phase1InitialBonus: " + fdcConstants["phase1InitialBonus"]);
+                console.log("phase1BonusSteps: " + fdcConstants["phase1BonusSteps"]);
+                console.log("Time: " + time);
                 console.log(" - Using Phase 1 bonus of: " + bonus + " [ " + timeLeft + "/" + duration + "/" + perPeriod + "]");
                 return bonus;
             }
