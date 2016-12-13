@@ -16,6 +16,7 @@
     <!-- Progress -->
     <div id="progress">
         <!-- <div class="box-header">Donate to Stiftung DFINITY. 1M Seed Round</div> -->
+        <h2 id="donation-state"></h2>
         <div class="box-content">
             <div class="progress-bar-dashboard">
                 <div class="lower">? % Done</div>
@@ -73,10 +74,24 @@
     <div id="dashboard">
         <div class="box-header">YOUR STATUS</div>
         <div class="box-content">
-            <div id="error-phase-over" class="error" style="display: none">
-                The foundation collection seed phase is over.
-                <br/>
-                <a class="blink" href="">Please withdraw remaining ETH that could not be forwarded.</a>
+
+            <div id="error-donation-not-started" class="error" style="display: none">
+            The seed donation phase has not yet started. Before the donation start, this application will not forward any ETH/BTC transaction.
+            <br>
+                Donation expected start time: <span id="donation-start-time">?</span>
+
+                <br>
+                Visit official <a href="http://dfinity.network">DFINITY project site</a> for more details.
+            </div>
+            <div id="error-donation-over" class="error" style="display: none">
+                 The seed donation phase has already ended.
+                <a class="blink" href="">Please withdraw any remaining ETH that could not be forwarded.</a>
+                <br>
+
+                Regarding timing for the next phase (main) donation round,  visit official
+                <a href="http://dfinity.network">DFINITY project site</a> for more details.
+                <br>
+
             </div>
             <div id="error-eth-forwarding" class="error" style="display: none">
                 There was an error forwarding ETH.

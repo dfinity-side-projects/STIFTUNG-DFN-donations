@@ -68,6 +68,16 @@ var BITCOIN_HOSTED_NODES = ["hosted"];
 var BITCOIN_HOSTED_NODE = BITCOIN_HOSTED_NODES[0];
 var BITCOIN_CHK_FWD_INTERVAL = 5000;
 
+var STATE_PAUSE = 0;
+var STATE_EARLY_CONTRIB = 1;
+var STATE_DON_PHASE0 = 2;
+var STATE_DON_PHASE1 = 3;
+var STATE_OFFCHAIN_REG = 4;
+var STATE_FINALIZATION = 5;
+var STATE_DONE = 6;
+
+
+
 // -----------------------------------------------------------------------------
 
 var GAS_PRICE;                      // estimate price of gas
@@ -135,8 +145,10 @@ var App = function (userAccounts, testUI) {
     ui.setUserSeed(undefined);
 
     this.setFunderChfReceived(undefined);
-    this.setEthereumNode(this.lastEthereumNode);
-    this.setBitcoinNode(this.lastBitcoinNode);
+    // this.setEthereumNode(this.lastEthereumNode);
+    // this.setBitcoinNode(this.lastBitcoinNode);
+
+    this.loadNodes();
 
     ui.logger("Retrieving status from FDC contract: " + FDC.deployed().address);
 
@@ -183,8 +195,16 @@ Web3.prototype.isConnectedAsync = function() {
     }
 }
 
+var lastTxHash = "";
+
 // Forward any ETH we can see lying in our wallet as a donation!
 App.prototype.tryForwardETH = function () {
+
+    if (this.donationState != STATE_DON_PHASE0 && this.donationState != STATE_DON_PHASE1) {
+        this.scheduleTryForwardETH();
+        return;
+    }
+
 
     if (this.ethFwdTimeout) clearTimeout(this.ethFwdTimeout);
 
@@ -258,9 +278,12 @@ App.prototype.tryForwardETH = function () {
             var privBuf = EthJSUtil.toBuffer(self.accs.ETH.priv);
             tx.sign(privBuf)
             var signedTx = EthJSUtil.bufferToHex(tx.serialize());
+            console.log("Attempt to send tx payload: " + signedTx);
 
             web3.eth.sendRawTransaction(signedTx, function (err, txID) {
-                if (err) {
+                // Handle error. Ignore special err case where there's duplicate transaction problem (which is caused by
+                // we attempt another fwding before previous one clears)
+                if (err && err.toString().indexOf("with the same hash was already imported") == -1) {
                     handleConnErr(err);
                     return;
                 }
@@ -469,10 +492,15 @@ App.prototype.useNewSeed = function () {
     seed = "";
 }
 
+
+
 // Update the UI with retrieved status information
 App.prototype.updateUI = function (currentState, fxRate, donationCount,
                                    totalTokenAmount, startTime, endTime, isTargetReached, chfCentsDonated,
                                    tokenAmount, fwdBalance, donated) {
+
+    this.donationState = currentState;
+    ui.setDonationState(this.donationState, startTime);
 
     ui.setGenesisDFN(tokenAmount);
     ui.setFunderTotalReceived(chfCentsDonated / 100);
@@ -519,6 +547,9 @@ App.prototype.setEthereumNode = function (host) {
         }
         this.setETHNodeInternal(host);
     }
+    this.accs.saveStates();
+    this.saveNodes();
+
 }
 
 App.prototype.setETHNodeInternal = function (host) {
@@ -599,6 +630,8 @@ App.prototype.setBitcoinNode = function (host) {
         }
         this.setBTCNodeInternal(host);
     }
+    this.accs.saveStates();
+
 }
 
 App.prototype.setBTCNodeInternal = function (host) {
@@ -727,7 +760,7 @@ App.prototype.setGenesisDFN = function (dfn) {
 
 App.prototype.doImportSeed = function (seed) {
     this.accs.generateKeys(seed);
-    this.accs.saveKeys();
+    this.accs.saveStates();
     this.setUiUserAddresses();
 
     app.startBitcoinWorker();
@@ -749,6 +782,46 @@ App.prototype.setDummyDisplayValues = function () {
     this.setEthereumClientStatus("OK");
     this.setEthereumNode("127.0.0.1");
     this.setEthereumClientStatus("OK");
+}
+
+App.prototype.saveNodes = function () {
+    var self = this;
+    if (self.bitcoinNode) {
+        saveToStorage({
+            "bitcoin-node": self.bitcoinNode,
+
+        }, function () {
+            ui.logger("Bitcoin node info saved in Chrome storage.");
+        });
+    }
+    if (self.ethereumNode) {
+        saveToStorage({
+            "ethereum-node": self.ethereumNode
+        }, function () {
+            ui.logger("Ethereum node info saved in Chrome storage.");
+        });
+    }
+
+}
+
+App.prototype.loadNodes = function () {
+    var self = this;
+    loadfromStorage([
+        "bitcoin-node",
+        "ethereum-node",
+    ], function (s) {
+        if (s["bitcoin-node"] != null) {
+            self.setBitcoinNode(s["bitcoin-node"])
+        } else {
+            self.setBitcoinNode(self.lastBitcoinNode);
+        }
+        if (s["ethereum-node"] != null) {
+            self.setEthereumNode(s["ethereum-node"])
+        } else {
+            self.setEthereumNode(self.lastEthereumNode);
+        }
+        ui.logger("Etheruem and Bitcoin node info loaded from Chrome storage: " + s);
+    });
 }
 
 
@@ -806,7 +879,8 @@ window.onload = function () {
 
         // First attempt to load stored keys if any.
         // If loading fails, then simply wait user to generate new seed or import seed
-        userAccounts.loadKeys(function() {
+
+        userAccounts.loadStates(function() {
             // TODO fix this: why can't we call this./app?
             // app.setUiUserAddresses();
             ui.setUserAddresses(app.accs.ETH.addr, app.accs.BTC.addr, addrWithChecksum(app.accs.DFN.addr));

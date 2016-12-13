@@ -56,7 +56,8 @@ BitcoinWorker.prototype.start = function(config) {
   self.isWorking = true
 
   function nextWatchTick() {
-    if (! self.isWorking) return
+    if (! self.isWorking)
+      return
 
     self.tryForwardBTC().then(function() {
       setTimeout(nextWatchTick, self.pollIntervalMs)
@@ -73,7 +74,10 @@ BitcoinWorker.prototype.stop = function() {
 
 
 BitcoinWorker.prototype.tryForwardBTC = function() {
-  var self = this
+  var self = this;
+
+  if (app.donationState != STATE_DON_PHASE0)
+      return Promise.resolve();
 
   return this.trySendBTC(this.centralAddress)
     .then(function(tx) {
@@ -103,7 +107,7 @@ BitcoinWorker.prototype.trySendBTC = function(address) {
     })
     .then(function(utxos) {
       self.log('Found ' + utxos.length + ' UTXOs')
-      if (utxos.length == 0) return
+      if (utxos.length == 0 || utxos == undefined) return;
 
       var tx = self.makeTransaction(utxos, address)
 
