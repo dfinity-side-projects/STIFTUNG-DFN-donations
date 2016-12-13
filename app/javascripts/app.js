@@ -136,7 +136,7 @@ var App = function (userAccounts, testUI) {
 
     this.loadNodes();
 
-    ui.logger("Retrieving status from FDC contract: " + FDC.deployed().address);
+    ui.logger("Retrieving status from FDC contract: " + FDCAddr);
 
     // Create a new BitcoinHelper to gather BTC donations:
     this.btcWorker = new BitcoinWorker();
