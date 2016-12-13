@@ -28,7 +28,7 @@
 
 // Constructor
 var UI = function () {
-    this.wireUpDOM();
+    // this.wireUpDOM();
     this.tasks = ["task-agree", "task-create-seed", "task-understand-fwd-eth", "task-donate"];
 }
 
@@ -36,15 +36,75 @@ var UI = function () {
 // This is necessary because Google Chrome extension will not allow inline
 // Javascript at highest manifest security setting.
 UI.prototype.wireUpDOM = function () {
-    // TODO
+    this.bindUIListener("withdraw-eth-link", "showWithdrawEth");
+    this.bindUIListener("withdraw-eth-link2", "showWithdrawEth");
+    this.bindUIListener("show-withdraw-btc-link", "showWithdrawBtc");
+
+    this.bindUIListener("do-withdraw-btc-button", "withdrawBtc");
+    this.bindUIListener("btn-ethereum-node", "showSelectEthereumNode");
+    this.bindUIListener("btn-bitcoin-node", "showSelectBitcoinNode");
+    this.bindUIListener("remaining-eth-link", "showWithdrawEth");
+
+    this.bindUIListener("hide-withdraw-eth-button", "hideWithdrawEth");
+    this.bindUIListener("do-withdraw-btc-button", "withdrawBtc");
+    this.bindUIListener("hide-withdraw-btc-button", "hideWithdrawBtc");
+    this.bindUIListener("show-import-seed-button", "showImportSeed");
+    this.bindUIListener("after-create-seed-button", "afterCreateSeed");
+    this.bindUIListener("cancel-create-seed-button", "cancelCreateSeed");
+    this.bindUIListener("do-validate-seed-button", "doValidateSeed");
+    this.bindUIListener("before-validate-seed-button", "beforeValidateSeed");
+    this.bindUIListener("do-import-seed-button", "doImportSeed");
+    this.bindUIListener("hide-import-seed-button", "hideImportSeed");
+    this.bindUIListener("done-explain-forwarding-button", "doneExplainForwarding");
+
+
+
+    // TODO: NEED TO IMPLEMENT READING FROM THE INPUT BOXES
+    this.bindUIListener("connect-hosted", "onSelectEthereumNode", "hosted");
+    this.bindUIListener("connect-localhost", "onSelectEthereumNode", "http://localhost:8545");
+    this.bindUIListener("btn-custom-full-node-eth", "onSelectEthereumNode", "$custom-full-node-address-eth");
+
+    this.bindUIListener("connect-hosted-btc", "onSelectBitcoinNode", "hosted");
+    this.bindUIListener("connect-localhost-btc", "onSelectBitcoinNode", "http://localhost:3001");
+    this.bindUIListener("btn-custom-full-node-btc", "onSelectBitcoinNode","$custom-full-node-address-btc");
+
+
+    this.bindUIListener("agree-terms-button", "readTerms");
+    this.bindUIListener("disagree-terms-button", "hideTerms");
+    this.bindUIListener("hide-withdraw-eth-button", "hideWithdrawEth");
+
+    this.bindGlobalListener("show-dfinities-info", "showDialog", "dfinities-info");
+    this.bindGlobalListener("close-dfinities-info", "closeDialog", "dfinities-info");
+    this.bindGlobalListener("close-select-full-node-eth", "closeDialog", "select-full-node-eth");
+    this.bindGlobalListener("close-select-full-node-btc", "closeDialog", "select-full-node-btc");
+
+
+
+
+}
+
+UI.prototype.afterAppLoaded = function () {
+    this.bindAppListener("retry-forward-link", "retryForwarding");
+    this.bindAppListener("retry-forward-btc-link", "retryForwardingBtc");
+}
+
+UI.prototype.bindUIListener = function (element, uiHandler, argument) {
+    document.getElementById(element).addEventListener("click", this[uiHandler].bind(ui, [argument]));
 }
 
 
+UI.prototype.bindAppListener = function (element, uiHandler, argument) {
+    document.getElementById(element).addEventListener("click", app[uiHandler].bind(app, [argument]));
+}
+
+UI.prototype.bindGlobalListener = function (element, uiHandler, argument) {
+    document.getElementById(element).addEventListener("click", window[uiHandler].bind(null, [argument]));
+}
 
 // Set the allocation of Genesis DFN to be recommended for user
 UI.prototype.setGenesisDFN = function (dfn) {
-    var e =document.getElementById("genesis-dfinities-amount");
-    var e2 =document.getElementById("genesis-dfinities-amount-2");
+    var e = document.getElementById("genesis-dfinities-amount");
+    var e2 = document.getElementById("genesis-dfinities-amount-2");
     if (dfn == undefined) {
         e.innerHTML = "? DFN";
         e2.innerHTML = "? DFN (unknown as not connected to an Ethereum node)";
@@ -112,7 +172,7 @@ UI.prototype.setUserAddresses = function (efa, bfa, dfa) {
 
 UI.prototype.generateSeed = function () {
     seed = app.generateSeed();
-    this.setUserSeed(seed);
+    ui.setUserSeed(seed);
     enableButton("after-create-seed-button");
 }
 
@@ -247,40 +307,40 @@ UI.prototype.isTaskReady = function (taskId) {
     return true;
 }
 
-UI.prototype.setDonationState = function(state, startTime) {
+UI.prototype.setDonationState = function (state, startTime) {
     console.log("Donation state = " + state);
 
     // Reset state
     removeClass("donation-state", "in-progress");
     removeClass("donation-state", "not-in-progress");
 
-    if (state== STATE_PAUSE || state == STATE_EARLY_CONTRIB) {
+    if (state == STATE_PAUSE || state == STATE_EARLY_CONTRIB) {
         setElementText("donation-state", "DONATION NOT STARTED");
 
         addClass("donation-state", "not-in-progress");
 
         showElement("error-donation-not-started");
-        if (startTime != undefined && startTime !=0)
-            setElementText("donation-start-time", new Date(startTime*1000).toString());
+        if (startTime != undefined && startTime != 0)
+            setElementText("donation-start-time", new Date(startTime * 1000).toString());
         hideElement("error-donation-over");
     }
-    else if  (state== STATE_OFFCHAIN_REG || state== STATE_FINALIZATION ||state== STATE_DONE) {
+    else if (state == STATE_OFFCHAIN_REG || state == STATE_FINALIZATION || state == STATE_DONE) {
 
         addClass("donation-state", "not-in-progress");
         if (state == STATE_OFFCHAIN_REG) {
             setElementText("donation-state", "SEED DONATION OVER");
-        } else if (state == STATE_FINALIZATION ||state== STATE_DONE) {
+        } else if (state == STATE_FINALIZATION || state == STATE_DONE) {
             setElementText("donation-state", "DONATION ENDED");
         }
 
         showElement("error-donation-over");
         hideElement("error-donation-not-started");
-    }else if  (state== STATE_DON_PHASE0) {
+    } else if (state == STATE_DON_PHASE0) {
         setElementText("donation-state", "SEED DONATION IN PROGRESS");
         addClass("donation-state", "in-progress");
         hideElement("error-donation-over");
         hideElement("error-donation-not-started");
-    }else if  (state== STATE_DON_PHASE1) {
+    } else if (state == STATE_DON_PHASE1) {
         setElementText("donation-state", "MAIN DONATION ROUND IN PROGRESS");
         addClass("donation-state", "in-progress");
         hideElement("error-donation-over");
@@ -419,7 +479,7 @@ UI.prototype.hideValidateSeed = function () {
 }
 
 function addClass(element, className) {
-    document.getElementById(element).className+=className + " " ;
+    document.getElementById(element).className += className + " ";
 }
 
 function removeClass(element, className) {
@@ -449,8 +509,8 @@ UI.prototype.readTerms = function () {
     disableButton("agree-terms-button");
     document.getElementById('agree-terms-button').innerText = "You have already accepted the terms";
     closeDialog("terms");
-    this.setCurrentTask('task-create-seed');
-    this.makeTaskDone('task-agree');
+    ui.setCurrentTask('task-create-seed');
+    ui.makeTaskDone('task-agree');
 
 }
 
@@ -622,7 +682,7 @@ function showAndSetElement(element, s) {
 
 function showElement(element, style) {
     if (!style)
-        style="block";
+        style = "block";
     document.getElementById(element).style.display = style;
 }
 function hideElement(element) {
@@ -637,20 +697,20 @@ function enableButton(buttonId) {
 /** UI utility functions */
 
 function formatCurrency(n, symbol, d) {
-  // round it
-  if (d > 0) {
-    n = Math.round(n*Math.pow(10, d)) / Math.pow(10, d);
-  }
+    // round it
+    if (d > 0) {
+        n = Math.round(n * Math.pow(10, d)) / Math.pow(10, d);
+    }
 
-  // cut off and/or pad
-  var s = n.toFixed(d);
+    // cut off and/or pad
+    var s = n.toFixed(d);
 
-  // insert comma separators into the whole part
-  var parts = s.split(".");
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    // insert comma separators into the whole part
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-  // re-combine parts
-  return parts.join(".") + " " + symbol;
+    // re-combine parts
+    return parts.join(".") + " " + symbol;
 }
 
 // pad is e.g. "000", 29 => "029"
