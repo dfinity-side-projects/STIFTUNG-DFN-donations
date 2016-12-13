@@ -65,7 +65,7 @@ contract Phased {
   */
   mapping(uint => uint) public maxDelay; 
 
-  /**
+  /*
    * The contract has no constructor.
    * The contract initialized itself with no phase transitions (N = 0) and one phase (N+1=1).
    *
@@ -131,7 +131,7 @@ contract Phased {
     return phaseEndTime[n-1];
   }
     
-  /**
+  /*
    *  There are 4 INTERNAL functions:
    *    1. addPhase
    *    2. setMaxDelay

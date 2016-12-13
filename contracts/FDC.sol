@@ -55,7 +55,9 @@ import "Targets.sol";
 import "Parameters.sol";
 
 contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
-
+  string public constant name   = "Dfinities";
+  string public constant symbol = "DFN";
+  
   /*
    * Phases
    *
@@ -219,7 +221,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     setTarget(phaseOfDonPhase1, phase1Target);
   }
   
-  /**
+  /*
    * PUBLIC functions
    * 
    * Un-authenticated:
@@ -491,7 +493,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     delayPhaseEndBy(phaseOfDonPhase1 - 1, timedelta);
   }
 
-  /**
+  /*
    * PRIVATE functions
    *
    *  - donateAs

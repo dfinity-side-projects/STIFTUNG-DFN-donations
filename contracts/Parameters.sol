@@ -31,7 +31,7 @@ pragma solidity ^0.4.6;
 
 contract Parameters {
 
-  /**
+  /*
    * Time Constants
    *
    * Phases are, in this order: 
@@ -65,7 +65,7 @@ contract Parameters {
   // The time for which donation phases remain open after they reach their respective targets   
   uint public constant gracePeriodAfterTarget  = 30 minutes;
 
-  /**
+  /*
    * Token issuance
    * 
    * The following configuration parameters completely govern all aspects of the token issuance.

@@ -52,7 +52,7 @@ contract StepFunction {
     nSteps = _nSteps; 
   }
  
-  /**
+  /*
    * Note the following edge cases.
    *   initialValue = 0: is valid and will create the constant zero function
    *   nSteps = 0: is valid and will create the constant zero function (only 1 sub-interval)
