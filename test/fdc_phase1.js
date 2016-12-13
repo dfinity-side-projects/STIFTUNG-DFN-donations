@@ -333,12 +333,15 @@ contract('FDC', function (accounts) {
                     // p = p.then(function () {
                         // advanceVmTimeTo(fdcConstants["phase0StartTime"]);
                     // });
+                    p = p.then(advanceToPhase.bind(null,2, 0));
                     p = p.then(generateAndRegisterOffChainDons);
                     for (var i in testSuites) {
                         const test = testSuites[i];
                         const phase0 = test["phase0"];
                         const phase1 = test["phase1"];
                         p = p.then(addPhase0Tests.bind(null, p, phase0));
+                        p = p.then(advanceToPhase.bind(null,3, 0));
+                        p = p.then(generateAndRegisterOffChainDons);
                         p = p.then(addPhase1Tests.bind(null, p, phase1));
                         p.then(validateFinalization);
                     }
@@ -536,7 +539,8 @@ contract('FDC', function (accounts) {
                 console.log(" Generate off-chain donations ...");
                 var p = Promise.resolve();
 
-                p = p.then(advanceToPhase.bind(null,2, 0));
+// TODO No longer needed here. We advance outside
+//                p = p.then(advanceToPhase.bind(null,2, 0));
                 
                 for (var i = 0; i < OFF_CHAIN_DONATIONS; i++) {
 
