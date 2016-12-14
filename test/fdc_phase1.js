@@ -426,7 +426,7 @@ contract('FDC', function (accounts) {
                     .then(fdcGetterPromise.bind(null, "restrictions", [address]))
                     .then(function () {
                         console.log(" - Asserting off-chain donation tokens / restricted:" + getterValues["tokens"] + " / " + getterValues["restrictions"]);
-                        assert.equal(Math.floor(1.5*amountCents/10), getterValues["tokens"]-getterValues["restrictions"]);
+                        assert.equal(Math.floor(2.5*amountCents/10), getterValues["tokens"]-getterValues["restrictions"]);
                     })
             }
 
@@ -442,7 +442,7 @@ contract('FDC', function (accounts) {
                             chfCentsDonated[0] = chfCentsDonated[0].add(amountCents);
                             // TODO use calcDfnAmountAtTime
                             //var expectedToken = calcDfnAmountAtTime(amountCents, time, 0);
-                            var expectedToken = Math.floor(1.5*amountCents/10);
+                            var expectedToken = Math.floor(2.5*amountCents/10);
                             totalTokenExpected = totalTokenExpected.add(expectedToken);
                             validateOffChainReg(address, amountCents).then(resolve);
                         });
