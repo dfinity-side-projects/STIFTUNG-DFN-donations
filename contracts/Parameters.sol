@@ -46,13 +46,16 @@ contract Parameters {
    */
 
   // The start of phase 0 is set to 2016-12-19 19:00 of timezone Europe/Zurich
-  // TZ="Europe/Zurich" date -d "2016-12-15 00:00" "+%s"
-  uint public constant phase0StartTime      = 1481756400; 
+  // TZ="Europe/Zurich" date -d "2016-12-19 19:00" "+%s"
+  uint public constant phase0StartTime      = 1482170400; 
   
   // The other phase transitions are defined by offsets from the start of phase 0
   uint public constant earlyContribEndTime  = phase0StartTime - 1 days; 
   uint public constant phase0EndTime        = phase0StartTime + 6 weeks;
-  uint public constant phase1StartTime      = phase0EndTime + 12 weeks;
+  
+  // The start of phase 1 is set to 2017-03-13 19:00 of timezone Europe/Zurich
+  // TZ="Europe/Zurich" date -d "2017-03-13 19:00" "+%s"
+  uint public constant phase0StartTime      = 1489428000; 
   uint public constant phase1EndTime        = phase1StartTime + 6 weeks;
   uint public constant finalizeStartTime    = phase1EndTime   + 1 weeks;
   
@@ -63,7 +66,7 @@ contract Parameters {
   uint public constant donPhase1MaxDelay    = 180 days;
 
   // The time for which donation phases remain open after they reach their respective targets   
-  uint public constant gracePeriodAfterTarget  = 30 minutes;
+  uint public constant gracePeriodAfterTarget  = 1 hours;
 
   /*
    * Token issuance
