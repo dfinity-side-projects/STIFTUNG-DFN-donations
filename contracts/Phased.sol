@@ -23,19 +23,23 @@ SOFTWARE.
 */
 
 /*
- * @title:  A contract that advances through multiple configurable phases over time.
+ * @title: Contract that advances through multiple configurable phases over time
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  * 
- * Phases are defined by their transition times. The moment one phase ends the next one starts.
- * Each time belongs to exactly one phase.
+ * Phases are defined by their transition times. The moment one phase ends the
+ * next one starts. Each time belongs to exactly one phase.
  *
- * The contract allows a limited set of changes to be applied to the phase transitions while the contract is active.
- * As a matter of principle, changes are prohibited from effecting the past. They may only ever affect future phase transitions.
+ * The contract allows a limited set of changes to be applied to the phase
+ * transitions while the contract is active.  As a matter of principle, changes
+ * are prohibited from effecting the past. They may only ever affect future
+ * phase transitions.
  *
  * The permitted changes are:
  *   - add a new phase after the last one
- *   - end the current phase right now and transition to the next phase immediately 
- *   - delay the start of a future phase (thereby pushing out all subsequent phases by an equal amount of time)
+ *   - end the current phase right now and transition to the next phase
+ *     immediately 
+ *   - delay the start of a future phase (thereby pushing out all subsequent
+ *     phases by an equal amount of time)
  *   - define a maximum delay for a specified phase 
  */
  
@@ -46,7 +50,8 @@ contract Phased {
    * Array of transition times defining the phases
    *   
    * phaseEndTime[i] is the time when phase i has just ended.
-   * Phase i is defined as the following time interval: [ phaseEndTime[i-1], phaseEndTime[i] )
+   * Phase i is defined as the following time interval: 
+   *   [ phaseEndTime[i-1], * phaseEndTime[i] )
    */
   uint[] public phaseEndTime;
 
@@ -61,27 +66,31 @@ contract Phased {
   /**
    *  Maximum delay for phase transitions
    *
-   *  maxDelay[i] is the maximum amount of time by which the transition phaseEndTime[i] can be delayed.
+   *  maxDelay[i] is the maximum amount of time by which the transition
+   *  phaseEndTime[i] can be delayed.
   */
   mapping(uint => uint) public maxDelay; 
 
   /*
    * The contract has no constructor.
-   * The contract initialized itself with no phase transitions (N = 0) and one phase (N+1=1).
+   * The contract initialized itself with no phase transitions (N = 0) and one
+   * phase (N+1=1).
    *
    * There are two PUBLIC functions (getters):
    *  - getPhaseAtTime
    *  - isPhase
    *  - getPhaseStartTime
    *
-   * Note that both functions are guaranteed to return the same value when called twice with the same argument (but at different times).
+   * Note that both functions are guaranteed to return the same value when
+   * called twice with the same argument (but at different times).
    */
 
   /**
    * Return the number of the phase to which the given time belongs.
    *
    * Return value i means phaseEndTime[i-1] <= time < phaseEndTime[i].
-   * The given time must not be in the future (because future phase numbers may still be subject to change).
+   * The given time must not be in the future (because future phase numbers may
+   * still be subject to change).
    */
   function getPhaseAtTime(uint time) constant returns (uint n) {
     // Throw if time is in the future
@@ -96,9 +105,11 @@ contract Phased {
   /**
    * Return true if the given time belongs to the given phase.
    *
-   * Returns the logical equivalent of the expression (phaseEndTime[i-1] <= time < phaseEndTime[i]).
+   * Returns the logical equivalent of the expression 
+   *   (phaseEndTime[i-1] <= time < phaseEndTime[i]).
    *
-   * The given time must not be in the future (because future phase numbers may still be subject to change).
+   * The given time must not be in the future (because future phase numbers may
+   * still be subject to change).
    */
   function isPhase(uint time, uint n) constant returns (bool) {
     // Throw if time is in the future
@@ -138,15 +149,18 @@ contract Phased {
    *    3. delayPhaseEndBy
    *    4. endCurrentPhaseIn
    *
-   *  This contract does not implement access control to these function, so they are made internal.
+   *  This contract does not implement access control to these function, so
+   *  they are made internal.
    */
    
   /**
    * 1. Add a phase after the last phase.
    *
-   * The argument is the new endTime of the phase currently known as the last phase, or, in other words the start time of the newly introduced phase.  
+   * The argument is the new endTime of the phase currently known as the last
+   * phase, or, in other words the start time of the newly introduced phase.  
    * All calls to addPhase() MUST be with strictly increasing time arguments.
-   * It is not allowed to add a phase transition that lies in the past relative to the current block time.
+   * It is not allowed to add a phase transition that lies in the past relative
+   * to the current block time.
    */
   function addPhase(uint time) internal {
     // Throw if new transition time is not strictly increasing
@@ -161,7 +175,8 @@ contract Phased {
   }
   
   /**
-   * 2. Define a limit on the amount of time by which the given transition (i) can be delayed.
+   * 2. Define a limit on the amount of time by which the given transition (i)
+   *    can be delayed.
    *
    * By default, transitions can not be delayed (limit = 0).
    */
@@ -187,10 +202,12 @@ contract Phased {
     // Throw if phase has already ended
     if (now >= phaseEndTime[n]) { throw; }
 
-    // Throw if the requested delay is higher than the defined maximum for the transition
+    // Throw if the requested delay is higher than the defined maximum for the
+    // transition
     if (timeDelta > maxDelay[n]) { throw; }
 
-    // Subtract from the current max delay, so maxDelay is honored across multiple calls
+    // Subtract from the current max delay, so maxDelay is honored across
+    // multiple calls
     maxDelay[n] -= timeDelta;
 
     // Push out all subsequent transitions by the same amount
@@ -223,7 +240,8 @@ contract Phased {
       timeDelta = 1; 
     }
     
-    // The new phase end should be earlier than the currently defined phase end, otherwise we don't change it.
+    // The new phase end should be earlier than the currently defined phase
+    // end, otherwise we don't change it.
     if (now + timeDelta < phaseEndTime[n]) { 
       phaseEndTime[n] = now + timeDelta;
     }

@@ -23,13 +23,14 @@ SOFTWARE.
 */
 
 /*
- * @title:  An arbitrary number of counters that can flag when a pre-configured target is reached.
+ * @title: Contract implementing counters with configurable targets
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  *
- * Each counter is identified by its counter id, a uint.
- * Counters can never decrease.
+ * There is an arbitrary number of counters. Each counter is identified by its
+ * counter id, a uint. Counters can never decrease.
  * 
- * The contract has no constructor. The target values are set and re-set via setTarget().
+ * The contract has no constructor. The target values are set and re-set via
+ * setTarget().
  */
 
 pragma solidity ^0.4.6;
@@ -57,9 +58,14 @@ contract Targets {
   }
  
   // Add to the counter 
-  // The function returns whether this current addition makes the counter reach or cross its target value 
-  function addTowardsTarget(uint id, uint amount) internal returns (bool firstReached) {
-    firstReached = (counter[id] < target[id]) && (counter[id] + amount >= target[id]);
+  // The function returns whether this current addition makes the counter reach
+  // or cross its target value 
+  function addTowardsTarget(uint id, uint amount) 
+    internal 
+    returns (bool firstReached) 
+  {
+    firstReached = (counter[id] < target[id]) && 
+                   (counter[id] + amount >= target[id]);
     counter[id] += amount;
   }
 }
