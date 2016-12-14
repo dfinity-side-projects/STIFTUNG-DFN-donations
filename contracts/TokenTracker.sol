@@ -27,15 +27,19 @@ SOFTWARE.
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  *
  * Optionally, assignments can be chosen to be of "restricted type". 
- * Being "restricted" means that the token assignment may later be partially reverted (or the tokens "burned") by the contract. 
+ * Being "restricted" means that the token assignment may later be partially
+ * reverted (or the tokens "burned") by the contract. 
  *
  * After all token assignments are completed the contract
  *   - burns some restricted tokens
  *   - releases the restriction on the remaining tokens
- * The percentage of tokens that burned out of each assignment of restricted tokens is calculated to achieve the following condition:
- *   - the remaining formerly restricted tokens combined have a pre-configured share (percentage) among all remaining tokens.
+ * The percentage of tokens that burned out of each assignment of restricted
+ * tokens is calculated to achieve the following condition:
+ *   - the remaining formerly restricted tokens combined have a pre-configured
+ *     share (percentage) among all remaining tokens.
  *
- * Once the conversion process has started the contract enters a state in which no more assignments can be made.
+ * Once the conversion process has started the contract enters a state in which
+ * no more assignments can be made.
  *
  * The contract also implements the TokenInterface as follows:
  *   - totalSupply() is the total number of unrestricted tokens
@@ -53,14 +57,16 @@ contract TokenTracker is TokenInterface {
   // Mapping from address to number of tokens assigned to the address
   mapping(address => uint) public tokens;
 
-  // Mapping from address to number of tokens assigned to the address that underly a restriction
+  // Mapping from address to number of tokens assigned to the address that
+  // underly a restriction
   mapping(address => uint) public restrictions;
   
   // Total number of (un)restricted tokens currently in existence
   uint public totalRestrictedTokens; 
   uint public totalUnrestrictedTokens; 
   
-  // Total number of individual assignment calls have been for (un)restricted tokens
+  // Total number of individual assignment calls have been for (un)restricted
+  // tokens
   uint public totalRestrictedAssignments; 
   uint public totalUnrestrictedAssignments; 
 
@@ -68,8 +74,10 @@ contract TokenTracker is TokenInterface {
   // Starting the conversion (burn) process irreversibly sets this to true. 
   bool public assignmentsClosed = false;
   
-  // The multiplier (defined by nominator and denominator) that defines the fraction of all restricted tokens to be burned. 
-  // This is computed after assignments have ended and before the conversion process starts.
+  // The multiplier (defined by nominator and denominator) that defines the
+  // fraction of all restricted tokens to be burned. 
+  // This is computed after assignments have ended and before the conversion
+  // process starts.
   uint public burnMultDen;
   uint public burnMultNom;
 
@@ -84,12 +92,16 @@ contract TokenTracker is TokenInterface {
    * TokenInterface 
    */ 
   uint8  public constant decimals = 0;  
-  function totalSupply() constant returns (uint256 balance) { return totalUnrestrictedTokens; }
-  function balanceOf(address owner) constant returns (uint256 balance) { return tokens[owner] - restrictions[owner]; }
-  function transfer(address to, uint256 amount) returns (bool success)                    { throw; }
-  function transferFrom(address from, address to, uint256 amount ) returns (bool success) { throw; }
-  function approve(address spender, uint256 amount) returns (bool success)                { throw; }
-  function allowance(address owner, address spender) constant returns (uint256 remaining) { throw; }
+  function totalSupply() constant returns (uint256 balance) { 
+    return totalUnrestrictedTokens; 
+  }
+  function balanceOf(address owner) constant returns (uint256 balance) { 
+    return tokens[owner] - restrictions[owner]; 
+  }
+  function transfer(address, uint256) returns (bool) { throw; }
+  function transferFrom(address, address, uint256) returns (bool) { throw; }
+  function approve(address, uint256) returns (bool) { throw; }
+  function allowance(address, address) constant returns (uint256) { throw; }
  
   /** 
    * PUBLIC functions
@@ -99,7 +111,8 @@ contract TokenTracker is TokenInterface {
    */
   
   /**
-   * Return true iff the assignments are closed and there are no restricted tokens left 
+   * Return true iff the assignments are closed and there are no restricted
+   * tokens left 
    */
   function isUnrestricted() constant returns (bool) {
     return (assignmentsClosed && totalRestrictedTokens == 0);
@@ -156,8 +169,11 @@ contract TokenTracker is TokenInterface {
    * This is irreversible and closes all future assignments.
    * The function can only be called once.
    *
-   * A call triggers the calculation of what fraction of restricted tokens should be burned by subsequent calls to the unrestrict() function.
-   * The result of this calculation is a multiplication factor whose nominator and denominator are stored in the contract variables burnMultNom, burnMultDen.
+   * A call triggers the calculation of what fraction of restricted tokens
+   * should be burned by subsequent calls to the unrestrict() function.
+   * The result of this calculation is a multiplication factor whose nominator
+   * and denominator are stored in the contract variables burnMultNom,
+   * burnMultDen.
    */
   function closeAssignmentsIfOpen() internal {
     // Return if assignments are not open
@@ -167,44 +183,52 @@ contract TokenTracker is TokenInterface {
     assignmentsClosed = true;
 
     /*
-      Calculate the total number of tokens that should remain after conversion.
-      This is based on the total number of unrestricted tokens assigned so far 
-      and the pre-configured share that the remaining formerly restricted tokens should have.
-    */
-    uint totalTokensTarget = (totalUnrestrictedTokens * 100) / (100 - restrictedShare);
+     *  Calculate the total number of tokens that should remain after
+     *  conversion.  This is based on the total number of unrestricted tokens
+     *  assigned so far and the pre-configured share that the remaining
+     *  formerly restricted tokens should have.
+     */
+    uint totalTokensTarget = (totalUnrestrictedTokens * 100) / 
+      (100 - restrictedShare);
     
     // The total number of tokens in existence now.
     uint totalTokensExisting = totalRestrictedTokens + totalUnrestrictedTokens;
       
     /*
-      The total number of tokens that need to be burned to bring the existing number down to the target number. 
-      If the existing number is lower than the target then we won't burn anything.
-    */
+     * The total number of tokens that need to be burned to bring the existing
+     * number down to the target number. If the existing number is lower than
+     * the target then we won't burn anything.
+     */
     uint totalBurn = 0; 
     if (totalTokensExisting > totalTokensTarget) {
       totalBurn = totalTokensExisting - totalTokensTarget; 
     }
 
-    // The fraction of restricted tokens to be burned (by nominator and denominator).
+    // The fraction of restricted tokens to be burned (by nominator and
+    // denominator).
     burnMultNom = totalBurn;
     burnMultDen = totalRestrictedTokens;
     
     /*
-     * For verifying the correctness of the above calculation it may help to note:
+     * For verifying the correctness of the above calculation it may help to
+     * note the following.
      * Given 0 <= restrictedShare < 100, we have:
      *  - totalTokensTarget >= totalUnrestrictedTokens
      *  - totalTokensExisting <= totalRestrictedTokens + totalTokensTarget
      *  - totalBurn <= totalRestrictedTokens
      *  - burnMultNom <= burnMultDen
-     * Also note that burnMultDen = 0 means totalRestrictedTokens = 0, in which burnMultNom = 0 as well.
+     * Also note that burnMultDen = 0 means totalRestrictedTokens = 0, in which
+     * burnMultNom = 0 as well.
      */
   }
 
   /**
    * Unrestrict (convert) all restricted tokens assigned to the given address
    *
-   * This function can only be called after assignments have been closed via closeAssignments().
-   * The return value is the number of restricted tokens that were burned in the conversion.
+   * This function can only be called after assignments have been closed via
+   * closeAssignments().
+   * The return value is the number of restricted tokens that were burned in
+   * the conversion.
    */
   function unrestrict(address addr) internal returns (uint) {
     // Throw is assignments are not yet closed
@@ -217,7 +241,8 @@ contract TokenTracker is TokenInterface {
     if (restrictionsForAddr == 0) { throw; }
 
     // Apply the burn multiplier to the balance of restricted tokens
-    // The result is the ceiling of the value: (restrictionForAddr * burnMultNom) / burnMultDen
+    // The result is the ceiling of the value: 
+    // (restrictionForAddr * burnMultNom) / burnMultDen
     uint burn = multFracCeiling(restrictionsForAddr, burnMultNom, burnMultDen);
 
     // Remove the tokens to be burned from the address's balance

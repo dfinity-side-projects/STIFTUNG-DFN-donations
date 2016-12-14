@@ -26,9 +26,12 @@ SOFTWARE.
  * @title:  A configurable step function 
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  *
- * The contract implements a step function going down from an initialValue to 0 in a number of steps (nSteps).
+ * The contract implements a step function going down from an initialValue to 0
+ * in a number of steps (nSteps).
  * The steps are distributed equally over a given time (phaseLength).
- * Having n steps means that the time phaseLength is divided into n+1 sub-intervalls of equal length during each of which the function value is constant. 
+ * Having n steps means that the time phaseLength is divided into n+1
+ * sub-intervalls of equal length during each of which the function value is
+ * constant. 
  */
  
 pragma solidity ^0.4.6;
@@ -55,8 +58,10 @@ contract StepFunction {
   /*
    * Note the following edge cases.
    *   initialValue = 0: is valid and will create the constant zero function
-   *   nSteps = 0: is valid and will create the constant zero function (only 1 sub-interval)
-   *   phaseLength < nSteps: is valid, but unlikely to be intended (so the constructor throws)
+   *   nSteps = 0: is valid and will create the constant zero function (only 1
+   *   sub-interval)
+   *   phaseLength < nSteps: is valid, but unlikely to be intended (so the
+   *   constructor throws)
    */
   
   /**
@@ -69,8 +74,9 @@ contract StepFunction {
     // Throw is elapsedTime is out-of-range
     if (elapsedTime >= phaseLength) { throw; }
     
-    // The function value will bel calculated from the end value backwards
-    // Hence we need the time left, which will lie in the intervall [0,phaseLength)
+    // The function value will bel calculated from the end value backwards.
+    // Hence we need the time left, which will lie in the intervall
+    // [0,phaseLength)
     uint timeLeft  = phaseLength - elapsedTime - 1; 
 
     // Calculate the number of steps away from reaching end value

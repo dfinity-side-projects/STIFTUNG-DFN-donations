@@ -30,18 +30,18 @@ SOFTWARE.
  *  - accepts on-chain donations for the foundation in ether 
  *  - tracks on-chain and off-chain donations made to the foundation
  *  - assigns unrestricted tokens to addresses provided by donors
- *  - assigns restricted tokens to itself and to early contributors
+ *  - assigns restricted tokens to DFINITY Stiftung and early contributors 
  *    
  * On-chain donations are received in ether are converted to Swiss francs (CHF).
  * Off-chain donations are received and recorded directly in Swiss francs.
  * Tokens are assigned at a rate of 10 tokens per CHF. 
  *
  * There are two types of tokens intially. Unrestricted tokens are assigned to 
- * donors and restricted tokens are assigned to the foundation and early 
+ * donors and restricted tokens are assigned to DFINITY Stiftung and early 
  * contributors. Restricted tokens are converted to unrestricted tokens in the 
  * finalization phase, after which only unrestricted tokens exist.
  *
- * After the finalization phase, tokens assigned to the foundation and early 
+ * After the finalization phase, tokens assigned to DFINITY Stiftung and early 
  * contributors will make up a pre-defined share of all tokens. This is achieved
  * through burning excess restricted tokens before their restriction is removed.
  */
@@ -71,11 +71,12 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   // The FDC states
   enum state {
     pause,         // Pause without any activity 
-    earlyContrib,  // Registration of early contributions
+    earlyContrib,  // Registration of DFINITY Stiftung/early contributions
     donPhase0,     // Donation phase 0  
     donPhase1,     // Donation phase 1 
     offChainReg,   // Grace period for registration of off-chain donations
-    finalization,  // Adjustment of early contributions down to their share
+    finalization,  // Adjustment of DFINITY Stiftung/early contribution tokens
+                   // down to their share
     done           // Read-only phase
   }
 
@@ -86,9 +87,10 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * Tokens
    *
    * The FDC uses base contract TokenTracker to:
-   *  - track token assignments for donors (unrestricted tokens)
-   *  - track token assignments for early contributors (restricted tokens)
-   *  - convert early contributor tokens down to the right amount
+   *  - track token assignments for 
+   *      - donors (unrestricted tokens)
+   *      - DFINITY Stiftung/early contributors (restricted tokens)
+   *  - convert DFINITY Stiftung/early contributor tokens down to their share
    *
    * The FDC uses the base contract Targets to:
    *  - track the targets measured in CHF for each donation phase
@@ -121,8 +123,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   // Wallet address to which on-chain donations are being forwarded
   address public foundationWallet; 
   
-  // Address that is allowed to register early contributions and off-chain 
-  // donations and delay donation phase 1
+  // Address that is allowed to register DFINITY Stiftung/early contributions
+  // and off-chain donations and to delay donation phase 1
   address public registrarAuth; 
   
   // Address that is allowed to update the exchange rate
@@ -140,7 +142,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * Events
    *
    *  - DonationReceipt:     logs an on-chain or off-chain donation
-   *  - EarlyContribReceipt: logs the registration of an early contribution 
+   *  - EarlyContribReceipt: logs the registration of early contribution 
    *  - BurnReceipt:         logs the burning of token during finalization
    */
 
@@ -173,7 +175,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
                address _registrarAuth,
                address _exchangeRateAuth)
     TokenTracker(earlyContribShare)
-    StepFunction(phase1EndTime-phase1StartTime, phase1InitialBonus, phase1BonusSteps) 
+    StepFunction(phase1EndTime-phase1StartTime, phase1InitialBonus, 
+                 phase1BonusSteps) 
   {
     /*
      * Set privileged addresses for access control
@@ -278,7 +281,10 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * The second argument is a checksum which must equal the first 4 bytes of the
    * SHA-256 digest of the byte representation of the address.
    */
-  function donateAsWithChecksum(address addr, bytes4 checksum) payable returns (bool) {
+  function donateAsWithChecksum(address addr, bytes4 checksum) 
+    payable 
+    returns (bool) 
+  {
     // Calculate SHA-256 digest of the address 
     bytes32 hash = sha256(addr);
     
@@ -442,7 +448,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * phase and if called during the extended period for off-chain donations then
    * the timestamp must lie in the immediately preceding donation phase. 
    */
-  function registerOffChainDonation(address addr, uint timestamp, uint chfCents, string currency, bytes32 memo) {
+  function registerOffChainDonation(address addr, uint timestamp, uint chfCents, 
+                                    string currency, bytes32 memo) 
+  {
     // Require permission
     if (msg.sender != registrarAuth) { throw; }
 
@@ -450,8 +458,12 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     uint currentPhase = getPhaseAtTime(now);
     state currentState = stateOfPhase[currentPhase];
     
-    // Reject registrations outside the two donation phases (incl. their extended registration periods for off-chain donations)
-    if (currentState != state.donPhase0 && currentState != state.donPhase1 && currentState != state.offChainReg) { throw; }
+    // Reject registrations outside the two donation phases (incl. their
+    // extended registration periods for off-chain donations)
+    if (currentState != state.donPhase0 && currentState != state.donPhase1 && 
+        currentState != state.offChainReg) {  
+      throw; 
+    }
    
     // Throw if timestamp is in the future
     if (timestamp > now) { throw; }
@@ -462,12 +474,16 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    
     // Throw if called during a donation phase and the timestamp does not match
     // that phase.
-    if (currentState == state.donPhase0 && timestampState != currentState) { throw; }
-    if (currentState == state.donPhase1 && timestampState != currentState) { throw; }
+    if ((currentState == state.donPhase0 || currentState == state.donPhase1) && 
+        (timestampState != currentState)) { 
+      throw; 
+    }
     
     // Throw if called during the extended period for off-chain donations and
     // the timestamp does not lie in the immediately preceding donation phase.
-    if (currentState == state.offChainReg && timestampPhase != currentPhase - 1) { throw; }
+    if (currentState == state.offChainReg && timestampPhase != currentPhase-1) { 
+      throw; 
+    }
 
     // Do the book-keeping
     bookDonation(addr, timestamp, chfCents, currency, memo);
@@ -543,7 +559,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * The phase argument is redundant because it could be derived from the 
    * timestamp. However, it is passed in to save the gas of re-calculating it.
    */
-  function bookDonation(address addr, uint timestamp, uint chfCents, string currency, bytes32 memo) private {
+  function bookDonation(address addr, uint timestamp, uint chfCents, 
+                        string currency, bytes32 memo) private 
+  {
     // The current phase
     uint phase = getPhaseAtTime(timestamp);
     
@@ -568,6 +586,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     assign(addr,tokenAmount,false);
 
     // Issue donation receipt
-    DonationReceipt(addr, currency, bonusMultiplier, timestamp, tokenAmount, memo);
+    DonationReceipt(addr, currency, bonusMultiplier, timestamp, tokenAmount, 
+                    memo);
   }
 }
