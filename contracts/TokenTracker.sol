@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/*
+/**
  * @title:  A contract that tracks numbers of tokens assigned to addresses. 
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  *
@@ -159,9 +159,9 @@ contract TokenTracker is TokenInterface {
    * A call triggers the calculation of what fraction of restricted tokens should be burned by subsequent calls to the unrestrict() function.
    * The result of this calculation is a multiplication factor whose nominator and denominator are stored in the contract variables burnMultNom, burnMultDen.
    */
-  function closeAssignments() internal {
-    // Throw if assignments were already closed before
-    if (assignmentsClosed) { throw; } 
+  function closeAssignmentsIfOpen() internal {
+    // Return if assignments are not open
+    if (assignmentsClosed) { return; } 
     
     // Set the state to "closed"
     assignmentsClosed = true;
