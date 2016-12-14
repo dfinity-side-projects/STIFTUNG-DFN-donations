@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/*
+/**
  * @title:  Configuration parameters for the FDC
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  */
@@ -55,7 +55,7 @@ contract Parameters {
   
   // The start of phase 1 is set to 2017-03-13 19:00 of timezone Europe/Zurich
   // TZ="Europe/Zurich" date -d "2017-03-13 19:00" "+%s"
-  uint public constant phase0StartTime      = 1489428000; 
+  uint public constant phase1StartTime      = 1489428000; 
   uint public constant phase1EndTime        = phase1StartTime + 6 weeks;
   uint public constant finalizeStartTime    = phase1EndTime   + 1 weeks;
   
