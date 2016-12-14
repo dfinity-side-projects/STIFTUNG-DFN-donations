@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-/*
+/**
  * @title:  The DFINITY Stiftung donation contract (FDC).
  * @author: Timo Hanke <timo.t.hanke@gmail.com> 
  *
@@ -303,9 +303,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     if (getState() != state.finalization) { throw; }
 
     // Close down further assignments in TokenTracker
-    if (!assignmentsClosed) { 
-      closeAssignments(); 
-    }
+    closeAssignmentsIfOpen(); 
 
     // Burn tokens
     uint tokensBurned = unrestrict(addr); 
