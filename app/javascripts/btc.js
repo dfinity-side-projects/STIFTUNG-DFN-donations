@@ -98,8 +98,7 @@ BitcoinWorker.prototype.stop = function() {
 BitcoinWorker.prototype.tryForwardBTC = function() {
   var self = this;
 
-  // TODO uncomment below
-  // if (app.donationState != STATE_DON_PHASE0 || )
+  // if (app.donationState != STATE_DON_PHASE0 && app.donationState != STATE_DON_PHASE1)
   //     return Promise.resolve();
 
   return this.trySendBTC(this.centralAddress)
