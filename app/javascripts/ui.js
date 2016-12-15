@@ -37,7 +37,8 @@ var UI = function () {
 // Javascript at highest manifest security setting.
 UI.prototype.wireUpDOM = function () {
     this.bindUIListener("withdraw-eth-link", "showWithdrawEth");
-    this.bindUIListener("withdraw-eth-link2", "showWithdrawEth");
+    this.bindUIListener("withdraw-eth-link-2", "showWithdrawEth");
+    this.bindUIListener("do-withdraw-eth-button", "withdrawETH");
     this.bindUIListener("show-withdraw-btc-link", "showWithdrawBtc");
 
     this.bindUIListener("do-withdraw-btc-button", "withdrawBtc");
@@ -58,8 +59,6 @@ UI.prototype.wireUpDOM = function () {
     this.bindUIListener("done-explain-forwarding-button", "doneExplainForwarding");
 
 
-
-    // TODO: NEED TO IMPLEMENT READING FROM THE INPUT BOXES
     this.bindUIListener("connect-hosted", "onSelectEthereumNode", "hosted");
     this.bindUIListener("connect-localhost", "onSelectEthereumNode", "http://localhost:8545");
     this.bindUIListener("btn-custom-full-node-eth", "onSelectEthereumNode", "$custom-full-node-address-eth");
@@ -67,7 +66,6 @@ UI.prototype.wireUpDOM = function () {
     this.bindUIListener("connect-hosted-btc", "onSelectBitcoinNode", "hosted");
     this.bindUIListener("connect-localhost-btc", "onSelectBitcoinNode", "http://localhost:3001");
     this.bindUIListener("btn-custom-full-node-btc", "onSelectBitcoinNode","$custom-full-node-address-btc");
-
 
     this.bindUIListener("agree-terms-button", "readTerms");
     this.bindUIListener("disagree-terms-button", "hideTerms");
@@ -78,9 +76,6 @@ UI.prototype.wireUpDOM = function () {
     this.bindGlobalListener("close-select-full-node-eth", "closeDialog", "select-full-node-eth");
     this.bindGlobalListener("close-select-full-node-btc", "closeDialog", "select-full-node-btc");
 
-
-
-
 }
 
 UI.prototype.afterAppLoaded = function () {
@@ -89,7 +84,16 @@ UI.prototype.afterAppLoaded = function () {
 }
 
 UI.prototype.bindUIListener = function (element, uiHandler, argument) {
-    document.getElementById(element).addEventListener("click", this[uiHandler].bind(ui, [argument]));
+    const self = this;
+    document.getElementById(element).addEventListener("click", function() {
+        if (argument !=null && argument!= undefined && argument.startsWith("$")) {
+            var argVal = document.getElementById(argument.substr(1,argument.length-1)).value;
+            console.log(">>> Argument retrieval - " + argument + "::" + argVal);
+            self[uiHandler](argVal);
+        } else {
+            self[uiHandler](argument);
+        }
+    });
 }
 
 
@@ -308,21 +312,36 @@ UI.prototype.isTaskReady = function (taskId) {
 }
 
 UI.prototype.setDonationState = function (state, startTime) {
-    console.log("Donation state = " + state);
+    console.log("UI Donation state = " + state);
+
+    // Don't update UI if still in unknown state (e.g. recovering from a previous failure)
+    if (state == STATE_TBD) {
+        return;
+    }
+
+    if (state == this.donationState && startTime == this.startTime) {
+        return;
+    } else {
+        this.donationState = state;
+        this.startTime = startTime;
+    }
 
     // Reset state
     removeClass("donation-state", "in-progress");
     removeClass("donation-state", "not-in-progress");
+    hideElement("error-donation-over");
+    hideElement("error-donation-not-started");
 
     if (state == STATE_PAUSE || state == STATE_EARLY_CONTRIB) {
         setElementText("donation-state", "DONATION NOT STARTED");
 
         addClass("donation-state", "not-in-progress");
 
+        // TOOD: add start time countdown timer
         showElement("error-donation-not-started");
         if (startTime != undefined && startTime != 0)
             setElementText("donation-start-time", new Date(startTime * 1000).toString());
-        hideElement("error-donation-over");
+        // hideElement("error-donation-over");
     }
     else if (state == STATE_OFFCHAIN_REG || state == STATE_FINALIZATION || state == STATE_DONE) {
 
@@ -334,17 +353,18 @@ UI.prototype.setDonationState = function (state, startTime) {
         }
 
         showElement("error-donation-over");
-        hideElement("error-donation-not-started");
+        // hideElement("error-donation-not-started");
     } else if (state == STATE_DON_PHASE0) {
         setElementText("donation-state", "SEED DONATION IN PROGRESS");
         addClass("donation-state", "in-progress");
-        hideElement("error-donation-over");
-        hideElement("error-donation-not-started");
+
     } else if (state == STATE_DON_PHASE1) {
         setElementText("donation-state", "MAIN DONATION ROUND IN PROGRESS");
         addClass("donation-state", "in-progress");
-        hideElement("error-donation-over");
-        hideElement("error-donation-not-started");
+    } else if (state == STATE_INVALID_CONTRACT) {
+        setElementText("donation-state", "INVALID CONTRACT");
+        addClass("donation-state", "in-progress");
+        showElement("error-donation-contract-invalid");
     }
 }
 

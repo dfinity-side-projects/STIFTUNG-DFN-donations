@@ -34,7 +34,9 @@ input, button {
 #donation-state.not-in-progress {
     color: #ffd322;
 }
-
+#donation-state.invalid {
+    color: red;
+}
 #content {
     width: 975px;
     margin: auto;
@@ -101,7 +103,9 @@ input, button {
     font-weight: normal;
     margin-bottom: 25px;
 }
-
+#dashboard div.error span {
+    color: #333;
+}
 #dashboard div.error a {
     color: black;
     text-decoration: underline;
@@ -420,6 +424,8 @@ body.modal-open {
     padding-right: 60px;
     padding-top: 40px;
     padding-top: 60px;
+    max-height: calc(100vh - 210px);
+    overflow-y: auto;
 }
 
 .dialog-small {
@@ -429,6 +435,7 @@ body.modal-open {
     margin-bottom: auto;
     padding-bottom: 20px;
     padding-top: 20px;
+    overflow: auto;
     bottom: auto;
     top: 15%;
 }

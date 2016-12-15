@@ -76,7 +76,13 @@
     <div id="dashboard">
         <div class="box-header">YOUR STATUS</div>
         <div class="box-content">
-
+            <div id="error-donation-contract-invalid" class="error" style="display: none">
+                The Foundation Donation Contract currently configured with this software is invalid and the donation
+                cannot proceed. This software may be outdated, corrupt or mis-configured.
+                <br>
+                Please visit official <a href="http://dfinity.network">DFINITY project site</a> to download the correct
+                version.
+            </div>
             <div id="error-donation-not-started" class="error" style="display: none">
                 The seed donation phase has not yet started. Before the donation start, this application will not forward any ETH/BTC transaction.
                 <br>
@@ -87,7 +93,7 @@
             </div>
             <div id="error-donation-over" class="error" style="display: none">
                 The seed donation phase has already ended.
-                <a class="blink" href="">Please withdraw any remaining ETH that could not be forwarded.</a>
+                <a id="withdraw-eth-link-2" class="blink" href="#">Please withdraw any remaining ETH that could not be forwarded.</a>
                 <br>
 
                 Regarding timing for the next phase (main) donation round,  visit official
@@ -232,7 +238,7 @@
     <div class="clearfix"></div>
 </div>
 <!-- Popup Dialog Windows -->
-<div id="withdraw-eth" class="dialog dialog-no-scroll dialog-small">
+<div id="withdraw-eth" class="dialog  dialog-small">
     <h2>Withdraw unsent ETH in your forwarding account</h2>
     <p>If there is ETH in your forwarding account that has not already been forwarded to the Foundation Collection
         Contract, you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a
@@ -245,11 +251,11 @@
     <input id="withdraw-eth-addr" type="text" class="textbox-custom"/>
     </p>
     <p>
-        <a id="withdraw-eth-link2" href="#" class="btn">Withdraw</a>
+        <a id="do-withdraw-eth-button" href="#" class="btn">Withdraw</a>
         <a id="hide-withdraw-eth-button" href="#" class="btn">Cancel</a>
     </p>
 </div>
-<div id="withdraw-btc" class="dialog dialog-no-scroll dialog-small">
+<div id="withdraw-btc" class="dialog dialog-small">
     <h2>Withdraw unsent BTC in your forwarding account</h2>
     <p>
         If there is BTC in your forwarding account that has not already been forwarded to the Foundation address,
