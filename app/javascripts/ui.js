@@ -30,12 +30,25 @@
 var UI = function () {
     // this.wireUpDOM();
     this.tasks = ["task-agree", "task-create-seed", "task-understand-fwd-eth", "task-donate"];
+    this.locationDetected = "";
 }
+
+
+// US country code
+var US_COUNTRY_CODE = "US";
 
 // Wire up event handlers of UI.
 // This is necessary because Google Chrome extension will not allow inline
 // Javascript at highest manifest security setting.
 UI.prototype.wireUpDOM = function () {
+
+    this.bindUIListener("show-terms-task", "showTerms");
+    this.bindUIListener("show-create-seed-task", "showCreateSeed");
+    this.bindUIListener("show-explain-forwarding-task", "showExplainForwarding");
+
+
+
+
     this.bindUIListener("withdraw-eth-link", "showWithdrawEth");
     this.bindUIListener("withdraw-eth-link-2", "showWithdrawEth");
     this.bindUIListener("do-withdraw-eth-button", "withdrawETH");
@@ -67,6 +80,10 @@ UI.prototype.wireUpDOM = function () {
     this.bindUIListener("connect-localhost-btc", "onSelectBitcoinNode", "http://localhost:3001");
     this.bindUIListener("btn-custom-full-node-btc", "onSelectBitcoinNode","$custom-full-node-address-btc");
 
+
+    this.bindUIListener("i-accept-terms", "checkTermsBox");
+    this.bindUIListener("i-am-not-usa-resident", "checkTermsBox");
+
     this.bindUIListener("agree-terms-button", "readTerms");
     this.bindUIListener("disagree-terms-button", "hideTerms");
     this.bindUIListener("hide-withdraw-eth-button", "hideWithdrawEth");
@@ -76,6 +93,7 @@ UI.prototype.wireUpDOM = function () {
     this.bindGlobalListener("close-select-full-node-eth", "closeDialog", "select-full-node-eth");
     this.bindGlobalListener("close-select-full-node-btc", "closeDialog", "select-full-node-btc");
 
+    disableButton("agree-terms-button");
 }
 
 UI.prototype.afterAppLoaded = function () {
@@ -88,7 +106,6 @@ UI.prototype.bindUIListener = function (element, uiHandler, argument) {
     document.getElementById(element).addEventListener("click", function() {
         if (argument !=null && argument!= undefined && argument.startsWith("$")) {
             var argVal = document.getElementById(argument.substr(1,argument.length-1)).value;
-            console.log(">>> Argument retrieval - " + argument + "::" + argVal);
             self[uiHandler](argVal);
         } else {
             self[uiHandler](argument);
@@ -122,6 +139,15 @@ UI.prototype.setGenesisDFN = function (dfn) {
     }
 }
 
+UI.prototype.checkTermsBox = function () {
+    if (document.getElementById("i-accept-terms").checked &&
+        document.getElementById("i-am-not-usa-resident").checked && this.locationDetected != US_COUNTRY_CODE ) {
+        enableButton("agree-terms-button");
+    } else {
+        disableButton("agree-terms-button");
+    }
+}
+
 // Set amount of ETH forwarded so far
 UI.prototype.setForwardedETH = function (fe) {
     var e = document.getElementById('donated-eth');
@@ -135,7 +161,7 @@ UI.prototype.setForwardedETH = function (fe) {
 UI.prototype.setRemainingETH = function (re) {
     var e = document.getElementById('waiting-eth');
     var e2 = document.getElementById('withdraw-waiting-eth');
-    console.log("set remaining eth: " + re);
+
     if (re == undefined) {
         e.innerHTML = "?";
         e2.innerHTML = "?";
@@ -257,8 +283,6 @@ UI.prototype.setFunderChfReceived = function (chf) {
 //	'task-understand-fwd-eth'
 //	'task-donate'
 UI.prototype.setCurrentTask = function (taskId) {
-    // Make interface changes after a delay that allows the user to "observe" the transition
-    // TODO disable clicks until interface updated
     var _ui = this;
     var f = function () {
         _ui.unsetNextTask('task-agree');
@@ -272,7 +296,7 @@ UI.prototype.setCurrentTask = function (taskId) {
 }
 
 UI.prototype.unsetNextTask = function (t) {
-    document.getElementById(t).className = document.getElementById(t).className.replace('next-task', '');
+    document.getElementById(t).className = document.getElementById(t).className.replace(/next-task/g, '');
 }
 
 UI.prototype.makeTaskDone = function (t) {
@@ -302,7 +326,7 @@ UI.prototype.logger = function (text) {
 // Tasks can only move forward if previous tasks completed.
 UI.prototype.isTaskReady = function (taskId) {
     k = this.tasks.indexOf(taskId);
-    console.log("taskId " + taskId + ": index " + k)
+
     // Look for all previous steps to see if any one not completed
     for (var i = 0; i < k; i++) {
         if (document.getElementById(this.tasks[i]).className.indexOf("done-task") == -1)
@@ -312,7 +336,6 @@ UI.prototype.isTaskReady = function (taskId) {
 }
 
 UI.prototype.setDonationState = function (state, startTime) {
-    console.log("UI Donation state = " + state);
 
     // Don't update UI if still in unknown state (e.g. recovering from a previous failure)
     if (state == STATE_TBD) {
@@ -523,10 +546,29 @@ UI.prototype.hideTerms = function () {
     closeDialog("terms");
 }
 
-
+UI.prototype.disableTerms = function () {
+    disableButton("agree-terms-button");
+    document.getElementById("i-accept-terms").checked = true;
+    document.getElementById("i-am-not-usa-resident").checked = true;
+    document.getElementById("i-accept-terms").disabled = true;
+    document.getElementById("i-am-not-usa-resident").disabled = true;
+}
 UI.prototype.readTerms = function () {
+
+    if (!document.getElementById("i-accept-terms").checked ||
+        !document.getElementById("i-am-not-usa-resident").checked) {
+        return;
+    }
+
+    if (this.locationDetected == "US") {
+        return;
+    }
+
     // Once agreed, it should be disabled to prevent confusion
     disableButton("agree-terms-button");
+    document.getElementById("i-accept-terms").disabled = true;
+    document.getElementById("i-am-not-usa-resident").disabled = true;
+
     document.getElementById('agree-terms-button').innerText = "You have already accepted the terms";
     closeDialog("terms");
     ui.setCurrentTask('task-create-seed');
@@ -612,9 +654,6 @@ UI.prototype.hideWithdrawEth = function () {
 
 UI.prototype.withdrawETH = function () {
     var addr = document.getElementById('withdraw-eth-addr').value;
-    console.log("addr", addr);
-    console.log("lower", addr.toLowerCase());
-    console.log("addr", addr.toUpperCase());
     // We accept either all lower case or all upper case except the 'x' in '0x' or a valid checksum
     if ((addr.length == 42) &&
         (addr == addr.toLowerCase() || addr.slice(2) == addr.toUpperCase().slice(2) || EthJSUtil.isValidChecksumAddress(addr))
@@ -622,9 +661,7 @@ UI.prototype.withdrawETH = function () {
         app.withdrawETH(addr);
         this.hideErrorEthForwarding();
     } else {
-        // TODO: UI error feedback in withdraw popup
         ui.logger("Invalid ETH withdraw address, the checksum may be incorrect.");
-
     }
     this.hideWithdrawEth();
 }
@@ -669,18 +706,19 @@ UI.prototype.updateLocationBlocker = function () {
     agreeButton = document.getElementById("agree-terms-button");
     ajaxGet("http://ip-api.com/json/", function (data) {
         countryCode = JSON.parse(data)["countryCode"];
-        if (countryCode != "US") {
-            enableButton("agree-terms-button");
+        this.locationDetected = countryCode;
+        if (countryCode != US_COUNTRY_CODE) {
+            // enableButton("agree-terms-button");
             usBlocker.style.display = 'none';
-        } else if (countryCode == "US") {
-            // IMPORTANT TODO: need to change to disable rather than enable. This is only for dev / debugging.
-            // disableButton("agree-terms-button");
-            enableButton("agree-terms-button");
+        } else if (countryCode == US_COUNTRY_CODE) {
+            // IMPORTANT TODO: need to change to disable
+            disableButton("agree-terms-button");
+            // enableButton("agree-terms-button");
             usBlocker.style.display = 'block';
         }
     }, function (err) {
-        // Fallback in case of IP service is unaccessible
-        enableButton("agree-terms-button");
+        // enableButton("agree-terms-button");
+        this.locationDetected = "unknown";
         usBlocker.style.display = 'none';
     });
 }
@@ -711,7 +749,7 @@ function hideElement(element) {
 
 function enableButton(buttonId) {
     button = document.getElementById(buttonId);
-    button.className.replace('disabled', '');
+    button.className = button.className.replace(/disabled/g, '');
 }
 
 /** UI utility functions */
@@ -742,7 +780,7 @@ function padNumber(pad, n) {
 function getChildWithClass(e, c) {
     for (var i = 0; i < e.childNodes.length; i++) {
         var n = e.childNodes[i];
-        if (n.nodeType == 1 && n.className.indexOf(c) >= 0) // TODO use regex catch word not substring
+        if (n.nodeType == 1 && n.className.indexOf(c) >= 0)
             return n
     }
 }

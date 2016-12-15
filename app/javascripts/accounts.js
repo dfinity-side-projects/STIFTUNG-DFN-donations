@@ -113,8 +113,7 @@ Accounts.prototype.saveStates = function () {
             "btc-private-key": this.BTC.priv,
 
         }, function () {
-            ui.logger("DFN, BTC and ETH address successfully saved in Chrome storage.");
-            console.log("DFN, BTC and ETH address successfully saved in Chrome storage.");
+            // ui.logger("DFN, BTC and ETH address successfully saved in Chrome storage.");
         });
     }
 }
@@ -131,12 +130,11 @@ Accounts.prototype.loadStates = function (successFn) {
         "btc-address",
         "btc-private-key",
     ], function (s) {
-        console.log(s);
+
         if (s["dfn-address"] != null && s["dfn-address"] != undefined
             && s["eth-address"]!= null && s["eth-private-key"]!=null
             && s["btc-address"] != null && s["btc-private-key"]!= null
            ) {
-            console.log(" *** keys exist from storage *** ");
             self.DFN.addr = s["dfn-address"];
             self.ETH.addr = s["eth-address"];
             self.ETH.priv = s["eth-private-key"];
@@ -145,7 +143,7 @@ Accounts.prototype.loadStates = function (successFn) {
             successFn();
         }
 
-        ui.logger("DFN, BTC and ETH address loaded successfully: " + self.DFN.addr   + " / " + self.BTC.addr + " / " + self.ETH.addr);
+        // ui.logger("DFN, BTC and ETH address loaded successfully. ");
     });
 }
 

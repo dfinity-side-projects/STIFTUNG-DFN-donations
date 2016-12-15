@@ -18,9 +18,9 @@ module.exports = {
   "live": {
     network_id: 1, // Ethereum public network
     host: "ec2-54-149-199-242.us-west-2.compute.amazonaws.com",
-    port: 80,
+    port: 8545,
       gas: 4000000,
-      from: "0x0a6e23d3a9d6a1ed31f4791614bbc44c04930c66",
+      from: "733dcdb9a7c60067d65ec731c49e95ed995e59fd",
   },
   "morden": {
     network_id: 2,        // Official Ethereum test network
@@ -32,7 +32,7 @@ module.exports = {
       host:"127.0.0.1",
       gas: 4000000,
       from: "0x882ED121Ea15230251af7d84C595A4864b3BBCCc",
-      port:8545
+      port:18545
     },
   "staging": {
     network_id: 1337 // custom private network

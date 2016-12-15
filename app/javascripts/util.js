@@ -26,10 +26,6 @@
 var KEYCODE_ENTER = 13;
 var KEYCODE_ESC = 27;
 
-// TODO: figure out why keyup is not available in ext tab document
-// TODO: if using jquery keys can be set individually without overwriting the onkeyup Event:
-// $(document).keyup(function(e) { if (e.which == KEYCODE_ESC) { cb(); } });
-// adds callbacks for ESC and ENTER key presses
 function onKeys(cbESC, cbENTER) {
     document.onkeyup = function(e) {
         e = e || window.event;
@@ -76,7 +72,7 @@ function saveToStorage(values, successFn) {
     if (typeof(chrome.storage) !== "undefined") {
         // We have access to Chrome storage e.g. as does Chrome extension
         // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
-        ui.logger("Saving values to Chrome storage");
+        // ui.logger("Saving values to Chrome storage");
         // Save in the local chrome storage (not sync storage as we don't want sensitive info uploaded to cloud)
         chrome.storage.local.set(values, function () {
             successFn();
@@ -85,7 +81,7 @@ function saveToStorage(values, successFn) {
     else if (typeof(Storage) !== "undefined") {
         // We have access to browser storage
         // http://www.w3schools.com/html/html5_webstorage.asp
-        ui.logger("Saving values to local Web page storage. WARNING this storage not secure");
+        // ui.logger("Saving values to local Web page storage. WARNING this storage not secure");
         for (var k in values) {
             localStorage.setItem(k, values[k]);
         }
@@ -104,7 +100,7 @@ function loadfromStorage (keys, successFn) {
     if (typeof(chrome.storage) !== "undefined") {
         // We have access to Chrome storage e.g. as does Chrome extension
         // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
-        ui.logger("Querying Chrome storage for " + keys);
+        // ui.logger("Querying Chrome storage for " + keys);
         chrome.storage.local.get(keys, function (s) {
             if (runtime.lastError) {
                 ui.logger("Key loading failed: " + runtime.lastError);
@@ -115,12 +111,11 @@ function loadfromStorage (keys, successFn) {
     else if (typeof(Storage) !== "undefined") {
         // We only have access to browser storage
         // http://www.w3schools.com/html/html5_webstorage.asp
-        ui.logger("Querying local Web page storage for " + keys + ".  WARNING this storage not secure");
+        // ui.logger("Querying local Web page storage for " + keys + ".  WARNING this storage not secure");
 
 
         var s = {};
         for (var k in keys) {
-            ui.logger("Querying local Web page storage for " + keys[k]);
             s[keys[k]] = localStorage.getItem(keys[k]);
         }
         successFn(s);
@@ -153,4 +148,21 @@ function getParameterByName(name, url) {
     if (!results) return null;
     if (!results[2]) return '';
     return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+// Returns a random integer between min (included) and max (included)
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+
+// for single arg functions
+// https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
+function packArg(ABISig, arg) {
+    return ABISig + "000000000000000000000000" + arg.replace("0x", "");
+}
+
+function packArg2(ABISig, arg20, arg4) {
+    return ABISig + "000000000000000000000000" + arg20.replace("0x", "") + arg4.replace("0x", "");
 }

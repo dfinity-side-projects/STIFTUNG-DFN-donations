@@ -46,17 +46,17 @@
         <div class="box-header">MAKE DONATIONS</div>
         <div class="box-content">
             <ul>
-                <li onclick="ui.showTerms()">
+                <li id="show-terms-task" >
                     <div id="task-agree"><span class="task-number">1</span> &nbsp; Agree the process &amp; terms<span
                             class="tick"><span style="visibility:hidden">&#10004</span></span>
                     </div>
                 </li>
-                <li onclick="ui.showCreateSeed()">
+                <li  id="show-create-seed-task" >
                     <div id="task-create-seed"><span class="task-number">2</span> &nbsp; Create &amp; save your DFN
                         address<span class="tick"><span style="visibility:hidden">&#10004</span></span>
                     </div>
                 </li>
-                <li onclick="ui.showExplainForwarding()">
+                <li  id="show-explain-forwarding-task" >
                     <div id="task-understand-fwd-eth"><span class="task-number">3</span> &nbsp; Understand ETH
                         forwarding<span class="tick"><span style="visibility:hidden">&#10004</span></span>
                     </div>
@@ -602,12 +602,16 @@
         </div>
         </p>
         <p>
+            <input id="i-accept-terms" class="checkbox-custom" type="checkbox"/>
+            <label for="i-accept-terms" class="checkbox-custom-label">I accept all the terms and conditions above.</label>
+        </p>
+        <p>
             <input id="i-am-not-usa-resident" class="checkbox-custom" type="checkbox"/>
             <label for="i-am-not-usa-resident" class="checkbox-custom-label">I confirm I am not a resident in or citzen
                 of the United States of America.</label>
         </p>
         <p>
-            <a disabled id="agree-terms-button" class="btn " href="#">I Agree Terms &amp;
+            <a  id="agree-terms-button" class="btn disabled " href="#">I Agree Terms &amp;
                 Conditions </a>
             <a id="disagree-terms-button" class="btn " href="#">Cancel</a>
         </p>

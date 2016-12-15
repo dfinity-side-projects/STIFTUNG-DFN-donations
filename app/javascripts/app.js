@@ -31,7 +31,7 @@ var account;
 var ETHEREUM_CHK_FWD_INTERVAL = 1000; // not actual... pauses
 var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
 var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically selected Ethereum provider
-var ETHEREUM_HOSTED_NODES = ["TODO"];
+var ETHEREUM_HOSTED_NODES = ["http://54.149.199.242:8545/", "http://54.202.187.131:8545"];
 var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
 
 
@@ -46,7 +46,7 @@ var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
 
 var Insight = require('bitcore-explorers').Insight;
 var bitcore = require('bitcore-lib');
-bitcore.Networks.defaultNetwork = bitcore.Networks.testnet;
+bitcore.Networks.defaultNetwork = bitcore.Networks.livenet;
 
 var BITCOIN_FOUNDATION_ADDRESS = 'mpraKTVqqgTxUpYDu1yHakrGLogRcYt5Xo'
 var BITCOIN_HOSTED_NODES = ["hosted"];
@@ -78,10 +78,13 @@ var VALUE_TRANSFER_GAS_COST;
 
 // FDC address
 var FDCAddr = null;
+var FDC_PRODUCTION_ADDR = "0xAeCdd1B710728FA68b85cF463e874Dd1b86F7C2A"
+
 
 // FDC ABI signatures
 var donateAs = "0d9543c5";
 var donateAsWithChecksum = "ceadd9c8";
+
 
 // *
 // *** Application logic ***
@@ -91,10 +94,6 @@ var donateAsWithChecksum = "ceadd9c8";
 var App = function (userAccounts, testUI) {
     ui.logger("Initializing main extension application...");
 
-    if (testUI) {
-        this.setDummyDisplayValues();
-        return;
-    }
 
     this.tryForwardBalance = true;    // try to forward wallet balance
     this.contFwdingOnNewData = false; // used to indicate set fwding on new poll data
@@ -110,16 +109,21 @@ var App = function (userAccounts, testUI) {
     this.ethBalance = undefined;      // balance of ETH forwarding wallet
     this.accs = userAccounts;
     this.lastTask = 'task-agree';
-    this.lastEthereumNode = ETHEREUM_LOCAL_NODE;
+    this.lastEthereumNode = ETHEREUM_HOSTED_NODES[0];
     this.lastBitcoinNode = BITCOIN_HOSTED_NODE;
     this.donationState = STATE_TBD;;
 
+
+    // Try Dev FDC param first, then default fdc addr, then local migration
+    // TODO DISABLE THIS FOR FINAL VERSION!!!
     if (window.location.href.indexOf("fdc") != -1) {
         FDCAddr = getParameterByName("fdc", window.location.href);
         console.log("Using Custom FDC:" + FDCAddr)
-    } else {
+    } else if (!FDC_PRODUCTION_ADDR) {
         FDCAddr = FDC.deployed().address;
         console.log("Using locally deployed FDC for testing:" + FDCAddr)
+    } else if (FDC_PRODUCTION_ADDR) {
+        FDCAddr = FDC_PRODUCTION_ADDR;
     }
 
     this.setCurrentTask(this.lastTask);
@@ -219,7 +223,7 @@ App.prototype.tryForwardETH = function () {
     if (web3.toBigNumber(this.ethBalance).lt(MIN_FORWARD_AMOUNT)) {
         if (!this.saidBalanceTooSmall) {
             this.saidBalanceTooSmall = true;
-            ui.logger("Waiting balance at forwarding address too small to donate (" +
+            ui.logger("Waiting balance at forwarding address ... too small to donate (" +
                 web3.fromWei(this.ethBalance, 'ether') + " ETH)");
         }
         this.scheduleTryForwardETH();
@@ -230,7 +234,7 @@ App.prototype.tryForwardETH = function () {
 
         this.saidBalanceTooSmall = false;
         var donating = web3.fromWei(this.ethBalance, 'ether');
-        ui.logger("Forwarding " + donating + " ETH...");
+        ui.logger("Attempting to forward " + donating + " ETH...");
         // will continue forwarding only on success!
         self.tryForwardBalance = false;
         self.contFwdingOnNewData = false;
@@ -273,8 +277,6 @@ App.prototype.tryForwardETH = function () {
             tx.sign(privBuf)
             var signedTx = EthJSUtil.bufferToHex(tx.serialize());
             console.log("Attempt to send tx payload: " + signedTx);
-
-
             // check for duplicate tx in mempool
             if (self.lastTxId != null && web3.eth.getBlock("pending").transactions.includes(self.lastTxId)) {
                 console.log("Same forwarding tx still in the queue ... " + self.lastTxId);
@@ -290,7 +292,7 @@ App.prototype.tryForwardETH = function () {
                 }
                 self.lastTxId = txID;
                 try {
-                    console.log("Successfully donated : " + donating + " ETH (txID=" + txID + ")");
+                    ui.logger("Successfully donated : " + donating + " ETH (txID=" + txID + ")");
                     self.contFwdingOnNewData = true; // start fowarding again on new data
                 } finally {
                     self.scheduleTryForwardETH();
@@ -314,24 +316,18 @@ App.prototype.retryForwarding = function () {
     this.contFwdingOnNewData = true;
 }
 
-// TODO: merge common parts of tx handling for forwarding and withdrawal
 App.prototype.withdrawETH = function (toAddr) {
     var self = this;
     web3.eth.getTransactionCount(self.accs.ETH.addr, function (err, accNonce) {
         if (err) {
-            // TODO: error handling
-            console.log("could not get tx count: " + err);
+            ui.logger("Withdraw failed - unable to get transaction information for the forwarding address. Check your Ethereum node connection.")
             return;
         }
 
-        // TODO: remove web3.eth.getBalance call once self.ethBalance works (currently buggy
-        // as not immediately updated after failed forwarding tx)
-        // https://github.com/dfinity/STIFTUNG-DFN-donations/issues/1
         var bal = web3.eth.getBalance(self.accs.ETH.addr);
         var value = bal.sub(VALUE_TRANSFER_GAS_COST);
-        // TODO: move this validation to before showing withdraw option
         if (value.isNegative() || value.isZero()) {
-            ui.logger("Not enough balance to withdraw");
+            ui.logger("Withdraw failed - not enough balance to withdraw");
             return;
         }
 
@@ -350,18 +346,13 @@ App.prototype.withdrawETH = function (toAddr) {
 
         web3.eth.sendRawTransaction(signedTx, function (err, txID) {
             if (err) {
-                // TODO: error handling
-                console.log("could not send raw tx: " + err);
+                ui.logger("Withdraw failed - failed to send the transaction. Check your Ethereum node connection. " + err);
                 return;
             }
-
             try {
-                console.log("Sent withdraw tx: " + value + " ETH (txID=" + txID + ")");
                 ui.logger("Sent withdraw tx: " + value + " ETH (txID=" + txID + ")");
                 self.contFwdingOnNewData = true; // start fowarding again on new data
-                // TODO: track state of withdraw tx
             } finally {
-                // TODO: track state of withdraw tx
             }
         });
     });
@@ -369,12 +360,12 @@ App.prototype.withdrawETH = function (toAddr) {
 
 // Poll Ethereum for status information from FDC and wallet
 App.prototype.pollStatus = function () {
-    console.log("pollStatus()");
     if (this.ethPollTimeout) clearTimeout(this.ethPollTimeout);
 
     // connected?
     if (!web3.isConnectedAsync()) {
-        ui.logger("Not connected to Ethereum...");
+        if (this.ethConnectionRetries > 1)
+            ui.logger("Still trying to connect to an Ethereum node...");
         // adjust connection if too many fails and appropriate
         this.adjustConnection(++this.ethConnectionRetries);
         // reschedule next polling
@@ -386,8 +377,10 @@ App.prototype.pollStatus = function () {
         return;
     }
     this.onEthereumConnect();
+    if (this.ethConnectionRetries > 0) {
+        ui.logger("Successfully connected to an Ethereum node.");
+    }
     this.ethConnectionRetries = 0;
-    console.log("Ethereum provider: " + JSON.stringify(web3.currentProvider));
 
 
     var dfnAddr = this.accs.DFN.addr;
@@ -412,32 +405,14 @@ App.prototype.pollStatus = function () {
 
 
     var p = Promise.resolve();
-    // p = p.then(fdc.name.call).then(function (res) {
-    //     if (res != "Dfinities") {
-    //         ui.logger("Invalid donation contract. Got " + res + " as repsonse.");
-    //         ui.setDonationState(STATE_INVALID_CONTRACT, -1);
-    //         return;
-    //     } else {
-    //         if (self.donateState==STATE_INVALID_CONTRACT)
-    //             self.donationState = STATE_TBD;
-    //     }
-    // }).catch(function (e) {
-    //     ui.logger("Exception in connecting to donation contract: " + e);
-    //     ui.setDonationState(STATE_INVALID_CONTRACT, -1);
-    //
-    //     self.donationState = STATE_INVALID_CONTRACT;
-    //     return;
-    // });
-
     p = p.then(fdc.getStatus.call.bind(this, self.donationPhase, dfnAddr, ethAddr));
     p = p.then(function (res) {
         try {
 
             if (self.donationState == STATE_INVALID_CONTRACT) {
-                console.log("Not in right state. Skipping status poll processing.");
+                // console.log("Not in right state. Skipping status poll processing.");
                 return;
             }
-            console.log("FDC.getStatus: " + JSON.stringify(res));
 
             // parse status data
             var currentState = res[0];      // current state (an enum)
@@ -535,9 +510,7 @@ App.prototype.updateUI = function (currentState, fxRate, donationCount,
 
 // Adjust the connection after too many failures e.g. try new full node
 App.prototype.adjustConnection = function (retries) {
-    if (retries > ETHEREUM_CONN_MAX_RETRIES) {
-        // TODO try another provider?
-    }
+
 }
 
 // Set current task given to user making donations
@@ -549,12 +522,18 @@ App.prototype.setCurrentTask = function (tId) {
 // ETH node
 // Set the Etheruem full node we are connecting to
 App.prototype.setEthereumNode = function (host) {
-    console.log("Set Ethereum node: " + host);
+    // console.log("Set Ethereum node: " + host);
 
     if (host == "hosted") {
         // TODO: add logic to randomly choose which hosted node to connect to
         // TODO: add fallback logic if one hosted node is down
-        this.setETHNodeInternal(ETHEREUM_HOSTED_NODES[0]);
+        if (ETHEREUM_HOSTED_NODES.length > 1) {
+            var nodeIndex = getRandomInt(0, ETHEREUM_HOSTED_NODES.length-1);
+            this.setETHNodeInternal(ETHEREUM_HOSTED_NODES[nodeIndex]);
+        } else {
+            this.setETHNodeInternal(ETHEREUM_HOSTED_NODES[0]);
+        }
+
     } else {
         host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
         host = host.replace(/\s/g, '') // all whitespace chars
@@ -589,21 +568,17 @@ App.prototype.setETHNodeInternal = function (host) {
     web3.setProvider(provider);
     FDC.setProvider(provider);
 
-    console.log("New provider set to:" + provider.toString());
-
-
-    // TODO: reconnect immediately instead of waiting for next poll
-    // TODO save node to storage
+    // Instantly connect to new node to fetch status
+    this.pollStatus();
 }
 
 App.prototype.setForwardedETH = function (fe) {
-    console.log("Set forwarded ETH: " + fe);
+    // console.log("Set forwarded ETH: " + fe);
     this.forwardedETH = fe;
     ui.setForwardedETH(fe);
 }
 
 App.prototype.setRemainingETH = function (re) {
-    console.log("Set remaining ETH: " + re);
     this.remainingETH = re;
     ui.setRemainingETH(re);
 }
@@ -632,12 +607,14 @@ App.prototype.onEthereumDisconnect = function (errCode) {
 // BTC node
 // Set the Bitcoin node we are connecting to
 App.prototype.setBitcoinNode = function (host) {
-    console.log("Set Bitcoin node: " + host);
 
     if (host == "hosted") {
-        // TODO: add logic to randomly choose which hosted node to connect to
-        // TODO: add fallback logic if one hosted node is down
-        this.setBTCNodeInternal(BITCOIN_HOSTED_NODES[0]);
+        if (BITCOIN_HOSTED_NODES.length > 1) {
+            var nodeIndex = getRandomInt(0, BITCOIN_HOSTED_NODES.length-1);
+            this.setBTCNodeInternal(BITCOIN_HOSTED_NODES[nodeIndex]);
+        } else {
+            this.setBTCNodeInternal(BITCOIN_HOSTED_NODES[0]);
+        }
     } else {
         host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
         host = host.replace(/\s/g, '') // all whitespace chars
@@ -671,18 +648,16 @@ App.prototype.setBTCNodeInternal = function (host) {
         new Insight(this.bitcoinNode) :
         new Insight();
 
-    // TODO: reconnect immediately instead of waiting for next poll
-    // TODO save node to storage
+    this.saveNodes();
+
 }
 
 App.prototype.setForwardedBTC = function (fb) {
-    console.log("Set forwarded BTC: " + fb);
     this.forwardedBTC = fb;
     ui.setForwardedBTC(fb);
 }
 
 App.prototype.setRemainingBTC = function (rb) {
-    console.log("Set remaining BTC: " + rb);
     this.remainingBTC = rb;
     ui.setRemainingBTC(rb);
 }
@@ -722,9 +697,7 @@ App.prototype.onBitcoinDisconnect = function (errCode) {
 }
 
 App.prototype.onBitcoinError = function (err) {
-    // TODO find a better way to differentiate HTTP errors from Bitcoin errors
     var isConnectionError = (err.cors === 'rejected')
-
     if (isConnectionError) {
         ui.setBitcoinClientStatus('connecting...');
 
@@ -764,21 +737,15 @@ App.prototype.setUiUserAddresses = function () {
     var ETHAddr = this.accs.ETH.addr;
     var BTCAddr = this.accs.BTC.addr;
     var DFNAddr = this.accs.DFN.addr;
-    console.log("Set Ethereum forwarding addr: " + ETHAddr);
-    console.log("Set Bitcoin forwarding addr: " + BTCAddr);
-    console.log("Set DFN addr: " + DFNAddr);
-    console.log("Set DFN addr with checksum: " + addrWithChecksum(DFNAddr));
     ui.setUserAddresses(ETHAddr, BTCAddr, addrWithChecksum(DFNAddr));
 }
 
 App.prototype.setFunderChfReceived = function (chf) {
-    console.log("Set funder CHF received: " + chf);
     this.funderChfReceived = chf;
     ui.setFunderTotalReceived(chf);
 }
 
 App.prototype.setGenesisDFN = function (dfn) {
-    console.log("Set genesis DFN: " + dfn);
     this.genesisDFN = dfn;
     ui.setGenesisDFN(dfn);
 }
@@ -792,23 +759,6 @@ App.prototype.doImportSeed = function (seed) {
 }
 
 
-// TODO: can be removed now as truffle is integrated for development?
-// HTML testing function
-// 1 in main.js, uncomment
-//	var app = new App(true);
-// 2 then set values below to see how they appear in HTML interface
-App.prototype.setDummyDisplayValues = function () {
-    ui.logger("TESTING: setting dummy values...");
-    this.setCurrentTask('task-agree');
-    this.setGenesisDFN(282819);
-    this.setForwardedETH(000);
-    this.setRemainingETH(100);
-    this.setFunderChfReceived(762521);
-    this.setEthereumClientStatus("OK");
-    this.setEthereumNode("127.0.0.1");
-    this.setEthereumClientStatus("OK");
-}
-
 App.prototype.saveNodes = function () {
     var self = this;
     if (self.bitcoinNode) {
@@ -816,14 +766,14 @@ App.prototype.saveNodes = function () {
             "bitcoin-node": self.bitcoinNode,
 
         }, function () {
-            ui.logger("Bitcoin node info saved in Chrome storage.");
+            // ui.logger("Bitcoin node info saved in Chrome storage.");
         });
     }
     if (self.ethereumNode) {
         saveToStorage({
             "ethereum-node": self.ethereumNode
         }, function () {
-            ui.logger("Ethereum node info saved in Chrome storage.");
+            // ui.logger("Ethereum node info saved in Chrome storage.");
         });
     }
 
@@ -845,7 +795,7 @@ App.prototype.loadNodes = function () {
         } else {
             self.setEthereumNode(self.lastEthereumNode);
         }
-        ui.logger("Etheruem and Bitcoin node info loaded from Chrome storage: " + s);
+        // ui.logger("Etheruem and Bitcoin node info loaded from Chrome storage: " + s);
     });
 }
 
@@ -879,21 +829,19 @@ window.onload = function () {
         // Load current account details from Storage
         //
 
-        ui.logger("Restoring defaults from storage");
+        ui.logger("Restoring default account information from storage");
 
         //
         // Initialize our Ethereum accounts, and DFN private key
         // (if they exist already)
         //
 
-        // TODO: persistence of accounts. for now, for testing, we generate new accounts on each load.
-        // TODO: remember to clear userAccounts.seed after user has backed it up!
         var userAccounts = new Accounts();
 
 
         // ui.logger("user accounts created");
         // console.log("userAccounts: " + JSON.stringify(userAccounts));
-        ui.logger("now starting App");
+        ui.logger("Now starting application ... ");
 
         //
         // Bootstrap our app...
@@ -907,10 +855,9 @@ window.onload = function () {
         // If loading fails, then simply wait user to generate new seed or import seed
 
         userAccounts.loadStates(function () {
-            // TODO fix this: why can't we call this./app?
-            // app.setUiUserAddresses();
             ui.setUserAddresses(app.accs.ETH.addr, app.accs.BTC.addr, addrWithChecksum(app.accs.DFN.addr));
             ui.readTerms();
+            ui.disableTerms();
             ui.markSeedGenerated();
             ui.makeTaskDone('task-agree');
             ui.makeTaskDone('task-create-seed');
@@ -921,14 +868,3 @@ window.onload = function () {
     });
 }
 
-// TODO: move to utils / accounts module?
-
-// for single arg functions
-// https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
-function packArg(ABISig, arg) {
-    return ABISig + "000000000000000000000000" + arg.replace("0x", "");
-}
-
-function packArg2(ABISig, arg20, arg4) {
-    return ABISig + "000000000000000000000000" + arg20.replace("0x", "") + arg4.replace("0x", "");
-}
