@@ -704,21 +704,21 @@ UI.prototype.hideErrorBtcForwarding = function () {
 UI.prototype.updateLocationBlocker = function () {
     usBlocker = document.getElementById("us-person-error");
     agreeButton = document.getElementById("agree-terms-button");
+    var self = this;
     ajaxGet("http://ip-api.com/json/", function (data) {
         countryCode = JSON.parse(data)["countryCode"];
-        this.locationDetected = countryCode;
+
+        self.locationDetected = countryCode;
         if (countryCode != US_COUNTRY_CODE) {
             // enableButton("agree-terms-button");
             usBlocker.style.display = 'none';
         } else if (countryCode == US_COUNTRY_CODE) {
-            // IMPORTANT TODO: need to change to disable
             disableButton("agree-terms-button");
-            // enableButton("agree-terms-button");
             usBlocker.style.display = 'block';
         }
     }, function (err) {
         // enableButton("agree-terms-button");
-        this.locationDetected = "unknown";
+        self.locationDetected = "unknown";
         usBlocker.style.display = 'none';
     });
 }
