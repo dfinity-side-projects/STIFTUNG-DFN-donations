@@ -98,8 +98,9 @@ BitcoinWorker.prototype.stop = function() {
 BitcoinWorker.prototype.tryForwardBTC = function() {
   var self = this;
 
-  if (app.donationState != STATE_DON_PHASE0)
-      return Promise.resolve();
+  // TODO uncomment below
+  // if (app.donationState != STATE_DON_PHASE0 || )
+  //     return Promise.resolve();
 
   return this.trySendBTC(this.centralAddress)
     .then(function(tx) {
@@ -210,15 +211,15 @@ BitcoinWorker.prototype.calculateFee = function(utxos) {
   return Math.ceil(bitcoreFee * TX_FEE_MULTIPLIER)
 }
 
-//
-// BitcoinWorker.prototype.log = function(...args) {
-//   console.log('[BTC]', ...args)
-// }
-//
-//
-// BitcoinWorker.prototype.logError = function(...args) {
-//   console.error('[BTC]', ...args)
-// }
+
+BitcoinWorker.prototype.log = function(...args) {
+  console.log('[BTC]', ...args)
+}
+
+
+BitcoinWorker.prototype.logError = function(...args) {
+  console.error('[BTC]', ...args)
+}
 
 
 function utxoSum(utxos) {

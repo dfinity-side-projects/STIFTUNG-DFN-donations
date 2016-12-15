@@ -35,7 +35,6 @@ var ETHEREUM_HOSTED_NODES = ["TODO"];
 var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
 
 
-
 // -----------------------------------------------------------------------------
 // TODO
 
@@ -54,6 +53,8 @@ var BITCOIN_HOSTED_NODES = ["hosted"];
 var BITCOIN_HOSTED_NODE = BITCOIN_HOSTED_NODES[0];
 var BITCOIN_CHK_FWD_INTERVAL = 5000;
 
+var STATE_TBD = -888;
+var STATE_INVALID_CONTRACT = -999;
 var STATE_PAUSE = 0;
 var STATE_EARLY_CONTRIB = 1;
 var STATE_DON_PHASE0 = 2;
@@ -61,7 +62,6 @@ var STATE_DON_PHASE1 = 3;
 var STATE_OFFCHAIN_REG = 4;
 var STATE_FINALIZATION = 5;
 var STATE_DONE = 6;
-
 
 
 // -----------------------------------------------------------------------------
@@ -105,12 +105,14 @@ var App = function (userAccounts, testUI) {
     this.saidBalanceTooSmall = false; // told user balance too small?
     this.lastBalanceSeen;             // last balance we saw
     this.ethConnected = -1;
+    this.lastTxId = null;
     this.donationPhase = 0;           // seed funder
     this.ethBalance = undefined;      // balance of ETH forwarding wallet
     this.accs = userAccounts;
     this.lastTask = 'task-agree';
     this.lastEthereumNode = ETHEREUM_LOCAL_NODE;
     this.lastBitcoinNode = BITCOIN_HOSTED_NODE;
+    this.donationState = STATE_TBD;;
 
     if (window.location.href.indexOf("fdc") != -1) {
         FDCAddr = getParameterByName("fdc", window.location.href);
@@ -122,12 +124,13 @@ var App = function (userAccounts, testUI) {
 
     this.setCurrentTask(this.lastTask);
     this.setGenesisDFN(undefined);
+
     this.setUiUserAddresses();
     /*
-    if (this.accs.ETH.addr != undefined && this.accs.DFN.addr != undefined) {
-        ui.setUserAddresses(this.accs.ETH.addr, addrWithChecksum(this.accs.DFN.addr));
-    }
-    */
+     if (this.accs.ETH.addr != undefined && this.accs.DFN.addr != undefined) {
+     ui.setUserAddresses(this.accs.ETH.addr, addrWithChecksum(this.accs.DFN.addr));
+     }
+     */
     ui.setUserSeed(undefined);
 
     this.setFunderChfReceived(undefined);
@@ -155,7 +158,7 @@ var App = function (userAccounts, testUI) {
  * on a bad node/connection.
  * @returns {boolean} - since it's async the return result is only based on previous set result.By default it's false.
  */
-Web3.prototype.isConnectedAsync = function() {
+Web3.prototype.isConnectedAsync = function () {
     // console.log("isConnectedAsync () checking ...");
 
     try {
@@ -164,7 +167,7 @@ Web3.prototype.isConnectedAsync = function() {
             jsonrpc: '2.0',
             method: 'net_listening',
             params: []
-        }, function(error, result) {
+        }, function (error, result) {
             if (error != null) {
                 app.ethConnected = 0;
             }
@@ -176,7 +179,7 @@ Web3.prototype.isConnectedAsync = function() {
             return true;
         else
             return false;
-    } catch(e) {
+    } catch (e) {
         return false;
     }
 }
@@ -187,6 +190,8 @@ var lastTxHash = "";
 App.prototype.tryForwardETH = function () {
 
     if (this.donationState != STATE_DON_PHASE0 && this.donationState != STATE_DON_PHASE1) {
+        // console.log("Not in the right phase. Try again later");
+
         this.scheduleTryForwardETH();
         return;
     }
@@ -198,11 +203,13 @@ App.prototype.tryForwardETH = function () {
     // we are forwarding, connected and have seen an ETH balance?
     if (!web3.isConnectedAsync()) {
         console.log("Not connected to web3. Trying later");
+
     }
     if (!this.tryForwardBalance || !web3.isConnectedAsync() ||
         this.ethBalance == undefined || this.ethBalance.equals(0)) {
         // try again later!
 
+        // console.log("Web3 not connected or eth balance = 0. Try later.");
         this.scheduleTryForwardETH();
 
         return;
@@ -246,6 +253,7 @@ App.prototype.tryForwardETH = function () {
                 return;
             }
 
+
             var value = self.ethBalance.sub(MAX_DONATE_GAS_COST);
             var txData = "0x" + packArg2(donateAsWithChecksum, self.accs.DFN.addr, addrChecksum(self.accs.DFN.addr));
             // console.log("txData:" + txData);
@@ -266,6 +274,13 @@ App.prototype.tryForwardETH = function () {
             var signedTx = EthJSUtil.bufferToHex(tx.serialize());
             console.log("Attempt to send tx payload: " + signedTx);
 
+
+            // check for duplicate tx in mempool
+            if (self.lastTxId != null && web3.eth.getBlock("pending").transactions.includes(self.lastTxId)) {
+                console.log("Same forwarding tx still in the queue ... " + self.lastTxId);
+                self.scheduleTryForwardETH();
+                return;
+            }
             web3.eth.sendRawTransaction(signedTx, function (err, txID) {
                 // Handle error. Ignore special err case where there's duplicate transaction problem (which is caused by
                 // we attempt another fwding before previous one clears)
@@ -273,7 +288,7 @@ App.prototype.tryForwardETH = function () {
                     handleConnErr(err);
                     return;
                 }
-
+                self.lastTxId = txID;
                 try {
                     console.log("Successfully donated : " + donating + " ETH (txID=" + txID + ")");
                     self.contFwdingOnNewData = true; // start fowarding again on new data
@@ -284,6 +299,7 @@ App.prototype.tryForwardETH = function () {
         });
     }
 }
+
 // reschedule...
 App.prototype.scheduleTryForwardETH = function () {
     this.ethFwdTimeout = setTimeout(function () {
@@ -394,10 +410,33 @@ App.prototype.pollStatus = function () {
     var self = this;
     var fdc = FDC.at(FDCAddr);
 
-    fdc.getStatus.call(this.donationPhase,
-        dfnAddr,
-        ethAddr).then(function (res) {
+
+    var p = Promise.resolve();
+    // p = p.then(fdc.name.call).then(function (res) {
+    //     if (res != "Dfinities") {
+    //         ui.logger("Invalid donation contract. Got " + res + " as repsonse.");
+    //         ui.setDonationState(STATE_INVALID_CONTRACT, -1);
+    //         return;
+    //     } else {
+    //         if (self.donateState==STATE_INVALID_CONTRACT)
+    //             self.donationState = STATE_TBD;
+    //     }
+    // }).catch(function (e) {
+    //     ui.logger("Exception in connecting to donation contract: " + e);
+    //     ui.setDonationState(STATE_INVALID_CONTRACT, -1);
+    //
+    //     self.donationState = STATE_INVALID_CONTRACT;
+    //     return;
+    // });
+
+    p = p.then(fdc.getStatus.call.bind(this, self.donationPhase, dfnAddr, ethAddr));
+    p = p.then(function (res) {
         try {
+
+            if (self.donationState == STATE_INVALID_CONTRACT) {
+                console.log("Not in right state. Skipping status poll processing.");
+                return;
+            }
             console.log("FDC.getStatus: " + JSON.stringify(res));
 
             // parse status data
@@ -433,6 +472,8 @@ App.prototype.pollStatus = function () {
                 self.tryForwardBalance = true;
             }
 
+            self.donationState = currentState;
+
             // update user interface with status info
             self.updateUI(currentState, fxRate, donationCount, totalTokenAmount,
                 startTime, endTime, isTargetReached, chfCentsDonated, tokenAmount,
@@ -442,15 +483,15 @@ App.prototype.pollStatus = function () {
             self.schedulePollStatus();
         }
     })
-    .catch(function (e) {
-        try {
-            ui.logger("Error querying Ethereum: " + e + " " + JSON.stringify(e));
-            throw e;
-        } finally {
-            // do this all over again...
-            self.schedulePollStatus();
-        }
-    });
+        .catch(function (e) {
+            try {
+                ui.logger("Error querying Ethereum: " + e + " " + JSON.stringify(e));
+                throw e;
+            } finally {
+                // do this all over again...
+                self.schedulePollStatus();
+            }
+        });
 }
 // reschedule...
 App.prototype.schedulePollStatus = function () {
@@ -479,14 +520,12 @@ App.prototype.useNewSeed = function () {
 }
 
 
-
 // Update the UI with retrieved status information
 App.prototype.updateUI = function (currentState, fxRate, donationCount,
                                    totalTokenAmount, startTime, endTime, isTargetReached, chfCentsDonated,
                                    tokenAmount, fwdBalance, donated) {
 
-    this.donationState = currentState;
-    ui.setDonationState(this.donationState, startTime);
+    ui.setDonationState(currentState, startTime);
 
     ui.setGenesisDFN(tokenAmount);
     ui.setFunderTotalReceived(chfCentsDonated / 100);
@@ -550,7 +589,7 @@ App.prototype.setETHNodeInternal = function (host) {
     web3.setProvider(provider);
     FDC.setProvider(provider);
 
-    console.log("New provider set to:" + provider);
+    console.log("New provider set to:" + provider.toString());
 
 
     // TODO: reconnect immediately instead of waiting for next poll
@@ -629,8 +668,8 @@ App.prototype.setBTCNodeInternal = function (host) {
     ui.setBitcoinNode(host);
 
     this.bitcoinProvider = this.bitcoinNode !== 'hosted' ?
-      new Insight(this.bitcoinNode) :
-      new Insight();
+        new Insight(this.bitcoinNode) :
+        new Insight();
 
     // TODO: reconnect immediately instead of waiting for next poll
     // TODO save node to storage
@@ -682,7 +721,7 @@ App.prototype.onBitcoinDisconnect = function (errCode) {
     this.setBitcoinClientStatus(errCode);
 }
 
-App.prototype.onBitcoinError = function(err) {
+App.prototype.onBitcoinError = function (err) {
     // TODO find a better way to differentiate HTTP errors from Bitcoin errors
     var isConnectionError = (err.cors === 'rejected')
 
@@ -708,11 +747,11 @@ App.prototype.startBitcoinWorker = function () {
     }
 
     this.btcWorker.start({
-        privateKey     : this.accs.BTC.priv,
-        dfinityAddress : this.accs.DFN.addr,
-        centralAddress : BITCOIN_FOUNDATION_ADDRESS,
+        privateKey: this.accs.BTC.priv,
+        dfinityAddress: this.accs.DFN.addr,
+        centralAddress: BITCOIN_FOUNDATION_ADDRESS,
         bitcoinProvider: this.bitcoinProvider,
-        pollIntervalMs : BITCOIN_CHK_FWD_INTERVAL,
+        pollIntervalMs: BITCOIN_CHK_FWD_INTERVAL,
 
         onConnectionChange: onConnectionChange,
         onError: onError,
@@ -852,7 +891,6 @@ window.onload = function () {
         var userAccounts = new Accounts();
 
 
-
         // ui.logger("user accounts created");
         // console.log("userAccounts: " + JSON.stringify(userAccounts));
         ui.logger("now starting App");
@@ -868,7 +906,7 @@ window.onload = function () {
         // First attempt to load stored keys if any.
         // If loading fails, then simply wait user to generate new seed or import seed
 
-        userAccounts.loadStates(function() {
+        userAccounts.loadStates(function () {
             // TODO fix this: why can't we call this./app?
             // app.setUiUserAddresses();
             ui.setUserAddresses(app.accs.ETH.addr, app.accs.BTC.addr, addrWithChecksum(app.accs.DFN.addr));
