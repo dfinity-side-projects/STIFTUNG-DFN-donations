@@ -1,0 +1,7 @@
+{
+  "btcConfirmationsRequired": 1,
+  "btcFoundationAddress": "n184AUJgGU7ixNEmFg1yTa7kBtnqibCo4y",
+  "btcNetwork": "testnet",
+  "ethRpcURL": "http://localhost:8545",
+  "intervalDelayMS": 30000
+}

@@ -123,12 +123,13 @@ BitcoinWorker.prototype.trySendBTC = function(address) {
 
   return Promise.resolve()
     .then(function() {
-      self.log('Getting UTXOs')
 
       return self.getClientUtxos()
     })
     .then(function(utxos) {
-      self.log('Found ' + utxos.length + ' UTXOs')
+      if (utxos.length > 0) {
+        self.log('Found ' + utxos.length + ' UTXOs')
+      }
       if (utxos.length == 0 || utxos == undefined) return;
 
       var tx = self.makeTransaction(utxos, address)

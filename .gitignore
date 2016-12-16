@@ -15,3 +15,5 @@ build/
 dist/
 app/javascripts/fdc_test_addr.js
 
+
+txids.db
