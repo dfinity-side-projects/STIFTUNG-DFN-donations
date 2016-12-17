@@ -35,7 +35,7 @@ var UI = function () {
 
 
 // US country code
-var US_COUNTRY_CODE = "US";
+var US_COUNTRY_CODE = "USA";
 
 // Wire up event handlers of UI.
 // This is necessary because Google Chrome extension will not allow inline
@@ -45,10 +45,6 @@ UI.prototype.wireUpDOM = function () {
     this.bindUIListener("show-terms-task", "showTerms");
     this.bindUIListener("show-create-seed-task", "showCreateSeed");
     this.bindUIListener("show-explain-forwarding-task", "showExplainForwarding");
-
-
-
-
     this.bindUIListener("withdraw-eth-link", "showWithdrawEth");
     this.bindUIListener("withdraw-eth-link-2", "showWithdrawEth");
     this.bindUIListener("do-withdraw-eth-button", "withdrawETH");
@@ -155,6 +151,25 @@ UI.prototype.setForwardedETH = function (fe) {
         e.innerHTML = "?";
     else
         e.innerHTML = formatCurrency(fe, "ETH", 2);
+}
+
+
+// Set amount of ETH forwarded so far
+UI.prototype.setForwardedBTC = function (fe) {
+    var e = document.getElementById('donated-btc');
+    if (fe == undefined)
+        e.innerHTML = "?";
+    else
+        e.innerHTML = formatCurrency(fe, "BTC", 2);
+}
+
+// Set amount of ETH forwarded so far
+UI.prototype.setRemainingBTC = function (rb) {
+    var e = document.getElementById('waiting-btc');
+    if (rb == undefined)
+        e.innerHTML = "?";
+    else
+        e.innerHTML = formatCurrency(rb, "BTC", 2);
 }
 
 // Set amount of ETH remaining in client
@@ -395,12 +410,13 @@ UI.prototype.cancelCreateSeed = function () {
     if (app.accs.ETH.addr == undefined || app.accs.DFN.addr == undefined) {
         setElementText("seed", "");
     }
-    document.getElementById('create-dfn-seed').style.display = 'none';
+    closeDialog('create-dfn-seed');
 }
 
 UI.prototype.hideCreateSeed = function () {
     // this.markSeedGenerated();
-    document.getElementById('create-dfn-seed').style.display = 'none';
+    // document.getElementById('create-dfn-seed').style.display = 'none';
+    closeDialog("create-dfn-seed");
 }
 
 UI.prototype.doImportSeed = function () {
@@ -432,12 +448,14 @@ UI.prototype.finishCreateSeed = function () {
 }
 
 UI.prototype.showImportSeed = function () {
-    document.getElementById('create-dfn-seed').style.display = 'none';
-    document.getElementById('import-dfn-seed').style.display = 'block';
+
+    closeDialog('create-dfn-seed');
+    showDialog('import-dfn-seed');
+
 }
 
 UI.prototype.hideImportSeed = function () {
-    document.getElementById('import-dfn-seed').style.display = 'none';
+    closeDialog('import-dfn-seed');
 }
 
 UI.prototype.showCreateSeed = function () {
@@ -453,7 +471,7 @@ UI.prototype.showCreateSeed = function () {
         this.generateSeed();
     }
     // app.generateSeed();
-    document.getElementById('create-dfn-seed').style.display = 'block';
+    showDialog("create-dfn-seed");
 }
 
 UI.prototype.afterCreateSeed = function () {
@@ -464,7 +482,8 @@ UI.prototype.afterCreateSeed = function () {
 
 UI.prototype.showValidateSeed = function () {
     this.hideValidateSeedError();
-    document.getElementById('verify-dfn-seed').style.display = 'block';
+    // document.getElementById('verify-dfn-seed').style.display = 'block';
+    showDialog('verify-dfn-seed');
 }
 
 UI.prototype.beforeValidateSeed = function () {
@@ -478,13 +497,14 @@ UI.prototype.showImportSeedError = function (e) {
 
 UI.prototype.showValidateSeedError = function () {
     document.getElementById('verify-seed-error').style.display = 'block';
+
 }
 UI.prototype.hideValidateSeedError = function () {
     document.getElementById('verify-seed-error').style.display = 'none';
 }
 
 UI.prototype.doValidateSeed = function () {
-    document.getElementById('verify-dfn-seed').style.display = 'block';
+    showDialog("verify-dfn-seed");
 
     var typedSeed = document.getElementById("typed-seed");
     var s = getChildWithClass(document.getElementById("create-dfn-seed"), "seed").innerText;
@@ -518,7 +538,7 @@ UI.prototype.markSeedGenerated = function () {
 }
 
 UI.prototype.hideValidateSeed = function () {
-    document.getElementById('verify-dfn-seed').style.display = 'none';
+    closeDialog('verify-dfn-seed');
 }
 
 function addClass(element, className) {
@@ -560,7 +580,7 @@ UI.prototype.readTerms = function () {
         return;
     }
 
-    if (this.locationDetected == "US") {
+    if (this.locationDetected == US_COUNTRY_CODE) {
         return;
     }
 

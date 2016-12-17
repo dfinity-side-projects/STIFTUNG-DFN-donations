@@ -46,9 +46,11 @@ var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
 
 var Insight = require('bitcore-explorers').Insight;
 var bitcore = require('bitcore-lib');
+// bitcore.Networks.defaultNetwork = bitcore.Networks.testnet;
 bitcore.Networks.defaultNetwork = bitcore.Networks.livenet;
 
-var BITCOIN_FOUNDATION_ADDRESS = 'mpraKTVqqgTxUpYDu1yHakrGLogRcYt5Xo'
+var BITCOIN_FOUNDATION_ADDRESS = '17uBu7yynWbvdd7TPKFuu5qPEs6H3A3V4U'
+// var BITCOIN_FOUNDATION_ADDRESS = 'mr5u4MQPmjktx2nF718m5PguKF4v7MUefo'
 var BITCOIN_HOSTED_NODES = ["hosted"];
 var BITCOIN_HOSTED_NODE = BITCOIN_HOSTED_NODES[0];
 var BITCOIN_CHK_FWD_INTERVAL = 5000;
@@ -96,7 +98,7 @@ var App = function (userAccounts, testUI) {
 
 
     this.tryForwardBalance = true;    // try to forward wallet balance
-    this.contFwdingOnNewData = false; // used to indicate set fwding on new poll data
+    this.fwdingOnlyOnNewData = false; // used to indicate set fwding on new poll data
 
     this.ethFwdTimeout = undefined;   // handle to current timer for Etheruem forwarding
     this.ethPollTimeout = undefined;  // handle to current timer for Ethereum polling
@@ -111,7 +113,8 @@ var App = function (userAccounts, testUI) {
     this.lastTask = 'task-agree';
     this.lastEthereumNode = ETHEREUM_HOSTED_NODES[0];
     this.lastBitcoinNode = BITCOIN_HOSTED_NODE;
-    this.donationState = STATE_TBD;;
+    this.donationState = STATE_TBD;
+    ;
 
 
     // Try Dev FDC param first, then default fdc addr, then local migration
@@ -155,6 +158,8 @@ var App = function (userAccounts, testUI) {
     this.tryForwardETH();
 
     ui.updateLocationBlocker();
+
+    // this.setBitcoinClientStatus("to be connected");
 }
 
 /*
@@ -162,7 +167,7 @@ var App = function (userAccounts, testUI) {
  * on a bad node/connection.
  * @returns {boolean} - since it's async the return result is only based on previous set result.By default it's false.
  */
-Web3.prototype.isConnectedAsync = function () {
+Web3.prototype.isConnectedAsync = function (success, error) {
     // console.log("isConnectedAsync () checking ...");
 
     try {
@@ -174,15 +179,20 @@ Web3.prototype.isConnectedAsync = function () {
         }, function (error, result) {
             if (error != null) {
                 app.ethConnected = 0;
+                // if (error) error();
             }
             else {
                 app.ethConnected = 1;
+                if (success) success();
             }
         });
-        if (app.ethConnected == 1)
+        if (app.ethConnected == 1) {
             return true;
-        else
+
+        }
+        else {
             return false;
+        }
     } catch (e) {
         return false;
     }
@@ -193,29 +203,29 @@ var lastTxHash = "";
 // Forward any ETH we can see lying in our wallet as a donation!
 App.prototype.tryForwardETH = function () {
 
+    // Are we in right donation phase?
     if (this.donationState != STATE_DON_PHASE0 && this.donationState != STATE_DON_PHASE1) {
-        // console.log("Not in the right phase. Try again later");
-
         this.scheduleTryForwardETH();
         return;
     }
 
+    // Clear any other fwding attempts
+    if (this.ethFwdTimeout)
+        clearTimeout(this.ethFwdTimeout);
 
-    if (this.ethFwdTimeout) clearTimeout(this.ethFwdTimeout);
+    var isConnected = web3.isConnectedAsync(this.setEthereumClientStatus.bind(ui, "OK"), this.setEthereumClientStatus.bind(ui, "ok"));
 
 
     // we are forwarding, connected and have seen an ETH balance?
-    if (!web3.isConnectedAsync()) {
-        console.log("Not connected to web3. Trying later");
-
-    }
-    if (!this.tryForwardBalance || !web3.isConnectedAsync() ||
+    if ((this.fwdingOnlyOnNewData && !this.tryForwardBalance) || !isConnected ||
         this.ethBalance == undefined || this.ethBalance.equals(0)) {
+        if (!isConnected) {
+            this.setEthereumClientStatus("disconnected");
+            console.log("Not connected to web3. Can't forward ETH. Trying later");
+        }
+
         // try again later!
-
-        // console.log("Web3 not connected or eth balance = 0. Try later.");
         this.scheduleTryForwardETH();
-
         return;
     }
 
@@ -227,79 +237,94 @@ App.prototype.tryForwardETH = function () {
                 web3.fromWei(this.ethBalance, 'ether') + " ETH)");
         }
         this.scheduleTryForwardETH();
-    } else {
-        // yes...
-        var self = this;
-        var fdc = FDC.at(FDCAddr);
+        return;
 
-        this.saidBalanceTooSmall = false;
-        var donating = web3.fromWei(this.ethBalance, 'ether');
+    }
+
+    // Prepare to forward
+
+    var self = this;
+    var fdc = FDC.at(FDCAddr);
+
+    this.saidBalanceTooSmall = false;
+    var donating = web3.fromWei(this.ethBalance, 'ether');
+
+    self.fwdingOnlyOnNewData = false;
+    self.tryForwardBalance = false;
+
+    // handle connection error issues
+    var handleConnErr = function (e) {
+        try {
+            ui.logger("Error forwarding balance as donation: " + e + " " + JSON.stringify(e));
+            ui.showErrorEthForwarding();
+            // user must manually restart forwarding.. otherwise a smart contract
+            // error would cause all their balance to be used up in gas when retrying!
+        } finally {
+            self.fwdingOnlyOnNewData = false;
+            self.scheduleTryForwardETH();
+        }
+    }
+
+    web3.eth.getTransactionCount(self.accs.ETH.addr, function (err, accNonce) {
+        if (err) {
+            handleConnErr(err);
+            return;
+        }
+
+        var value = self.ethBalance.sub(MAX_DONATE_GAS_COST);
+        var txData = "0x" + packArg2(donateAsWithChecksum, self.accs.DFN.addr, addrChecksum(self.accs.DFN.addr));
+        // console.log("txData:" + txData);
+        var dataBuf = EthJSUtil.toBuffer(txData);
+        // console.log("txData:" + EthJSUtil.bufferToHex(dataBuf));
+
+        var txObj = {};
+        txObj.to = FDCAddr;
+        txObj.gasPrice = web3.toHex(GAS_PRICE);
+        txObj.gasLimit = web3.toHex(MAX_DONATE_GAS);
+        txObj.nonce = accNonce;
+        txObj.data = dataBuf
+        txObj.value = web3.toHex(value);
+
+        var tx = new EthJS(txObj);
+        var privBuf = EthJSUtil.toBuffer(self.accs.ETH.priv);
+        tx.sign(privBuf)
+        var signedTx = EthJSUtil.bufferToHex(tx.serialize());
+        console.log("Attempt to send tx payload: " + signedTx);
+
+        // check for duplicate tx in mempool
+        if (self.lastTxId != null && web3.eth.getBlock("pending").transactions.includes(self.lastTxId)) {
+            console.log("Same forwarding tx still in the queue ... " + self.lastTxId);
+            self.fwdingOnlyOnNewData = true;
+            self.scheduleTryForwardETH();
+            return;
+        }
+
         ui.logger("Attempting to forward " + donating + " ETH...");
-        // will continue forwarding only on success!
-        self.tryForwardBalance = false;
-        self.contFwdingOnNewData = false;
 
-        // do the donation
-        var handleConnErr = function (e) {
+        // Let's do it!
+        web3.eth.sendRawTransaction(signedTx, function (err, txID) {
+            // Handle error. Ignore occasional err msg from Parity where there's duplicate transaction problem (which is caused by
+            // we attempt another fwding before previous one clears). This shouldn't occur frequently as it should be
+            // taken care of with previous duplicate tx detection.
+            if (err && err.toString().indexOf("with the same hash was already imported") == -1) {
+                handleConnErr(err);
+                return;
+            } else if (err && err.toString().indexOf("with the same hash was already imported") != -1) {
+                self.fwdingOnlyOnNewData = true;
+                self.scheduleTryForwardETH();
+                return;
+            }
+
+            self.lastTxId = txID; // Record the tx id for future comparison
             try {
-                ui.logger("Error forwarding balance as donation: " + e + " " + JSON.stringify(e));
-                ui.showErrorEthForwarding();
-                // user must manually restart forwarding.. otherwise a smart contract
-                // error would cause all their balance to be used up in gas when retrying!
+                ui.logger("Successfully donated : " + donating + " ETH (txID=" + txID + ")");
+                self.fwdingOnlyOnNewData = true; // start forwarding again only on new data incoming
             } finally {
                 self.scheduleTryForwardETH();
             }
-        }
-
-        web3.eth.getTransactionCount(self.accs.ETH.addr, function (err, accNonce) {
-            if (err) {
-                handleConnErr(err);
-                return;
-            }
-
-
-            var value = self.ethBalance.sub(MAX_DONATE_GAS_COST);
-            var txData = "0x" + packArg2(donateAsWithChecksum, self.accs.DFN.addr, addrChecksum(self.accs.DFN.addr));
-            // console.log("txData:" + txData);
-            var dataBuf = EthJSUtil.toBuffer(txData);
-            // console.log("txData:" + EthJSUtil.bufferToHex(dataBuf));
-
-            var txObj = {};
-            txObj.to = FDCAddr;
-            txObj.gasPrice = web3.toHex(GAS_PRICE);
-            txObj.gasLimit = web3.toHex(MAX_DONATE_GAS);
-            txObj.nonce = accNonce;
-            txObj.data = dataBuf
-            txObj.value = web3.toHex(value);
-
-            var tx = new EthJS(txObj);
-            var privBuf = EthJSUtil.toBuffer(self.accs.ETH.priv);
-            tx.sign(privBuf)
-            var signedTx = EthJSUtil.bufferToHex(tx.serialize());
-            console.log("Attempt to send tx payload: " + signedTx);
-            // check for duplicate tx in mempool
-            if (self.lastTxId != null && web3.eth.getBlock("pending").transactions.includes(self.lastTxId)) {
-                console.log("Same forwarding tx still in the queue ... " + self.lastTxId);
-                self.scheduleTryForwardETH();
-                return;
-            }
-            web3.eth.sendRawTransaction(signedTx, function (err, txID) {
-                // Handle error. Ignore special err case where there's duplicate transaction problem (which is caused by
-                // we attempt another fwding before previous one clears)
-                if (err && err.toString().indexOf("with the same hash was already imported") == -1) {
-                    handleConnErr(err);
-                    return;
-                }
-                self.lastTxId = txID;
-                try {
-                    ui.logger("Successfully donated : " + donating + " ETH (txID=" + txID + ")");
-                    self.contFwdingOnNewData = true; // start fowarding again on new data
-                } finally {
-                    self.scheduleTryForwardETH();
-                }
-            });
         });
-    }
+    });
+
 }
 
 // reschedule...
@@ -313,7 +338,7 @@ App.prototype.retryForwarding = function () {
     // stop showing user error box. We're back in business...
     ui.hideErrorEthForwarding();
     // flag we can continue forwarding available balance
-    this.contFwdingOnNewData = true;
+    this.fwdingOnlyOnNewData = true;
 }
 
 App.prototype.withdrawETH = function (toAddr) {
@@ -351,7 +376,7 @@ App.prototype.withdrawETH = function (toAddr) {
             }
             try {
                 ui.logger("Sent withdraw tx: " + value + " ETH (txID=" + txID + ")");
-                self.contFwdingOnNewData = true; // start fowarding again on new data
+                self.fwdingOnlyOnNewData = true; // start fowarding again on new data
             } finally {
             }
         });
@@ -362,8 +387,11 @@ App.prototype.withdrawETH = function (toAddr) {
 App.prototype.pollStatus = function () {
     if (this.ethPollTimeout) clearTimeout(this.ethPollTimeout);
 
+    var isConnected = web3.isConnectedAsync(this.setEthereumClientStatus.bind(ui, "OK"), this.setEthereumClientStatus.bind(ui, "ok"));
+
+
     // connected?
-    if (!web3.isConnectedAsync()) {
+    if (!isConnected) {
         if (this.ethConnectionRetries > 1)
             ui.logger("Still trying to connect to an Ethereum node...");
         // adjust connection if too many fails and appropriate
@@ -379,9 +407,9 @@ App.prototype.pollStatus = function () {
     this.onEthereumConnect();
     if (this.ethConnectionRetries > 0) {
         ui.logger("Successfully connected to an Ethereum node.");
+        this.setEthereumClientStatus("OK");
     }
     this.ethConnectionRetries = 0;
-
 
     var dfnAddr = this.accs.DFN.addr;
     var ethAddr = this.accs.ETH.addr;
@@ -443,7 +471,7 @@ App.prototype.pollStatus = function () {
             // We need to refresh their balance before trying to forward again or
             // we will try to send more than we have. There is a race condition here
             // but unlikely to trigger and doesn't cost user money just error msg.
-            if (self.contFwdingOnNewData) {
+            if (self.fwdingOnlyOnNewData) {
                 self.tryForwardBalance = true;
             }
 
@@ -528,7 +556,7 @@ App.prototype.setEthereumNode = function (host) {
         // TODO: add logic to randomly choose which hosted node to connect to
         // TODO: add fallback logic if one hosted node is down
         if (ETHEREUM_HOSTED_NODES.length > 1) {
-            var nodeIndex = getRandomInt(0, ETHEREUM_HOSTED_NODES.length-1);
+            var nodeIndex = getRandomInt(0, ETHEREUM_HOSTED_NODES.length - 1);
             this.setETHNodeInternal(ETHEREUM_HOSTED_NODES[nodeIndex]);
         } else {
             this.setETHNodeInternal(ETHEREUM_HOSTED_NODES[0]);
@@ -573,7 +601,6 @@ App.prototype.setETHNodeInternal = function (host) {
 }
 
 App.prototype.setForwardedETH = function (fe) {
-    // console.log("Set forwarded ETH: " + fe);
     this.forwardedETH = fe;
     ui.setForwardedETH(fe);
 }
@@ -610,7 +637,7 @@ App.prototype.setBitcoinNode = function (host) {
 
     if (host == "hosted") {
         if (BITCOIN_HOSTED_NODES.length > 1) {
-            var nodeIndex = getRandomInt(0, BITCOIN_HOSTED_NODES.length-1);
+            var nodeIndex = getRandomInt(0, BITCOIN_HOSTED_NODES.length - 1);
             this.setBTCNodeInternal(BITCOIN_HOSTED_NODES[nodeIndex]);
         } else {
             this.setBTCNodeInternal(BITCOIN_HOSTED_NODES[0]);
@@ -625,11 +652,11 @@ App.prototype.setBitcoinNode = function (host) {
             host += "http://";
         }
         var splits = host.split(':');
-        var port = splits[splits.length - 1];
-        if ((port.length < 2 && port.length > 5) || port.match(/^[0-9]+$/) == null) {
-            ui.logger("Host string must end with valid port, e.g. \":3001\"");
-            return;
-        }
+        // var port = splits[splits.length - 1];
+        // if ((port.length < 2 && port.length > 5) || port.match(/^[0-9]+$/) == null) {
+        //     ui.logger("Host string must end with valid port, e.g. \":3001\"");
+        //     return;
+        // }
         this.setBTCNodeInternal(host);
     }
     this.accs.saveStates();
@@ -680,6 +707,8 @@ App.prototype.setBitcoinClientStatus = function (status) {
 
         // now we're connected, grab all the values we need
         // this.pollStatus();
+    } else if (status="tbc") {
+        ui.setBitcoinClientStatus("to be connected automatically")
     } else {
         var message = "not connected";
         if (status) message += " (" + status + ")";

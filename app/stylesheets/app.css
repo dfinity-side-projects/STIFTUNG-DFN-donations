@@ -119,7 +119,7 @@ input, button {
     height: 420px;
     width: 400px;
     float: left;
-    border-right: 1px solid #666;
+    /*border-right: 1px solid #666;*/
 }
 
 #tasks li {
@@ -162,6 +162,23 @@ body.modal-open {
     overflow: hidden;
 }
 
+body.modal-open  #page-mask {
+    background: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+
+    /* Blur and de-color */
+    -webkit-filter:  grayscale(50%);
+
+    /*transition: all 0.1s ease; !* prefix me *!*/
+
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+
+
 .tick {
     height: 22px;
     width: 22px;
@@ -184,6 +201,9 @@ body.modal-open {
     cursor: pointer;
 }
 
+#btn-ethereum-node, #btn-bitcoin-node {
+    cursor: pointer;
+}
 #tasks li span.task-number {
     font-family: 'Open Sans Condensed', 'Arial', sans-serif;
     display: inline-block;
@@ -231,7 +251,25 @@ body.modal-open {
     width: 573px;
     float: right;
     border-left: 1px solid #666
+    /*-webkit-filter:  grayscale(50%);*/
+
 }
+
+
+/*#dashboard .box-content #page-mask {*/
+    /*background: rgba(0, 0, 0, 0.5);*/
+    /*position: static;*/
+    /*top: -100%;*/
+    /*transform: translateY(-500px);*/
+
+    /*!* Blur and de-color *!*/
+    /*-webkit-filter:  grayscale(50%);*/
+
+    /*width:573px;*/
+    /*height:800px;*/
+
+
+/*}*/
 
 #btc-forwarding-address, #eth-forwarding-address, #genesis-dfinities {
     text-align: center;
@@ -413,32 +451,40 @@ body.modal-open {
 .dialog {
     display: none;
     position: fixed;
-    overflow: auto;
-    top: 40px;
-    margin-left: 15%;
-    margin-right: 15%;
-    bottom: 40px;
-    left: 0px;
-    right: 0px;
-    border: 6px solid #6d6d6d;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    width:925px;
+    top: 50%;
+    transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
+
+    /*left: 50%;*/
+    /*transform: translate(-50%, -50%);*/
+
+    max-height: calc(100% - 100px);
+
+
+    border: 2px solid #6d6d6d;
     padding-left: 60px;
     padding-right: 60px;
     padding-top: 40px;
-    padding-top: 60px;
-    max-height: calc(100vh - 210px);
-    overflow-y: auto;
+    /*max-height: calc(100vh - 210px);*/
+    background-color: rgb(55, 55, 55);
+    overflow: auto;
+    color: white;
 }
 
 .dialog-small {
-    margin-left: 25%;
-    margin-right: 25%;
+    /*margin-left: 25%;*/
+    /*margin-right: 25%;*/
     /*margin-top: auto;*/
-    margin-bottom: auto;
+    /*margin-bottom: auto;*/
     padding-bottom: 20px;
     padding-top: 20px;
     overflow: auto;
-    bottom: auto;
-    top: 15%;
+    /*bottom: auto;*/
+    /*top: 15%;*/
 }
 .dialog-no-scroll {
     overflow: hidden;
@@ -446,24 +492,9 @@ body.modal-open {
 
 
 
-@media screen and (max-width: 1680px) {
-    .dialog {
-        margin-left: 5%;
-        margin-right: 5%;
-    }
-    .dialog-small {
-        margin-left: 15%;
-        margin-right: 15%;
-    }
-}
-
-.dialog {
-    background-color: rgb(55, 55, 55);
-    color: white;
-}
 
 .dialog, .dialog * {
-    color: white /*!important;							*/
+    color: white;
     line-height: 1.5;
     letter-spacing: 0.05em;
 }
@@ -555,6 +586,7 @@ div.important-notes {
 
 .text-blocks {
     padding-right: 10%;
+    line-height: 1.6;
 
 }
 
