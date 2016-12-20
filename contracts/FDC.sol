@@ -130,6 +130,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   // Address that is allowed to update the exchange rate
   address public exchangeRateAuth; 
 
+  // Address that is allowed to update the other autheticated addresses
+  address public masterAuth; 
+
   /*
    * Global variables
    */
@@ -171,9 +174,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *
    * All configuration parameters are taken from base contract Parameters.
    */
-  function FDC(address _foundationWallet,
-               address _registrarAuth,
-               address _exchangeRateAuth)
+  function FDC(address _foundationWallet, address _masterAuth)
     TokenTracker(earlyContribShare)
     StepFunction(phase1EndTime-phase1StartTime, phase1InitialBonus, 
                  phase1BonusSteps) 
@@ -182,8 +183,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
      * Set privileged addresses for access control
      */
     foundationWallet  = _foundationWallet;
-    registrarAuth     = _registrarAuth;
-    exchangeRateAuth  = _exchangeRateAuth;
+    masterAuth     = _masterAuth;
+    exchangeRateAuth  = _masterAuth;
+    registrarAuth  = _masterAuth;
 
     /*
      * Initialize base contract Phased
@@ -214,8 +216,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     phaseOfDonPhase0 = 2;
     phaseOfDonPhase1 = 4;
     
-    // Maximum delay for start of donation phase 1 
-    setMaxDelay(phaseOfDonPhase1 - 1, donPhase1MaxDelay);
+    // Maximum delay for start of donation phases 
+    setMaxDelay(phaseOfDonPhase0 - 1, donPhaseMaxDelay);
+    setMaxDelay(phaseOfDonPhase1 - 1, donPhaseMaxDelay);
 
     /*
      * Initialize base contract Targets
@@ -240,6 +243,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - registerOffChainDonation
    *  - setExchangeRate
    *  - delayDonPhase1
+   *  - setRegistrarAuth
+   *  - setExchangeRateAuth
+   *  - setAdminAuth
    */
 
   /**
@@ -490,21 +496,61 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   }
 
   /**
-   * Delay donation phase 1
+   * Delay a donation phase
    *
-   * Must be called from registrarAuth.
+   * Must be called from the address registrarAuth.
    *
    * This function delays the start of donation phase 1 by the given time delta
    * unless the time delta is bigger than the configured maximum delay.
    */
-  function delayDonPhase1(uint timedelta) {
+  function delayDonPhase(uint donPhase, uint timedelta) {
     // Require permission
     if (msg.sender != registrarAuth) { throw; }
 
     // Pass the call on to base contract Phased
-    // Delaying the start of donation phase 1 is the same as delaying the end 
-    // of the phase preceding donation phase 1 
-    delayPhaseEndBy(phaseOfDonPhase1 - 1, timedelta);
+    // Delaying the start of a donation phase is the same as delaying the end 
+    // of the preceding phase
+    if (donPhase == 0) {
+      delayPhaseEndBy(phaseOfDonPhase0 - 1, timedelta);
+    } else if (donPhase == 1) {
+      delayPhaseEndBy(phaseOfDonPhase1 - 1, timedelta);
+    }
+  }
+
+  /**
+   * Set new authenticated address for setting exchange rate
+   * 
+   * Must be called from the address masterAuth.
+   */
+  function setExchangeRateAuth(address newAuth) {
+    // Require permission
+    if (msg.sender != masterAuth) { throw; }
+ 
+    exchangeRateAuth = newAuth;
+  }
+
+  /**
+   * Set new authenticated address for registrations
+   * 
+   * Must be called from the address masterAuth.
+   */
+  function setRegistrarAuth(address newAuth) {
+    // Require permission
+    if (msg.sender != masterAuth) { throw; }
+ 
+    registrarAuth = newAuth;
+  }
+
+  /**
+   * Set new authenticated address for admin
+   * 
+   * Must be called from the address masterAuth.
+   */
+  function setMasterAuth(address newAuth) {
+    // Require permission
+    if (msg.sender != masterAuth) { throw; }
+ 
+    masterAuth = newAuth;
   }
 
   /*

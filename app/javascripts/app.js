@@ -84,7 +84,7 @@ var FDC_PRODUCTION_ADDR = "0xAeCdd1B710728FA68b85cF463e874Dd1b86F7C2A"
 
 
 // FDC ABI signatures
-var donateAs = "0d9543c5";
+//var donateAs = "0d9543c5";
 var donateAsWithChecksum = "ceadd9c8";
 
 
