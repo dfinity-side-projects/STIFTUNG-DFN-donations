@@ -13,7 +13,7 @@ module.exports = function(deployer, network) {
         // Deploy FDC using the standard accounts provided by testRPC for testing
         // purposes. These can be accessed from any test unit :)
         //
-        deployer.deploy(FDC, walletAddr, registrar, exchangeRateAddr).then(function() {
+        deployer.deploy(FDC, walletAddr, registrar).then(function() {
             // deployed OK!
             var fdc = FDC.deployed();
             console.log("FDC deployed at "+fdc.address+"\nUsing controllers:\n"+

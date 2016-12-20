@@ -88,6 +88,17 @@ contract('FDC', function (accounts) {
         web3.currentProvider.send({method: "evm_increaseTime", params: [time - getVmTime()]})
     }
 
+    it("We will set the exchangeRateAuth", function () {
+        var fdc = FDC.deployed();
+        console.log("Setting exchangeRateAuth on FDC at " + fdc.address);
+        return fdc.setExchangeRateAuth(accounts[2], {gas: 300000, from: accounts[1]}).then(function (txID) {
+            console.log("Successfully set the exchangeRateAuth!");
+        }).catch(function (e) {
+            console.log("Test exception: " + e);
+            throw e;
+        });
+    });
+
     it("We will set the Wei to CHF exchange rate", function () {
         var fdc = FDC.deployed();
         console.log("Setting exchange rate on FDC at " + fdc.address);
@@ -508,7 +519,7 @@ contract('FDC', function (accounts) {
             function delayPhase1(timeDelta) {
                 return new Promise(function (resolve, reject) {
                     printStatus(1);
-                    fdc.delayDonPhase1(timeDelta, {gas: 100000, from: accounts[1]})
+                    fdc.delayDonPhase(1, timeDelta, {gas: 100000, from: accounts[1]})
                         .then(function (success) {
                             console.log(" Donation phase 1 delayed by: " + timeDelta  + " seconds");
                             resolve(timeDelta);
