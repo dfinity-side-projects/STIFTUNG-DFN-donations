@@ -120,6 +120,7 @@ UI.prototype.bindGlobalListener = function (element, uiHandler, argument) {
 
 // Set the allocation of Genesis DFN to be recommended for user
 UI.prototype.setGenesisDFN = function (dfn) {
+    console.log("Setting genesis DFN: " + dfn);
     var e = document.getElementById("genesis-dfinities-amount");
     var e2 = document.getElementById("genesis-dfinities-amount-2");
     if (dfn == undefined) {

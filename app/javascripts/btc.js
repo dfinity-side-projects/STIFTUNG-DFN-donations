@@ -59,7 +59,7 @@ BitcoinWorker.prototype.start = function (config) {
     // Client configuration:
     self.clientPrivateKey = bitcore.PrivateKey(config.privateKey)
     self.clientAddress = self.clientPrivateKey.toAddress()
-    self.clientDfinityData = bitcore.util.buffer.hexToBuffer(config.dfinityAddress.slice(2))
+    self.clientDfinityData =  config.clientDfinityData;
 
     // Central configuration:
     self.centralAddress = bitcore.Address(config.centralAddress)
@@ -160,14 +160,14 @@ BitcoinWorker.prototype.pollBTCStatus = function () {
         if (!self.isConnected)
             return;
         // 1. Update Pending BTC balance based on UTXO status
-        self.log('PollBTCStatus(): Saw ' + utxos.length + ' UTXOs')
+        // self.log('PollBTCStatus(): Saw ' + utxos.length + ' UTXOs')
         if (utxos.length == 0 || utxos == undefined) {
             ui.setRemainingBTC(0);
             return;
         }
 
         var sum = Unit.fromSatoshis(utxoSum(utxos));
-        self.log("Sum of all UTXO:" + sum);
+        // self.log("Sum of all UTXO:" + sum);
 
         // Update remaining BTC;
         ui.setRemainingBTC(sum.toBTC());
@@ -235,7 +235,7 @@ BitcoinWorker.prototype.trySendBTC = function (address) {
 
     return Promise.resolve()
         .then(function () {
-            self.log('Getting UTXOs')
+            // self.log('Getting UTXOs')
 
             return self.getClientUtxos()
         })

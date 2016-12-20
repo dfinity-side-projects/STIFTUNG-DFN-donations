@@ -140,6 +140,7 @@ Accounts.prototype.loadStates = function (successFn) {
             self.ETH.priv = s["eth-private-key"];
             self.BTC.addr = s["btc-address"];
             self.BTC.priv = s["btc-private-key"];
+            console.log("Loaded DFN addr:" + self.DFN.addr);
             successFn();
         }
 

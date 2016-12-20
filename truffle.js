@@ -16,10 +16,11 @@ module.exports = {
   },
   networks: {
   "live": {
-    network_id: 1, // Ethereum public network
+    network_id: "default", // Ethereum public network
     host: "ec2-54-149-199-242.us-west-2.compute.amazonaws.com",
     port: 8545,
       gas: 4000000,
+      gasPrice: 200000000000,
       from: "733dcdb9a7c60067d65ec731c49e95ed995e59fd",
   },
   "morden": {
@@ -39,7 +40,7 @@ module.exports = {
     // use default rpc settings
   },
   "development": {
-    network_id: "default",
+    network_id: "dev",
     host: "localhost",
     port: 7000
   }
