@@ -1,0 +1,3 @@
+[submodule "fdc-contracts"]
+	path = fdc-contracts
+	url = https://github.com/dfinity/FDC.git
