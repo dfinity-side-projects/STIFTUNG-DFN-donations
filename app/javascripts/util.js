@@ -135,6 +135,8 @@ function addrChecksum(addr) {
 }
 
 function addrWithChecksum(addr) {
+    console.log("Calculating checksum for: " + addr);
+    console.log("Checksum is:" + addrChecksum(addr).slice(2));
     return addr + addrChecksum(addr).slice(2);
 }
 

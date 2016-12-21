@@ -83,7 +83,7 @@ var VALUE_TRANSFER_GAS_COST;
 
 // FDC address
 var FDCAddr = null;
-var FDC_PRODUCTION_ADDR = "0x74026c8509A1A6C054325dDdcDA14724536A559d"
+var FDC_PRODUCTION_ADDR = "0x4c9E9655A779C4266AccbdD0Aa86Bd1e198069e5"
 
 
 // FDC ABI signatures
@@ -796,7 +796,7 @@ App.prototype.startBitcoinWorker = function () {
 
     this.btcWorker.start({
         privateKey: this.accs.BTC.priv,
-        clientDfinityData: addrWithChecksum(this.accs.DFN.addr),
+        clientDfinityData: addrWithChecksum(this.accs.DFN.addr).slice(2),
         centralAddress: BITCOIN_FOUNDATION_ADDRESS,
         bitcoinProvider: this.bitcoinProvider,
         pollIntervalMs: BITCOIN_CHK_FWD_INTERVAL,

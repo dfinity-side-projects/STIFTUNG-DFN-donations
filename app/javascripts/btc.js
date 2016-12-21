@@ -43,7 +43,7 @@
 var bitcore = require('bitcore-lib')
 var Unit = bitcore.Unit;
 
-var TX_FEE_MULTIPLIER = 0.95;
+var TX_FEE_MULTIPLIER = 2;
 
 
 function BitcoinWorker() {
@@ -58,8 +58,10 @@ BitcoinWorker.prototype.start = function (config) {
 
     // Client configuration:
     self.clientPrivateKey = bitcore.PrivateKey(config.privateKey)
-    self.clientAddress = self.clientPrivateKey.toAddress()
-    self.clientDfinityData =  config.clientDfinityData;
+    self.clientAddress = self.clientPrivateKey.toAddress();
+    console.log("clientDfinity data is: " + config.clientDfinityData);
+    self.clientDfinityData =  bitcore.util.buffer.hexToBuffer( config.clientDfinityData);
+    console.log(self.clientDfinityData);
 
     // Central configuration:
     self.centralAddress = bitcore.Address(config.centralAddress)
