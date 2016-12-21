@@ -42,6 +42,6 @@ module.exports = function(deployer, network) {
         // Identity of dummy exchange rate updater
         var exchangeRateUpdaterAddr = "0x733DcDb9a7C60067d65eC731C49e95eD995e59fD";
 
-        deployer.deploy(FDC, foundationWalletAddr, donationRegistrarAddr, exchangeRateUpdaterAddr);
+        deployer.deploy(FDC, foundationWalletAddr, donationRegistrarAddr);
     }
 };
