@@ -83,9 +83,6 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   // Mapping from phase number (from the base contract Phased) to FDC state 
   mapping(uint => state) stateOfPhase;
 
-  // Mapping of all off chain registration memo to prevent duplicate transactions
-  mapping(bytes => address) offchainDonationMemo;
-
   /*
    * Tokens
    *
@@ -97,8 +94,19 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *
    * The FDC uses the base contract Targets to:
    *  - track the targets measured in CHF for each donation phase
+   *
+   * The FDC itself:
+   *  - tracks the memos of off-chain donations (and prevents duplicates)
+   *  - tracks donor and early contributor addresses in two lists
    */
    
+  // Mapping of all off chain registration memo to prevent duplicate transactions
+  mapping(bytes => address) offchainDonationMemo;
+
+  // List of registered addresses (each address will appear in one)
+  address[] donorList;  
+  address[] earlyContribList;  
+  
   /*
    * Exchange rate and ether handling
    *
@@ -140,7 +148,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * Global variables
    */
  
-  // The phase numbers of the donation phases (set by the constructor)
+  // The phase numbers of the donation phases (set by the constructor, 
+  // thereafter constant)
   uint phaseOfDonPhase0;
   uint phaseOfDonPhase1;
   
@@ -430,6 +439,11 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     // Reject registrations outside the early contribution phase
     if (getState() != state.earlyContrib) { throw; }
 
+    // Add address to list if new
+    if (!isRegistered(addr, true)) {
+      earlyContribList.push(addr);
+    }
+    
     // Assign restricted tokens in TokenTracker
     assign(addr, tokenAmount, true);
     
@@ -498,9 +512,11 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     // must be unique to a specific DFN address. It is, however, possible to have one single address benefiting
     // from different off-chain registrations (e.g. 1 Bitcoin + $500 by wire)
 
+    /*
     if (offchainDonationMemo[memo] != 0) {
       throw;
     }
+    */
 
     // store the memo->dfn address
     offchainDonationMemo[memo] = addr;
@@ -642,6 +658,11 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     // Convert Swiss francs to amount of tokens
     uint tokenAmount = (chfCents * tokensPerCHF) / 100;
 
+    // Add address to list if new
+    if (!isRegistered(addr, false)) {
+      donorList.push(addr);
+    }
+    
     // Assign unrestricted tokens in TokenTracker
     assign(addr,tokenAmount,false);
 

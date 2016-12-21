@@ -108,6 +108,7 @@ contract TokenTracker is TokenInterface {
    *
    *  - isUnrestricted (getter)
    *  - multFracCeiling (library function)
+   *  - isRegistered(addr) (getter)
    */
   
   /**
@@ -134,6 +135,17 @@ contract TokenTracker is TokenInterface {
     return (x * a + (b - 1)) / b; 
   }
     
+  /**
+   * Return true iff the address has tokens assigned (resp. restricted tokens)
+   */
+  function isRegistered(address addr, bool restricted) constant returns (bool) {
+    if (restricted) {
+      return (restrictions[addr] > 0);
+    } else {
+      return (tokens[addr] > 0);
+    }
+  }
+
   /**
    * INTERNAL functions
    *
