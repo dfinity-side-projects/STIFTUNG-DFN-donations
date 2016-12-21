@@ -7,8 +7,15 @@
     "test": "test"
   },
   "dependencies": {
+    "bitcore-explorers": "maraoz/bitcore-explorers",
     "bitcore-lib": "^0.13.19",
-    "bitcore-mnemonic": "^1.1.1"
+    "bitcore-mnemonic": "^1.1.1",
+    "ecb-exchange-rates": "0.0.7",
+    "nedb": "^1.8.0",
+    "node-coindesk": "^0.2.0",
+    "open-exchange-rates": "^0.3.0",
+    "request-promise": "^4.1.1",
+    "terminal-kit": "^0.25.6"
   },
   "devDependencies": {},
   "scripts": {
