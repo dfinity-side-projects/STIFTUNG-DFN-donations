@@ -36,7 +36,7 @@ SOFTWARE.
  * Off-chain donations are received and recorded directly in Swiss francs.
  * Tokens are assigned at a rate of 10 tokens per CHF. 
  *
- * There are two types of tokens intially. Unrestricted tokens are assigned to 
+ * There are two types of tokens initially. Unrestricted tokens are assigned to
  * donors and restricted tokens are assigned to DFINITY Stiftung and early 
  * contributors. Restricted tokens are converted to unrestricted tokens in the 
  * finalization phase, after which only unrestricted tokens exist.
@@ -82,6 +82,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
 
   // Mapping from phase number (from the base contract Phased) to FDC state 
   mapping(uint => state) stateOfPhase;
+
+  // Mapping of all off chain registration memo to prevent duplicate transactions
+  mapping(bytes => address) offchainDonationMemo;
 
   /*
    * Tokens
@@ -154,10 +157,10 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
                          uint indexed bonusMultiplierApplied,
                          uint timestamp,
                          uint tokenAmount,
-                         bytes32 memo);
+                         bytes memo);
   event EarlyContribReceipt (address indexed addr,
                              uint tokenAmount,
-                             bytes32 memo);
+                             bytes memo);
   event BurnReceipt (address indexed addr,
                      uint tokenAmountBurned);
 
@@ -418,9 +421,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * Arguments are:
    *  - addr: address to the tokens are assigned
    *  - tokenAmount: number of restricted tokens to assign
-   *  - memo: optional 32 bytes of data to appear in the receipt
+   *  - memo: optional dynamic bytes of data to appear in the receipt
    */
-  function registerEarlyContrib(address addr, uint tokenAmount, bytes32 memo) {
+  function registerEarlyContrib(address addr, uint tokenAmount, bytes memo) {
     // Require permission
     if (msg.sender != registrarAuth) { throw; }
 
@@ -444,7 +447,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - timestamp: time when the donation came in (determines phase and bonus)
    *  - chfCents: value of the donation in cents of Swiss francs
    *  - currency: the original currency of the donation (three letter string)
-   *  - memo: optional 32 bytes of data to appear in the receipt
+   *  - memo: optional bytes of data to appear in the receipt
    *
    * The timestamp must not be in the future. This is because the timestamp 
    * defines the donation phase and the multiplier and future phase times are
@@ -455,7 +458,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * the timestamp must lie in the immediately preceding donation phase. 
    */
   function registerOffChainDonation(address addr, uint timestamp, uint chfCents, 
-                                    string currency, bytes32 memo) 
+                                    string currency, bytes memo)
   {
     // Require permission
     if (msg.sender != registrarAuth) { throw; }
@@ -490,6 +493,17 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     if (currentState == state.offChainReg && timestampPhase != currentPhase-1) { 
       throw; 
     }
+
+    // To avoid duplicate submitted tx, we mandate that the memo field (likely bitcoin tx hash, or wire transfer id)
+    // must be unique to a specific DFN address. It is, however, possible to have one single address benefiting
+    // from different off-chain registrations (e.g. 1 Bitcoin + $500 by wire)
+
+    if (offchainDonationMemo[memo] != 0) {
+      throw;
+    }
+
+    // store the memo->dfn address
+    offchainDonationMemo[memo] = addr;
 
     // Do the book-keeping
     bookDonation(addr, timestamp, chfCents, currency, memo);
@@ -606,7 +620,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * timestamp. However, it is passed in to save the gas of re-calculating it.
    */
   function bookDonation(address addr, uint timestamp, uint chfCents, 
-                        string currency, bytes32 memo) private 
+                        string currency, bytes memo) private
   {
     // The current phase
     uint phase = getPhaseAtTime(timestamp);
