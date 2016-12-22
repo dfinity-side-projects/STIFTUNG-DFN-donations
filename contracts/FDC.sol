@@ -101,7 +101,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    */
    
   // Mapping of all off chain registration memo to prevent duplicate transactions
-  mapping(bytes => address) offchainDonationMemo;
+  mapping(bytes => bool) offchainDonationMemo;
 
   // List of registered addresses (each address will appear in one)
   address[] donorList;  
@@ -141,7 +141,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   // Address that is allowed to update the exchange rate
   address public exchangeRateAuth; 
 
-  // Address that is allowed to update the other autheticated addresses
+  // Address that is allowed to update the other authenticated addresses
   address public masterAuth; 
 
   /*
@@ -166,7 +166,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
                          uint indexed bonusMultiplierApplied,
                          uint timestamp,
                          uint tokenAmount,
-                         bytes memo);
+                         bytes32 memo);
   event EarlyContribReceipt (address indexed addr,
                              uint tokenAmount,
                              bytes memo);
@@ -472,7 +472,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * the timestamp must lie in the immediately preceding donation phase. 
    */
   function registerOffChainDonation(address addr, uint timestamp, uint chfCents, 
-                                    string currency, bytes memo)
+                                    string currency, bytes32 memo)
   {
     // Require permission
     if (msg.sender != registrarAuth) { throw; }
@@ -483,9 +483,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     
     // Reject registrations outside the two donation phases (incl. their
     // extended registration periods for off-chain donations)
-    if (currentState != state.donPhase0 && currentState != state.donPhase1 && 
-        currentState != state.offChainReg) {  
-      throw; 
+    if (currentState != state.donPhase0 && currentState != state.donPhase1 &&
+        currentState != state.offChainReg) {
+      throw;
     }
    
     // Throw if timestamp is in the future
@@ -497,29 +497,27 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    
     // Throw if called during a donation phase and the timestamp does not match
     // that phase.
-    if ((currentState == state.donPhase0 || currentState == state.donPhase1) && 
+    if ((currentState == state.donPhase0 || currentState == state.donPhase1) &&
         (timestampState != currentState)) { 
-      throw; 
+      throw;
     }
     
     // Throw if called during the extended period for off-chain donations and
     // the timestamp does not lie in the immediately preceding donation phase.
-    if (currentState == state.offChainReg && timestampPhase != currentPhase-1) { 
-      throw; 
-    }
-
-    // To avoid duplicate submitted tx, we mandate that the memo field (likely bitcoin tx hash, or wire transfer id)
-    // must be unique to a specific DFN address. It is, however, possible to have one single address benefiting
-    // from different off-chain registrations (e.g. 1 Bitcoin + $500 by wire)
-
-    /*
-    if (offchainDonationMemo[memo] != 0) {
+    if (currentState == state.offChainReg && timestampPhase != currentPhase-1) {
       throw;
     }
-    */
 
-    // store the memo->dfn address
-    offchainDonationMemo[memo] = addr;
+    // To avoid duplicate submitted tx, we mandate that the memo field (like bitcoin tx hash, or wire transfer id)
+    // must be unique. It is, however, possible to have one single DFN address benefiting from multiple
+    // off-chain transactions (e.g. 1 Bitcoin + $500 by wire)
+
+    if (offchainDonationMemo[memo] == true) {
+      throw;
+    }
+
+    // Set the memo item to true
+    offchainDonationMemo[memo] = true;
 
     // Do the book-keeping
     bookDonation(addr, timestamp, chfCents, currency, memo);
@@ -636,7 +634,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * timestamp. However, it is passed in to save the gas of re-calculating it.
    */
   function bookDonation(address addr, uint timestamp, uint chfCents, 
-                        string currency, bytes memo) private
+                        string currency, bytes32 memo) private
   {
     // The current phase
     uint phase = getPhaseAtTime(timestamp);
