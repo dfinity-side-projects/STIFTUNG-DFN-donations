@@ -156,7 +156,7 @@ contract('FDC', function (accounts) {
 
     }
 
-    it("Phase 1 testing", function () {
+    it("FDC Full lifecycle donation testing", function () {
             /* Test Parameters */
             var EARLY_CONTRIBUTORS = 1;
             var testSuites = [
@@ -359,7 +359,7 @@ contract('FDC', function (accounts) {
                         p = p.then(advanceToPhase.bind(null,3, 0));
                         p = p.then(generateAndRegisterOffChainDons);
                         p = p.then(addPhase1Tests.bind(null, p, phase1));
-                        p.then(validateFinalization);
+                        p = p.then(validateFinalization);
                     }
                     return p;
                 })
@@ -443,6 +443,7 @@ contract('FDC', function (accounts) {
                     .then(function () {
                         console.log(" - Asserting off-chain donation tokens / restricted:" + getterValues["tokens"] + " / " + getterValues["restrictions"]);
                         assert.equal(Math.floor(2.5*amountCents/10), getterValues["tokens"]-getterValues["restrictions"]);
+                        console.log(" - Assert success");
                     })
             }
 
@@ -519,6 +520,7 @@ contract('FDC', function (accounts) {
             function delayPhase1(timeDelta) {
                 return new Promise(function (resolve, reject) {
                     printStatus(1);
+                    console.log(" Donation phase 1 to be delayed by: " + timeDelta  + " seconds");
                     fdc.delayDonPhase(1, timeDelta, {gas: 100000, from: accounts[1]})
                         .then(function (success) {
                             console.log(" Donation phase 1 delayed by: " + timeDelta  + " seconds");
@@ -573,20 +575,19 @@ contract('FDC', function (accounts) {
                 return new Promise(function (resolve, reject) {
                     for (var addr in offChainDons) {
                         var time = fdcConstants["phase0StartTime"];
-                        p = p.then(registerAndValidateOffChainDon.bind(null, addr, time, offChainDons[addr], "USD", "Offchain"));
+                        p = p.then(registerAndValidateOffChainDon.bind(null, addr, time, offChainDons[addr], "USD", "Offchain #" + (offchainRegIndex++)));
                     }
                     p.then(resolve);
                 });
             }
+
+            var offchainRegIndex = 0;
             
             function generateAndRegisterEarlyContribs() {
                 earlyContribs = {};
                 console.log(" /////// ====   TEST SUITE:  Register early contribs  ==== \\\\\\\\\\ ")
-
                 console.log(" Generate early contribs ...");
                 var p = Promise.resolve();
-
-
                 for (var i = 0; i < EARLY_CONTRIBUTORS; i++) {
 
                     var account = new Accounts();
