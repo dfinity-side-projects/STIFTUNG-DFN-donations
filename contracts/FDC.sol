@@ -161,17 +161,17 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - BurnReceipt:         logs the burning of token during finalization
    */
 
-  event DonationReceipt (address indexed addr,
-                         string indexed currency,
-                         uint indexed bonusMultiplierApplied,
-                         uint timestamp,
-                         uint tokenAmount,
-                         bytes32 memo);
-  event EarlyContribReceipt (address indexed addr,
-                             uint tokenAmount,
-                             bytes memo);
-  event BurnReceipt (address indexed addr,
-                     uint tokenAmountBurned);
+  event DonationReceipt (address indexed addr,          // DFN address of donor
+                         string indexed currency,       // donation currency
+                         uint indexed bonusMultiplierApplied, // depends stage
+                         uint timestamp,                // time occurred
+                         uint tokenAmount,              // DFN to b recommended
+                         bytes32 memo);                 // unique note e.g TxID
+  event EarlyContribReceipt (address indexed addr,      // DFN address of donor 
+                             uint tokenAmount,          // *restricted* tokens
+                             bytes memo);               // arbitrary note
+  event BurnReceipt (address indexed addr,              // DFN address adjusted
+                     uint tokenAmountBurned);           // DFN deleted by adj.
 
   /**
    * Constructor
