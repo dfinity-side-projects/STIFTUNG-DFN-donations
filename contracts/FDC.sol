@@ -160,7 +160,6 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - EarlyContribReceipt: logs the registration of early contribution 
    *  - BurnReceipt:         logs the burning of token during finalization
    */
-
   event DonationReceipt (address indexed addr,          // DFN address of donor
                          string indexed currency,       // donation currency
                          uint indexed bonusMultiplierApplied, // depends stage
