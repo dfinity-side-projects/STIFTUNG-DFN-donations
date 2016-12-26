@@ -63,7 +63,7 @@ contract Parameters {
   
   // The maximum time by which donation phase 1 can be delayed from the start 
   // time defined above
-  uint public constant donPhaseMaxDelay     = 180 days;
+  uint public constant donPhaseMaxDelay     = 270 days;
 
   // The time for which donation phases remain open after they reach their 
   // respective targets   
