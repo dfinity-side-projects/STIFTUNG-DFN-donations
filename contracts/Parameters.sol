@@ -53,7 +53,7 @@ contract Parameters {
   uint public constant phase1StartTime      = 1489428000; 
   
   // Phase transitions defined by offsets from the start of phase 0 and 1
-  uint public constant earlyContribEndTime  = phase0StartTime - 1 weeks; 
+  uint public constant earlyContribEndTime  = phase0StartTime - 1 days; 
   uint public constant phase0EndTime        = phase0StartTime + 6 weeks;
   uint public constant phase1EndTime        = phase1StartTime + 6 weeks;
   uint public constant finalizeStartTime    = phase1EndTime   + 1 weeks;
