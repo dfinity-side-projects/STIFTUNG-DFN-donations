@@ -100,8 +100,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - tracks donor and early contributor addresses in two lists
    */
    
-  // Mapping of all off chain registration memo to prevent duplicate transactions
-  mapping(bytes => bool) offchainDonationMemo;
+  // Mapping to store memos that have been used. Used to prevent duplication.
+  mapping(bytes32 => bool) memoUsed;
 
   // List of registered addresses (each address will appear in one)
   address[] donorList;  
@@ -168,7 +168,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
                          bytes32 memo);                 // unique note e.g TxID
   event EarlyContribReceipt (address indexed addr,      // DFN address of donor 
                              uint tokenAmount,          // *restricted* tokens
-                             bytes memo);               // arbitrary note
+                             bytes32 memo);             // arbitrary note
   event BurnReceipt (address indexed addr,              // DFN address adjusted
                      uint tokenAmountBurned);           // DFN deleted by adj.
 
@@ -431,7 +431,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - tokenAmount: number of restricted tokens to assign
    *  - memo: optional dynamic bytes of data to appear in the receipt
    */
-  function registerEarlyContrib(address addr, uint tokenAmount, bytes memo) {
+  function registerEarlyContrib(address addr, uint tokenAmount, bytes32 memo) {
     // Require permission
     if (msg.sender != registrarAuth) { throw; }
 
@@ -510,13 +510,12 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     // To avoid duplicate submitted tx, we mandate that the memo field (like bitcoin tx hash, or wire transfer id)
     // must be unique. It is, however, possible to have one single DFN address benefiting from multiple
     // off-chain transactions (e.g. 1 Bitcoin + $500 by wire)
-
-    if (offchainDonationMemo[memo] == true) {
+    if (memoUsed[memo]) {
       throw;
     }
 
     // Set the memo item to true
-    offchainDonationMemo[memo] = true;
+    memoUsed[memo] = true;
 
     // Do the book-keeping
     bookDonation(addr, timestamp, chfCents, currency, memo);
