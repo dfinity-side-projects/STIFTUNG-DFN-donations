@@ -211,7 +211,8 @@ contract('FDC', function (accounts) {
                 "finalizeEndTime",
                 "phase0Target", "phase1Target",
                 "phase0Bonus", "phase1InitialBonus", "phase1BonusSteps",
-                "earlyContribShare", "gracePeriodAfterTarget",
+                "earlyContribShare", 
+                "gracePeriodAfterPhase0Target", "gracePeriodAfterPhase1Target",
                 "tokensPerCHF", "phase0StartTime"
             ]
 
@@ -720,7 +721,8 @@ contract('FDC', function (accounts) {
                         var phaseTarget = donationPhase == 0 ? fdcConstants["phase0Target"] : fdcConstants["phase1Target"];
                         console.log(" - Asserting if remaining end time less than 1hr if target reached: chfCents = " + chfCentsDonated[donationPhase] + " // cap = " + phaseTarget);
                         if (chfCentsDonated[donationPhase].greaterThanOrEqualTo(phaseTarget)) {
-                            console.log(" --> Target reached. End time should shorten to " + fdcConstants["gracePeriodAfterTarget"] + " seconds ");
+                            var gracePeriod = donationPhase == 0 ? fdcConstants["gracePeriodAfterPhase0Target"] : fdcConstants["gracePeriodAfterPhase1Target"];
+                            console.log(" --> Target reached. End time should shorten to " + gracePeriod + " seconds ");
                             // targetReachTime[donationPhase] = getLastBlockTime();
                             // printStatus();
 
@@ -733,9 +735,9 @@ contract('FDC', function (accounts) {
                             wait(5000, false);
                             var timeLeft = endTime - getVmTime();
 
-                            assert.isAtMost(timeLeft, fdcConstants["gracePeriodAfterTarget"]);
+                            assert.isAtMost(timeLeft, gracePeriod);
 
-                            assert.isAtLeast(timeLeft, fdcConstants["gracePeriodAfterTarget"] - 30);
+                            assert.isAtLeast(timeLeft, gracePeriod - 30);
                             console.log(" --> Assert success. Remaining time: " + (endTime - getLastBlockTime()));
 
                             resolve();

@@ -640,7 +640,11 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     
     // If the target was crossed then start the grace period
     if (targetReached && phase == getPhaseAtTime(now)) {
-      endCurrentPhaseIn(gracePeriodAfterTarget);
+      if (phase == phaseOfDonPhase0) {
+        endCurrentPhaseIn(gracePeriodAfterPhase0Target);
+      } else if (phase == phaseOfDonPhase1) {
+        endCurrentPhaseIn(gracePeriodAfterPhase1Target);
+      }
     }
 
     // Bonus multiplier that was valid at the given time 

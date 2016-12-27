@@ -66,7 +66,8 @@ contract Parameters {
 
   // The time for which donation phases remain open after they reach their 
   // respective targets   
-  uint public constant gracePeriodAfterTarget  = 1 hours;
+  uint public constant gracePeriodAfterPhase0Target  = 1 days;
+  uint public constant gracePeriodAfterPhase1Target  = 0 days;
 
   /*
    * Token issuance
