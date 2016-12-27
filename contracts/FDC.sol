@@ -503,9 +503,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
       throw;
     }
 
-    // To avoid duplicate submitted tx, we mandate that the memo field (like bitcoin tx hash, or wire transfer id)
-    // must be unique. It is, however, possible to have one single DFN address benefiting from multiple
-    // off-chain transactions (e.g. 1 Bitcoin + $500 by wire)
+    // Throw if the memo is duplicated
     if (memoUsed[memo]) {
       throw;
     }
