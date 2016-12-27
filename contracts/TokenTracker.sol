@@ -40,17 +40,11 @@ SOFTWARE.
  *
  * Once the conversion process has started the contract enters a state in which
  * no more assignments can be made.
- *
- * The contract also implements the TokenInterface as follows:
- *   - totalSupply() is the total number of unrestricted tokens
- *   - balanceOf(addr) is the number of unrestricted tokens assigned to addr
  */
  
 pragma solidity ^0.4.6;
 
-import "TokenInterface.sol";
-
-contract TokenTracker is TokenInterface {
+contract TokenTracker {
   // Share of formerly restricted tokens among all tokens in percent 
   uint public restrictedShare; 
 
@@ -88,21 +82,6 @@ contract TokenTracker is TokenInterface {
     restrictedShare = _restrictedShare;
   }
   
-  /**
-   * TokenInterface 
-   */ 
-  uint8  public constant decimals = 0;  
-  function totalSupply() constant returns (uint256 balance) { 
-    return totalUnrestrictedTokens; 
-  }
-  function balanceOf(address owner) constant returns (uint256 balance) { 
-    return tokens[owner] - restrictions[owner]; 
-  }
-  function transfer(address, uint256) returns (bool) { throw; }
-  function transferFrom(address, address, uint256) returns (bool) { throw; }
-  function approve(address, uint256) returns (bool) { throw; }
-  function allowance(address, address) constant returns (uint256) { throw; }
- 
   /** 
    * PUBLIC functions
    *

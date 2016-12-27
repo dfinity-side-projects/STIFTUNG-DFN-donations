@@ -55,8 +55,6 @@ import "Targets.sol";
 import "Parameters.sol";
 
 contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
-  string public constant name   = "Dfinities";
-  string public constant symbol = "DFN";
   
   /*
    * Phases
