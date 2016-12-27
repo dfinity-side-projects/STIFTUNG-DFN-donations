@@ -98,7 +98,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - tracks donor and early contributor addresses in two lists
    */
    
-  // Mapping to store memos that have been used. Used to prevent duplication.
+  // Mapping to store memos that have been used 
   mapping(bytes32 => bool) memoUsed;
 
   // List of registered addresses (each address will appear in one)
