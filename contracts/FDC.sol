@@ -207,25 +207,23 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
      *           V    V               V
      */
     stateOfPhase[0] = state.earlyContrib; 
-    addPhase(earlyContribEndTime); // 0
-    stateOfPhase[1] = state.pause;
-    addPhase(phase0StartTime);     // 1
-    stateOfPhase[2] = state.donPhase0;
-    addPhase(phase0EndTime);       // 2 
-    stateOfPhase[3] = state.offChainReg;
-    addPhase(phase1StartTime);     // 3
-    stateOfPhase[4] = state.donPhase1;
-    addPhase(phase1EndTime);       // 4 
-    stateOfPhase[5] = state.offChainReg;
-    addPhase(finalizeStartTime);   // 5 
-    stateOfPhase[6] = state.finalization;
-    addPhase(finalizeEndTime);     // 6 
-    stateOfPhase[7] = state.done;
+    addPhase(phase0StartTime);     // 0
+    stateOfPhase[1] = state.donPhase0;
+    addPhase(phase0EndTime);       // 1 
+    stateOfPhase[2] = state.offChainReg;
+    addPhase(phase1StartTime);     // 2
+    stateOfPhase[3] = state.donPhase1;
+    addPhase(phase1EndTime);       // 3 
+    stateOfPhase[4] = state.offChainReg;
+    addPhase(finalizeStartTime);   // 4 
+    stateOfPhase[5] = state.finalization;
+    addPhase(finalizeEndTime);     // 5 
+    stateOfPhase[6] = state.done;
 
     // Let the other functions know what phase numbers the donation phases were
     // assigned to
-    phaseOfDonPhase0 = 2;
-    phaseOfDonPhase1 = 4;
+    phaseOfDonPhase0 = 1;
+    phaseOfDonPhase1 = 3;
     
     // Maximum delay for start of donation phases 
     setMaxDelay(phaseOfDonPhase0 - 1, donPhaseMaxDelay);

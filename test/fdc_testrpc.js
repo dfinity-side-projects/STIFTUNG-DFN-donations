@@ -157,6 +157,11 @@ contract('FDC', function (accounts) {
     }
 
     it("FDC Full lifecycle donation testing", function () {
+           // phase number constants
+           var DON_ROUND_0 = 1 
+           var DON_ROUND_1 = 3
+            
+            
             /* Test Parameters */
             var EARLY_CONTRIBUTORS = 1;
             var testSuites = [
@@ -201,7 +206,7 @@ contract('FDC', function (accounts) {
 
             // printStatus();
 
-            var FDC_CONSTANTS = ["earlyContribEndTime", "phase0EndTime",
+            var FDC_CONSTANTS = ["phase0EndTime",
                 "phase1StartTime", "phase1EndTime", "finalizeStartTime",
                 "finalizeEndTime",
                 "phase0Target", "phase1Target",
@@ -229,9 +234,6 @@ contract('FDC', function (accounts) {
                 var fdcTarget = fdcConstants["phase0Target"] / 100 / 10;
                 var target = phase0["target"];
                 var chunk = fdcTarget / minDonations / 2; // TODO made chunk artificially smaller
-
-// TODO: No longer needed because we already advance there for the off-chain donations
-//                p = p.then(advanceToPhase.bind(null,2, 0));
 
                 for (var donationTx = 0; ; donationTx++) {
                     const amt = randomAmount(1, chunk);
@@ -282,7 +284,7 @@ contract('FDC', function (accounts) {
                 p = p.then(printStatus.bind(null, 1));
 
                 const multiplierInterval = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"]) / (fdcConstants["phase1BonusSteps"] + 1);
-                p = p.then(advanceToPhase.bind(null,4, 0));
+                p = p.then(advanceToPhase.bind(null,DON_ROUND_1, 0)); 
 
                 var currentStep = 0;
 
@@ -349,14 +351,14 @@ contract('FDC', function (accounts) {
                     // p = p.then(function () {
                         // advanceVmTimeTo(fdcConstants["phase0StartTime"]);
                     // });
-                    p = p.then(advanceToPhase.bind(null,2, 0));
+                    p = p.then(advanceToPhase.bind(null,DON_ROUND_0, 0)); 
                     p = p.then(generateAndRegisterOffChainDons);
                     for (var i in testSuites) {
                         const test = testSuites[i];
                         const phase0 = test["phase0"];
                         const phase1 = test["phase1"];
                         p = p.then(addPhase0Tests.bind(null, p, phase0));
-                        p = p.then(advanceToPhase.bind(null,3, 0));
+                        p = p.then(advanceToPhase.bind(null,DON_ROUND_0 + 1, 0)); 
                         p = p.then(generateAndRegisterOffChainDons);
                         p = p.then(addPhase1Tests.bind(null, p, phase1));
                         p = p.then(validateFinalization);
@@ -532,7 +534,7 @@ contract('FDC', function (accounts) {
             function onDelayAssertStartTime(delay) {
                 return new Promise(function (resolve, reject) {
                    totalDelay += delay; 
-                   fdc.getPhaseStartTime(4).then(function (startTime) {
+                   fdc.getPhaseStartTime(DON_ROUND_1).then(function (startTime) {
                        assert.equal(startTime, fdcConstants["phase1StartTime"] + totalDelay, "Phase 1 start time in FDC should be equal to initial constant + " + totalDelay);
                        console.log("start time after delay: " + fdcConstants["phase1StartTime"] + " / " + totalDelay + "/" + startTime);
                        resolve();
@@ -557,9 +559,6 @@ contract('FDC', function (accounts) {
                 console.log(" Generate off-chain donations ...");
                 var p = Promise.resolve();
 
-// TODO No longer needed here. We advance outside
-//                p = p.then(advanceToPhase.bind(null,2, 0));
-                
                 for (var i = 0; i < OFF_CHAIN_DONATIONS; i++) {
 
                     var account = new Accounts();
@@ -725,7 +724,7 @@ contract('FDC', function (accounts) {
                             // targetReachTime[donationPhase] = getLastBlockTime();
                             // printStatus();
 
-                            for (var i = 0; i < 7; i++) {
+                            for (var i = 0; i < 6; i++) {
                                 const k = i;
                                 fdc.phaseEndTime(i).then(function (f) {
                                     console.log("Phase " + k + " ends at: " + f);
@@ -815,13 +814,12 @@ contract('FDC', function (accounts) {
              This function use the exact same definition from FDC.sol in terms of definition of phase
              i.e.
              stateOfPhase[0] = state.earlyContrib;
-             stateOfPhase[1] = state.pause;
-             stateOfPhase[2] = state.donPhase0;
-             stateOfPhase[3] = state.offChainReg;
-             stateOfPhase[4] = state.donPhase1;
-             stateOfPhase[5] = state.offChainReg;
-             stateOfPhase[6] = state.finalization;
-             stateOfPhase[7] = state.done;
+             stateOfPhase[1] = state.donPhase0;
+             stateOfPhase[2] = state.offChainReg;
+             stateOfPhase[3] = state.donPhase1;
+             stateOfPhase[4] = state.offChainReg;
+             stateOfPhase[5] = state.finalization;
+             stateOfPhase[6] = state.done;
              */
             function advanceToPhase(phase, offset) {
                 if (phase == 0)
@@ -833,10 +831,10 @@ contract('FDC', function (accounts) {
                         var target = startTime - offset;
                         advanceVmTimeTo(target);
                         lifecycleStage = target;
-                        if (phase >= 2 && phase <= 3) {
+                        if (phase >= DON_ROUND_0 && phase <= DON_ROUND_0 + 1) {
                             donationPhase = 0;
                             phaseStartTime[donationPhase] = target;
-                        } else if (phase >= 4) {
+                        } else if (phase >= DON_ROUND_1) {
                             donationPhase = 1;
                             phaseStartTime[donationPhase] = target;
                         }
