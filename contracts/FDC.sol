@@ -70,8 +70,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   enum state {
     pause,         // Pause without any activity 
     earlyContrib,  // Registration of DFINITY Stiftung/early contributions
-    donPhase0,     // Donation phase 0  
-    donPhase1,     // Donation phase 1 
+    round0,        // Donation round 0  
+    round1,        // Donation round 1 
     offChainReg,   // Grace period for registration of off-chain donations
     finalization,  // Adjustment of DFINITY Stiftung/early contribution tokens
                    // down to their share
@@ -91,7 +91,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - convert DFINITY Stiftung/early contributor tokens down to their share
    *
    * The FDC uses the base contract Targets to:
-   *  - track the targets measured in CHF for each donation phase
+   *  - track the targets measured in CHF for each donation round
    *
    * The FDC itself:
    *  - tracks the memos of off-chain donations (and prevents duplicates)
@@ -133,7 +133,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   address public foundationWallet; 
   
   // Address that is allowed to register DFINITY Stiftung/early contributions
-  // and off-chain donations and to delay donation phase 1
+  // and off-chain donations and to delay donation round 1
   address public registrarAuth; 
   
   // Address that is allowed to update the exchange rate
@@ -148,8 +148,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
  
   // The phase numbers of the donation phases (set by the constructor, 
   // thereafter constant)
-  uint phaseOfDonPhase0;
-  uint phaseOfDonPhase1;
+  uint phaseOfRound0;
+  uint phaseOfRound1;
   
   /*
    * Events
@@ -179,14 +179,14 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - the mapping between phase numbers and states
    *  - the targets in base contract Targets 
    *  - the share for early contributors in base contract TokenTracker
-   *  - the step function for the bonus calculation in donation phase 1 
+   *  - the step function for the bonus calculation in donation round 1 
    *
    * All configuration parameters are taken from base contract Parameters.
    */
   function FDC(address _foundationWallet, address _masterAuth)
     TokenTracker(earlyContribShare)
-    StepFunction(phase1EndTime-phase1StartTime, phase1InitialBonus, 
-                 phase1BonusSteps) 
+    StepFunction(round1EndTime-round1StartTime, round1InitialBonus, 
+                 round1BonusSteps) 
   {
     /*
      * Set privileged addresses for access control
@@ -205,33 +205,33 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
      *           V    V               V
      */
     stateOfPhase[0] = state.earlyContrib; 
-    addPhase(phase0StartTime);     // 0
-    stateOfPhase[1] = state.donPhase0;
-    addPhase(phase0EndTime);       // 1 
+    addPhase(round0StartTime);     // 0
+    stateOfPhase[1] = state.round0;
+    addPhase(round0EndTime);       // 1 
     stateOfPhase[2] = state.offChainReg;
-    addPhase(phase1StartTime);     // 2
-    stateOfPhase[3] = state.donPhase1;
-    addPhase(phase1EndTime);       // 3 
+    addPhase(round1StartTime);     // 2
+    stateOfPhase[3] = state.round1;
+    addPhase(round1EndTime);       // 3 
     stateOfPhase[4] = state.offChainReg;
     addPhase(finalizeStartTime);   // 4 
     stateOfPhase[5] = state.finalization;
     addPhase(finalizeEndTime);     // 5 
     stateOfPhase[6] = state.done;
 
-    // Let the other functions know what phase numbers the donation phases were
+    // Let the other functions know what phase numbers the donation rounds were
     // assigned to
-    phaseOfDonPhase0 = 1;
-    phaseOfDonPhase1 = 3;
+    phaseOfRound0 = 1;
+    phaseOfRound1 = 3;
     
-    // Maximum delay for start of donation phases 
-    setMaxDelay(phaseOfDonPhase0 - 1, donPhaseMaxDelay);
-    setMaxDelay(phaseOfDonPhase1 - 1, donPhaseMaxDelay);
+    // Maximum delay for start of donation rounds 
+    setMaxDelay(phaseOfRound0 - 1, maxRoundDelay);
+    setMaxDelay(phaseOfRound1 - 1, maxRoundDelay);
 
     /*
      * Initialize base contract Targets
      */
-    setTarget(phaseOfDonPhase0, phase0Target);
-    setTarget(phaseOfDonPhase1, phase1Target);
+    setTarget(phaseOfRound0, round0Target);
+    setTarget(phaseOfRound1, round1Target);
   }
   
   /*
@@ -249,7 +249,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - registerEarlyContrib
    *  - registerOffChainDonation
    *  - setExchangeRate
-   *  - delayDonPhase1
+   *  - delayRound1
    *  - setRegistrarAuth
    *  - setExchangeRateAuth
    *  - setAdminAuth
@@ -266,7 +266,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    * Return the bonus multiplier at a given time
    *
    * The given time must  
-   *  - lie in one of the donation phases, 
+   *  - lie in one of the donation rounds, 
    *  - not lie in the future.
    * Otherwise there is no valid multiplier.
    */
@@ -274,17 +274,17 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     // Get phase number (will throw if time lies in the future)
     uint n = getPhaseAtTime(time);
 
-    // If time lies in donation phase 0 we return the constant multiplier 
-    if (stateOfPhase[n] == state.donPhase0) {
-      return 100 + phase0Bonus;
+    // If time lies in donation round 0 we return the constant multiplier 
+    if (stateOfPhase[n] == state.round0) {
+      return 100 + round0Bonus;
     }
 
-    // If time lies in donation phase 1 we return the step function
-    if (stateOfPhase[n] == state.donPhase1) {
+    // If time lies in donation round 1 we return the step function
+    if (stateOfPhase[n] == state.round1) {
       return 100 + getStepFunction(time - getPhaseStartTime(n));
     }
 
-    // Throw outside of donation phases
+    // Throw outside of donation rounds
     throw;
   }
 
@@ -349,16 +349,16 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *
    * This function returns a mix of
    *  - global status of the FDC
-   *  - global status of the FDC specific for one of the two donation phases
+   *  - global status of the FDC specific for one of the two donation rounds
    *  - status related to a specific token address (DFINITY address)
    *  - status (balance) of an external Ethereum account 
    *
    * Arguments are:
-   *  - donationPhase: donation phase to query (0 or 1)
+   *  - donationRound: donation round to query (0 or 1)
    *  - dfnAddr: token address to query
    *  - fwdAddr: external Ethereum address to query
    */
-  function getStatus(uint donationPhase, address dfnAddr, address fwdAddr)
+  function getStatus(uint donationRound, address dfnAddr, address fwdAddr)
     public constant
     returns (
       state currentState,     // current state (an enum)
@@ -366,34 +366,34 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
       uint currentMultiplier, // current bonus multiplier (0 if invalid)
       uint donationCount,     // total individual donations made (a count)
       uint totalTokenAmount,  // total DFN planned allocated to donors
-      uint startTime,         // expected start time of specified donation phase
-      uint endTime,           // expected end time of specified donation phase
-      bool isTargetReached,   // whether phase target has been reached
-      uint chfCentsDonated,   // total value donated in specified phase as CHF
+      uint startTime,         // expected start time of specified donation round
+      uint endTime,           // expected end time of specified donation round
+      bool isTargetReached,   // whether round target has been reached
+      uint chfCentsDonated,   // total value donated in specified round as CHF
       uint tokenAmount,       // total DFN planned allocted to donor (user)
       uint fwdBalance,        // total ETH (in Wei) waiting in fowarding address
       uint donated)           // total ETH (in Wei) donated by DFN address 
   {
     // The global status
     currentState = getState();
-    if (currentState == state.donPhase0 || currentState == state.donPhase1) {
+    if (currentState == state.round0 || currentState == state.round1) {
       currentMultiplier = getMultiplierAtTime(now);
     } 
     fxRate = weiPerCHF;
     donationCount = totalUnrestrictedAssignments;
     totalTokenAmount = totalUnrestrictedTokens;
    
-    // The phase specific status
-    if (donationPhase == 0) {
-      startTime = getPhaseStartTime(phaseOfDonPhase0);
-      endTime = getPhaseStartTime(phaseOfDonPhase0 + 1);
-      isTargetReached = targetReached(phaseOfDonPhase0);
-      chfCentsDonated = counter[phaseOfDonPhase0];
+    // The round specific status
+    if (donationRound == 0) {
+      startTime = getPhaseStartTime(phaseOfRound0);
+      endTime = getPhaseStartTime(phaseOfRound0 + 1);
+      isTargetReached = targetReached(phaseOfRound0);
+      chfCentsDonated = counter[phaseOfRound0];
     } else {
-      startTime = getPhaseStartTime(phaseOfDonPhase1);
-      endTime = getPhaseStartTime(phaseOfDonPhase1 + 1);
-      isTargetReached = targetReached(phaseOfDonPhase1);
-      chfCentsDonated = counter[phaseOfDonPhase1];
+      startTime = getPhaseStartTime(phaseOfRound1);
+      endTime = getPhaseStartTime(phaseOfRound1 + 1);
+      isTargetReached = targetReached(phaseOfRound1);
+      chfCentsDonated = counter[phaseOfRound1];
     }
     
     // The status specific to the DFN address
@@ -453,18 +453,18 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *
    * Arguments are:
    *  - addr: address to the tokens are assigned
-   *  - timestamp: time when the donation came in (determines phase and bonus)
+   *  - timestamp: time when the donation came in (determines round and bonus)
    *  - chfCents: value of the donation in cents of Swiss francs
    *  - currency: the original currency of the donation (three letter string)
    *  - memo: optional bytes of data to appear in the receipt
    *
    * The timestamp must not be in the future. This is because the timestamp 
-   * defines the donation phase and the multiplier and future phase times are
+   * defines the donation round and the multiplier and future phase times are
    * still subject to change.
    *
-   * If called during a donation phase then the timestamp must lie in the same 
+   * If called during a donation round then the timestamp must lie in the same 
    * phase and if called during the extended period for off-chain donations then
-   * the timestamp must lie in the immediately preceding donation phase. 
+   * the timestamp must lie in the immediately preceding donation round. 
    */
   function registerOffChainDonation(address addr, uint timestamp, uint chfCents, 
                                     string currency, bytes32 memo)
@@ -476,9 +476,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     uint currentPhase = getPhaseAtTime(now);
     state currentState = stateOfPhase[currentPhase];
     
-    // Reject registrations outside the two donation phases (incl. their
+    // Reject registrations outside the two donation rounds (incl. their
     // extended registration periods for off-chain donations)
-    if (currentState != state.donPhase0 && currentState != state.donPhase1 &&
+    if (currentState != state.round0 && currentState != state.round1 &&
         currentState != state.offChainReg) {
       throw;
     }
@@ -490,9 +490,9 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     uint timestampPhase = getPhaseAtTime(timestamp);
     state timestampState = stateOfPhase[timestampPhase];
    
-    // Throw if called during a donation phase and the timestamp does not match
+    // Throw if called during a donation round and the timestamp does not match
     // that phase.
-    if ((currentState == state.donPhase0 || currentState == state.donPhase1) &&
+    if ((currentState == state.round0 || currentState == state.round1) &&
         (timestampState != currentState)) { 
       throw;
     }
@@ -516,11 +516,11 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   }
 
   /**
-   * Delay a donation phase
+   * Delay a donation round
    *
    * Must be called from the address registrarAuth.
    *
-   * This function delays the start of donation phase 1 by the given time delta
+   * This function delays the start of donation round 1 by the given time delta
    * unless the time delta is bigger than the configured maximum delay.
    */
   function delayDonPhase(uint donPhase, uint timedelta) {
@@ -528,12 +528,12 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     if (msg.sender != registrarAuth) { throw; }
 
     // Pass the call on to base contract Phased
-    // Delaying the start of a donation phase is the same as delaying the end 
+    // Delaying the start of a donation round is the same as delaying the end 
     // of the preceding phase
     if (donPhase == 0) {
-      delayPhaseEndBy(phaseOfDonPhase0 - 1, timedelta);
+      delayPhaseEndBy(phaseOfRound0 - 1, timedelta);
     } else if (donPhase == 1) {
-      delayPhaseEndBy(phaseOfDonPhase1 - 1, timedelta);
+      delayPhaseEndBy(phaseOfRound1 - 1, timedelta);
     }
   }
 
@@ -590,8 +590,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     // The current state
     state st = getState();
     
-    // Throw if current state is not a donation phase
-    if (st != state.donPhase0 && st != state.donPhase1) { throw; }
+    // Throw if current state is not a donation round
+    if (st != state.round0 && st != state.round1) { throw; }
 
     // Throw if donation amount is below minimum
     if (msg.value < minDonation) { throw; }
@@ -622,8 +622,6 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - is agnostic to the currency 
    *    (the currency argument is simply passed through to the DonationReceipt)
    *
-   * The phase argument is redundant because it could be derived from the 
-   * timestamp. However, it is passed in to save the gas of re-calculating it.
    */
   function bookDonation(address addr, uint timestamp, uint chfCents, 
                         string currency, bytes32 memo) private
@@ -636,10 +634,10 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     
     // If the target was crossed then start the grace period
     if (targetReached && phase == getPhaseAtTime(now)) {
-      if (phase == phaseOfDonPhase0) {
-        endCurrentPhaseIn(gracePeriodAfterPhase0Target);
-      } else if (phase == phaseOfDonPhase1) {
-        endCurrentPhaseIn(gracePeriodAfterPhase1Target);
+      if (phase == phaseOfRound0) {
+        endCurrentPhaseIn(gracePeriodAfterRound0Target);
+      } else if (phase == phaseOfRound1) {
+        endCurrentPhaseIn(gracePeriodAfterRound1Target);
       }
     }
 

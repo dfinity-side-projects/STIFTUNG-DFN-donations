@@ -206,14 +206,14 @@ contract('FDC', function (accounts) {
 
             // printStatus();
 
-            var FDC_CONSTANTS = ["phase0EndTime",
-                "phase1StartTime", "phase1EndTime", "finalizeStartTime",
+            var FDC_CONSTANTS = ["round0EndTime"
+                "round1StartTime", "round1EndTime", "finalizeStartTime",
                 "finalizeEndTime",
-                "phase0Target", "phase1Target",
-                "phase0Bonus", "phase1InitialBonus", "phase1BonusSteps",
+                "round0Target", "round1Target",
+                "round0Bonus", "round1InitialBonus", "round1BonusSteps",
                 "earlyContribShare", 
-                "gracePeriodAfterPhase0Target", "gracePeriodAfterPhase1Target",
-                "tokensPerCHF", "phase0StartTime"
+                "gracePeriodAfterRound0Target", "gracePeriodAfterRound1Target",
+                "tokensPerCHF", "round0StartTime"
             ]
 
 
@@ -232,7 +232,7 @@ contract('FDC', function (accounts) {
             function addPhase0Tests(p, phase0) {
                 var minDonations = phase0["min_donations"];
                 var amountDonated = 0;
-                var fdcTarget = fdcConstants["phase0Target"] / 100 / 10;
+                var fdcTarget = fdcConstants["round0Target"] / 100 / 10;
                 var target = phase0["target"];
                 var chunk = fdcTarget / minDonations / 2; // TODO made chunk artificially smaller
 
@@ -270,11 +270,11 @@ contract('FDC', function (accounts) {
             function addPhase1Tests(p, phase1) {
                 var minDonations = phase1["min_donations"];
                 var amountDonated = 0;
-                var fdcTarget = fdcConstants["phase1Target"] / 100 / 10;
+                var fdcTarget = fdcConstants["round1Target"] / 100 / 10;
                 var target = phase1["target"];
                 var chunk = fdcTarget / minDonations;
 
-                var bonusSteps = fdcConstants["phase1BonusSteps"];
+                var bonusSteps = fdcConstants["round1BonusSteps"];
                 var requiredSteps = phase1["steps"];
 
                 p = p.then(delayPhase1.bind(null, DELAY)).then(onDelayAssertStartTime);
@@ -284,7 +284,7 @@ contract('FDC', function (accounts) {
                 p = p.then(initConstants);
                 p = p.then(printStatus.bind(null, 1));
 
-                const multiplierInterval = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"]) / (fdcConstants["phase1BonusSteps"] + 1);
+                const multiplierInterval = (fdcConstants["round1EndTime"] - fdcConstants["round1StartTime"]) / (fdcConstants["round1BonusSteps"] + 1);
                 p = p.then(advanceToPhase.bind(null,DON_ROUND_1, 0)); 
 
                 var currentStep = 0;
@@ -321,7 +321,7 @@ contract('FDC', function (accounts) {
                             currentStep++;
                             const s = currentStep;
                             const offset = multiplierInterval * s;
-                            const targetTime = fdcConstants["phase1StartTime"] + offset;
+                            const targetTime = fdcConstants["round1StartTime"] + offset;
                             p = p.then(function () {
                                 console.log("  Total delay :" + totalDelay);
                                 console.log("  Multiplier Step " + s + " offset:" + offset);
@@ -350,7 +350,7 @@ contract('FDC', function (accounts) {
                     var p = Promise.resolve();
                     p = p.then(generateAndRegisterEarlyContribs);
                     // p = p.then(function () {
-                        // advanceVmTimeTo(fdcConstants["phase0StartTime"]);
+                        // advanceVmTimeTo(fdcConstants["round0StartTime"]);
                     // });
                     p = p.then(advanceToPhase.bind(null,DON_ROUND_0, 0)); 
                     p = p.then(generateAndRegisterOffChainDons);
@@ -536,8 +536,8 @@ contract('FDC', function (accounts) {
                 return new Promise(function (resolve, reject) {
                    totalDelay += delay; 
                    fdc.getPhaseStartTime(DON_ROUND_1).then(function (startTime) {
-                       assert.equal(startTime, fdcConstants["phase1StartTime"] + totalDelay, "Phase 1 start time in FDC should be equal to initial constant + " + totalDelay);
-                       console.log("start time after delay: " + fdcConstants["phase1StartTime"] + " / " + totalDelay + "/" + startTime);
+                       assert.equal(startTime, fdcConstants["round1StartTime"] + totalDelay, "Phase 1 start time in FDC should be equal to initial constant + " + totalDelay);
+                       console.log("start time after delay: " + fdcConstants["round1StartTime"] + " / " + totalDelay + "/" + startTime);
                        resolve();
                    });
                 });
@@ -574,7 +574,7 @@ contract('FDC', function (accounts) {
 
                 return new Promise(function (resolve, reject) {
                     for (var addr in offChainDons) {
-                        var time = fdcConstants["phase0StartTime"];
+                        var time = fdcConstants["round0StartTime"];
                         p = p.then(registerAndValidateOffChainDon.bind(null, addr, time, offChainDons[addr], "USD", "Offchain #" + (offchainRegIndex++)));
                     }
                     p.then(resolve);
@@ -613,15 +613,15 @@ contract('FDC', function (accounts) {
             // Calculate bonus based on remaining time left
             function getPhase1Bonus(time) {
 
-                var timeLeft = fdcConstants["phase1EndTime"] + totalDelay - time;
-                var duration = (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"])
+                var timeLeft = fdcConstants["round1EndTime"] + totalDelay - time;
+                var duration = (fdcConstants["round1EndTime"] - fdcConstants["round1StartTime"])
 
-                var nSteps = fdcConstants["phase1BonusSteps"].valueOf() + 1;
+                var nSteps = fdcConstants["round1BonusSteps"].valueOf() + 1;
                 var perPeriod = duration / nSteps;
-                var step = fdcConstants["phase1InitialBonus"] / fdcConstants["phase1BonusSteps"]; // should be an integer
+                var step = fdcConstants["round1InitialBonus"] / fdcConstants["round1BonusSteps"]; // should be an integer
                 var bonus = (Math.ceil(timeLeft / perPeriod) - 1) * step; 
-                console.log("phase1InitialBonus: " + fdcConstants["phase1InitialBonus"]);
-                console.log("phase1BonusSteps: " + fdcConstants["phase1BonusSteps"]);
+                console.log("round1InitialBonus: " + fdcConstants["round1InitialBonus"]);
+                console.log("round1BonusSteps: " + fdcConstants["round1BonusSteps"]);
                 console.log("Time: " + time);
                 console.log(" - Using Phase 1 bonus of: " + bonus + " [ " + timeLeft + "/" + duration + "/" + perPeriod + "]");
                 return bonus;
@@ -631,7 +631,7 @@ contract('FDC', function (accounts) {
                 var multiplier = 100;
                 var startTime = phaseStartTime[phase];
                 if (phase == 0) {
-                    multiplier = 100 + fdcConstants["phase0Bonus"];
+                    multiplier = 100 + fdcConstants["round0Bonus"];
                 } else if (phase == 1) {
                     multiplier += getPhase1Bonus(time);
                     // console.log(" Using Phase 1 bonus multiplier: " + multiplier);
@@ -718,10 +718,10 @@ contract('FDC', function (accounts) {
                         var startTime = res[5];      // expected start time of specified donation phase
                         var endTime = res[6];        // expected end time of specified donation phase
 
-                        var phaseTarget = donationPhase == 0 ? fdcConstants["phase0Target"] : fdcConstants["phase1Target"];
+                        var phaseTarget = donationPhase == 0 ? fdcConstants["round0Target"] : fdcConstants["round1Target"];
                         console.log(" - Asserting if remaining end time less than 1hr if target reached: chfCents = " + chfCentsDonated[donationPhase] + " // cap = " + phaseTarget);
                         if (chfCentsDonated[donationPhase].greaterThanOrEqualTo(phaseTarget)) {
-                            var gracePeriod = donationPhase == 0 ? fdcConstants["gracePeriodAfterPhase0Target"] : fdcConstants["gracePeriodAfterPhase1Target"];
+                            var gracePeriod = donationPhase == 0 ? fdcConstants["gracePeriodAfterRound0Target"] : fdcConstants["gracePeriodAfterRound1Target"];
                             console.log(" --> Target reached. End time should shorten to " + gracePeriod + " seconds ");
                             // targetReachTime[donationPhase] = getLastBlockTime();
                             // printStatus();
@@ -745,9 +745,9 @@ contract('FDC', function (accounts) {
                             console.log(" --> Target NOT reached. Phase 0/1 End time should be 6 weeks apart from start time.");
                             // If in seed / main donation phase, then it should have 6 weeks
                             if (lifecycleStage == 4)
-                                assert.isAtLeast(endTime - startTime, (fdcConstants["phase1EndTime"] - fdcConstants["phase1StartTime"]));
+                                assert.isAtLeast(endTime - startTime, (fdcConstants["round1EndTime"] - fdcConstants["round1StartTime"]));
                             else if (lifecycleStage == 2) {
-                                assert.isAtLeast(endTime - startTime, (fdcConstants["phase0EndTime"] - fdcConstants["phase0StartTime"]));
+                                assert.isAtLeast(endTime - startTime, (fdcConstants["round0EndTime"] - fdcConstants["round0StartTime"]));
                             }
 
                             resolve();
@@ -816,9 +816,9 @@ contract('FDC', function (accounts) {
              This function use the exact same definition from FDC.sol in terms of definition of phase
              i.e.
              stateOfPhase[0] = state.earlyContrib;
-             stateOfPhase[1] = state.donPhase0;
+             stateOfPhase[1] = state.round0;
              stateOfPhase[2] = state.offChainReg;
-             stateOfPhase[3] = state.donPhase1;
+             stateOfPhase[3] = state.round1;
              stateOfPhase[4] = state.offChainReg;
              stateOfPhase[5] = state.finalization;
              stateOfPhase[6] = state.done;
