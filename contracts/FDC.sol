@@ -589,6 +589,13 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     masterAuth = newAuth;
   }
 
+  function endCurrentPhaseNow() public {
+    // Require permission
+    if (msg.sender != masterAuth) { throw; }
+    
+    endCurrentPhaseIn(1);
+  }
+
   /*
    * PRIVATE functions
    *
