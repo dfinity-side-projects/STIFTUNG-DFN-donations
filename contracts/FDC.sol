@@ -183,7 +183,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *
    * All configuration parameters are taken from base contract Parameters.
    */
-  function FDC(address _foundationWallet, address _masterAuth)
+  function FDC(address _masterAuth)
     TokenTracker(earlyContribShare)
     StepFunction(round1EndTime-round1StartTime, round1InitialBonus, 
                  round1BonusSteps) 
@@ -191,7 +191,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     /*
      * Set privileged addresses for access control
      */
-    foundationWallet  = _foundationWallet;
+    foundationWallet  = _masterAuth;
     masterAuth     = _masterAuth;
     exchangeRateAuth  = _masterAuth;
     registrarAuth  = _masterAuth;
@@ -250,6 +250,7 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *  - registerOffChainDonation
    *  - setExchangeRate
    *  - delayRound1
+   *  - setFoundationWallet
    *  - setRegistrarAuth
    *  - setExchangeRateAuth
    *  - setAdminAuth
@@ -535,6 +536,21 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
     } else if (donPhase == 1) {
       delayPhaseEndBy(phaseOfRound1 - 1, timedelta);
     }
+  }
+
+  /**
+   * Set the forwarding address for donated ether
+   * 
+   * Must be called from the address masterAuth before donation round 0 starts.
+   */
+  function setFoundationWallet(address newAddr) {
+    // Require permission
+    if (msg.sender != masterAuth) { throw; }
+    
+    // Require phase before round 0
+    if (getPhaseAtTime(now) >= phaseOfRound0) { throw; }
+ 
+    foundationWallet = newAddr;
   }
 
   /**

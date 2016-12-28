@@ -19,8 +19,8 @@ module.exports = {
     network_id: "default", // Ethereum public network
     host: "ec2-54-149-199-242.us-west-2.compute.amazonaws.com",
     port: 8545,
-      gas: 4000000,
-      gasPrice: 200000000000,
+      gas: 3000000,
+      gasPrice: 20000000000,
       from: "733dcdb9a7c60067d65ec731c49e95ed995e59fd",
   },
   "morden": {

@@ -13,7 +13,7 @@ module.exports = function(deployer, network) {
         // Deploy FDC using the standard accounts provided by testRPC for testing
         // purposes. These can be accessed from any test unit :)
         //
-        deployer.deploy(FDC, walletAddr, registrar).then(function() {
+        deployer.deploy(FDC, registrar).then(function() {
             // deployed OK!
             var fdc = FDC.deployed();
             console.log("FDC deployed at "+fdc.address+"\nUsing controllers:\n"+
@@ -34,14 +34,10 @@ module.exports = function(deployer, network) {
         });
     } else {
         //
-        // TODO add identities of multi-sig controllers for production!!
+        // Deploy FDC with master from Ledger wallet
         //
-        var foundationWalletAddr = "0x733DcDb9a7C60067d65eC731C49e95eD995e59fD";
-        // Identity of dummy registrar
-        var donationRegistrarAddr = "0x733DcDb9a7C60067d65eC731C49e95eD995e59fD";
-        // Identity of dummy exchange rate updater
-        var exchangeRateUpdaterAddr = "0x733DcDb9a7C60067d65eC731C49e95eD995e59fD";
+        var masterAddr = "0xb2a97344DC2156491be2Fd241bdc48ba6F1ad38D";
 
-        deployer.deploy(FDC, foundationWalletAddr, donationRegistrarAddr);
+        deployer.deploy(FDC, masterAddr);
     }
 };
