@@ -88,6 +88,17 @@ contract('FDC', function (accounts) {
         web3.currentProvider.send({method: "evm_increaseTime", params: [time - getVmTime()]})
     }
 
+    it("We will set the foundationWallet", function () {
+        var fdc = FDC.deployed();
+        console.log("Setting foundationWallet on FDC at " + fdc.address);
+        return fdc.setFoundationWallet(accounts[0], {gas: 300000, from: accounts[1]}).then(function (txID) {
+            console.log("Successfully set the foundationWallet!");
+        }).catch(function (e) {
+            console.log("Test exception: " + e);
+            throw e;
+        });
+    });
+
     it("We will set the exchangeRateAuth", function () {
         var fdc = FDC.deployed();
         console.log("Setting exchangeRateAuth on FDC at " + fdc.address);
@@ -206,7 +217,7 @@ contract('FDC', function (accounts) {
 
             // printStatus();
 
-            var FDC_CONSTANTS = ["round0EndTime"
+            var FDC_CONSTANTS = ["round0EndTime",
                 "round1StartTime", "round1EndTime", "finalizeStartTime",
                 "finalizeEndTime",
                 "round0Target", "round1Target",
