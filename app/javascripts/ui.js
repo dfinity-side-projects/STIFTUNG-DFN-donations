@@ -21,82 +21,94 @@
  *
  */
 
-// *
-// *** User interface wrapper ***
-// *
+/**
+ *  User interface wrapper
+ *
+ * This is a collection of wrapper functions that allow App to create/update UI elements
+ * and binding of UI event handlers
+ */
 
 
 // Constructor
 var UI = function () {
-    // this.wireUpDOM();
     this.tasks = ["task-agree", "task-create-seed", "task-understand-fwd-eth", "task-donate"];
     this.locationDetected = "";
 }
 
 
-// US country code
+// TODO: US country code
 var US_COUNTRY_CODE = "USA";
 
-// Wire up event handlers of UI.
-// This is necessary because Google Chrome extension will not allow inline
-// Javascript at highest manifest security setting.
+/*
+ * Wire up event handlers of UI.
+ * This is necessary because Google Chrome extension will not allow inline Javascript due to security reasons.
+ *
+ * This function should be called externally when UI elements are ready.
+ *
+ */
 UI.prototype.wireUpDOM = function () {
-
-    this.bindUIListener("show-terms-task", "showTerms");
-    this.bindUIListener("show-create-seed-task", "showCreateSeed");
-    this.bindUIListener("show-explain-forwarding-task", "showExplainForwarding");
-    this.bindUIListener("withdraw-eth-link", "showWithdrawEth");
-    this.bindUIListener("withdraw-eth-link-2", "showWithdrawEth");
-    this.bindUIListener("do-withdraw-eth-button", "withdrawETH");
-    this.bindUIListener("show-withdraw-btc-link", "showWithdrawBtc");
-
-    this.bindUIListener("do-withdraw-btc-button", "withdrawBtc");
-    this.bindUIListener("btn-ethereum-node", "showSelectEthereumNode");
-    this.bindUIListener("btn-bitcoin-node", "showSelectBitcoinNode");
-    this.bindUIListener("remaining-eth-link", "showWithdrawEth");
-
-    this.bindUIListener("hide-withdraw-eth-button", "hideWithdrawEth");
-    this.bindUIListener("do-withdraw-btc-button", "withdrawBtc");
-    this.bindUIListener("hide-withdraw-btc-button", "hideWithdrawBtc");
-    this.bindUIListener("show-import-seed-button", "showImportSeed");
-    this.bindUIListener("after-create-seed-button", "afterCreateSeed");
-    this.bindUIListener("cancel-create-seed-button", "cancelCreateSeed");
-    this.bindUIListener("do-validate-seed-button", "doValidateSeed");
-    this.bindUIListener("before-validate-seed-button", "beforeValidateSeed");
-    this.bindUIListener("do-import-seed-button", "doImportSeed");
-    this.bindUIListener("hide-import-seed-button", "hideImportSeed");
-    this.bindUIListener("done-explain-forwarding-button", "doneExplainForwarding");
-
-
-    this.bindUIListener("connect-hosted", "onSelectEthereumNode", "hosted");
-    this.bindUIListener("connect-localhost", "onSelectEthereumNode", "http://localhost:8545");
-    this.bindUIListener("btn-custom-full-node-eth", "onSelectEthereumNode", "$custom-full-node-address-eth");
-
-    this.bindUIListener("connect-hosted-btc", "onSelectBitcoinNode", "hosted");
-    this.bindUIListener("connect-localhost-btc", "onSelectBitcoinNode", "http://localhost:3001");
-    this.bindUIListener("btn-custom-full-node-btc", "onSelectBitcoinNode","$custom-full-node-address-btc");
-
-
+    //  Terms & Conditions
     this.bindUIListener("i-accept-terms", "checkTermsBox");
+    this.bindUIListener("show-terms-task", "showTerms");
     this.bindUIListener("i-am-not-usa-resident", "checkTermsBox");
-
     this.bindUIListener("agree-terms-button", "readTerms");
     this.bindUIListener("disagree-terms-button", "hideTerms");
     this.bindUIListener("hide-withdraw-eth-button", "hideWithdrawEth");
 
-    this.bindGlobalListener("show-dfinities-info", "showDialog", "dfinities-info");
-    this.bindGlobalListener("close-dfinities-info", "closeDialog", "dfinities-info");
+    // Seed generation / import
+    this.bindUIListener("show-create-seed-task", "showCreateSeed");
+    this.bindUIListener("after-create-seed-button", "afterCreateSeed");
+    this.bindUIListener("cancel-create-seed-button", "cancelCreateSeed");
+    this.bindUIListener("show-import-seed-button", "showImportSeed");
+    this.bindUIListener("do-validate-seed-button", "doValidateSeed");
+    this.bindUIListener("before-validate-seed-button", "beforeValidateSeed");
+    this.bindUIListener("do-import-seed-button", "doImportSeed");
+    this.bindUIListener("hide-import-seed-button", "hideImportSeed");
+
+    // Withdrawal ETH/BTC
+    this.bindUIListener("hide-withdraw-eth-button", "hideWithdrawEth");
+    this.bindUIListener("do-withdraw-btc-button", "withdrawBtc");
+    this.bindUIListener("hide-withdraw-btc-button", "hideWithdrawBtc");
+    this.bindUIListener("remaining-eth-link", "showWithdrawEth");
+    this.bindUIListener("withdraw-eth-link", "showWithdrawEth");
+    this.bindUIListener("withdraw-eth-link-2", "showWithdrawEth");
+    this.bindUIListener("do-withdraw-eth-button", "withdrawETH");
+    this.bindUIListener("show-withdraw-btc-link", "showWithdrawBtc");
+    this.bindUIListener("remaining-btc-link", "showWithdrawBtc");
+    this.bindUIListener("do-withdraw-btc-button", "withdrawBtc");
+
+    // Select Etheruem/Bitcoin Node
+    this.bindUIListener("btn-ethereum-node", "showSelectEthereumNode");
+    this.bindUIListener("btn-bitcoin-node", "showSelectBitcoinNode");
+    this.bindUIListener("connect-hosted", "onSelectEthereumNode", "hosted");
+    this.bindUIListener("connect-localhost", "onSelectEthereumNode", "http://localhost:8545");
+    this.bindUIListener("btn-custom-full-node-eth", "onSelectEthereumNode", "$custom-full-node-address-eth");
+    this.bindUIListener("connect-hosted-btc", "onSelectBitcoinNode", "hosted");
+    this.bindUIListener("connect-localhost-btc", "onSelectBitcoinNode", "http://localhost:3001");
+    this.bindUIListener("btn-custom-full-node-btc", "onSelectBitcoinNode","$custom-full-node-address-btc");
     this.bindGlobalListener("close-select-full-node-eth", "closeDialog", "select-full-node-eth");
     this.bindGlobalListener("close-select-full-node-btc", "closeDialog", "select-full-node-btc");
 
+    // Explain forwarding
+    this.bindUIListener("done-explain-forwarding-button", "doneExplainForwarding");
+    this.bindUIListener("show-explain-forwarding-task", "showExplainForwarding");
+
+    // Dfinity Info Dialog
+    this.bindGlobalListener("show-dfinities-info", "showDialog", "dfinities-info");
+    this.bindGlobalListener("close-dfinities-info", "closeDialog", "dfinities-info");
+
+    // Disable agree terms button by default, unless all checkboxes are confirmed and location check passed
     disableButton("agree-terms-button");
 }
 
+// UI function to be called after app completed loading
+// As some handlers depend upon the App function to be loaded
 UI.prototype.afterAppLoaded = function () {
     this.bindAppListener("retry-forward-link", "retryForwarding");
     this.bindAppListener("retry-forward-btc-link", "retryForwardingBtc");
 }
 
+// Utility function to bind an element's events to a handler in UI class
 UI.prototype.bindUIListener = function (element, uiHandler, argument) {
     const self = this;
     document.getElementById(element).addEventListener("click", function() {
@@ -109,16 +121,17 @@ UI.prototype.bindUIListener = function (element, uiHandler, argument) {
     });
 }
 
-
+// Utility function to bind an element's events to a handler in App class
 UI.prototype.bindAppListener = function (element, uiHandler, argument) {
     document.getElementById(element).addEventListener("click", app[uiHandler].bind(app, [argument]));
 }
 
+// Utility function to bind an element's events to a global function
 UI.prototype.bindGlobalListener = function (element, uiHandler, argument) {
     document.getElementById(element).addEventListener("click", window[uiHandler].bind(null, [argument]));
 }
 
-// Set the allocation of Genesis DFN to be recommended for user
+// Set the amount Genesis DFN to be recommended for user
 UI.prototype.setGenesisDFN = function (dfn) {
     console.log("Setting genesis DFN: " + dfn);
     var e = document.getElementById("genesis-dfinities-amount");
@@ -127,7 +140,6 @@ UI.prototype.setGenesisDFN = function (dfn) {
         e.innerHTML = "? DFN";
         e2.innerHTML = "? DFN (unknown as not connected to an Ethereum node)";
         // hideElement("genesis-dfinities-info-icon");
-
     }
     else {
         e.innerHTML = formatCurrency(dfn, "DFN");
@@ -744,7 +756,7 @@ UI.prototype.updateLocationBlocker = function () {
     });
 }
 
-/** Common UI functions */
+// ** Common UI functions **
 
 function disableButton(buttonId) {
     button = document.getElementById(buttonId);
@@ -773,7 +785,7 @@ function enableButton(buttonId) {
     button.className = button.className.replace(/disabled/g, '');
 }
 
-/** UI utility functions */
+// ** UI utility functions **
 
 function formatCurrency(n, symbol, d) {
     // round it
