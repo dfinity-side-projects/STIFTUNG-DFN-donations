@@ -102,8 +102,8 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   mapping(bytes32 => bool) memoUsed;
 
   // List of registered addresses (each address will appear in one)
-  address[] donorList;  
-  address[] earlyContribList;  
+  address[] public donorList;  
+  address[] public earlyContribList;  
   
   /*
    * Exchange rate and ether handling
