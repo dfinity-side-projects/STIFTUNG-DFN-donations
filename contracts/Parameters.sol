@@ -45,12 +45,12 @@ contract Parameters {
    *  done
    */
 
-  // The start time of round 0 is set to 2017-01-01 12:00 UTC
-  uint public constant round0StartTime      = 1483272000; 
+  // The start of round 0 is set to 2017-01-14 19:00 of timezone Europe/Zurich
+  uint public constant round0StartTime      = 1484416800; 
   
-  // The start of round 1 is set to 2017-03-13 19:00 of timezone Europe/Zurich
-  // TZ="Europe/Zurich" date -d "2017-03-13 19:00" "+%s"
-  uint public constant round1StartTime      = 1489428000; 
+  // The start of round 1 is set to 2017-05-15 19:00 of timezone Europe/Zurich
+  // TZ="Europe/Zurich" date -d "2017-05-15 19:00" "+%s"
+  uint public constant round1StartTime      = 1494867600; 
   
   // Transition times that are defined by duration
   uint public constant round0EndTime        = round0StartTime + 6 weeks;
@@ -98,5 +98,5 @@ contract Parameters {
 
   // Share of tokens eventually assigned to DFINITY Stiftung and early 
   // contributors in % of all tokens eventually in existence
-  uint public constant earlyContribShare = 20; 
+  uint public constant earlyContribShare = 22; 
 }
