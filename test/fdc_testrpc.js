@@ -520,8 +520,8 @@ contract('FDC', function (accounts) {
                     (function (status) {
                         var tokensTotal = status[4];
                         console.log("Total tokens of early contrib: " + finalizedTotalEarlyContrib + "  [total: " + tokensTotal + "]");
-                        assert.isAtLeast(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (EARLY_CONTRIB_PERC ) / 100 - tokensTotal * .001, " Early contrib should be at least 19.99% of Total tokens");
-                        assert.isAtMost(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (EARLY_CONTRIB_PERC ) / 100, " Early contrib should be no more than 20% of Total tokens");
+                        assert.isAtLeast(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (fdc["earlyContribShare"] ) / 100 - tokensTotal * .001, " Early contrib should be at least 19.99% of Total tokens");
+                        assert.isAtMost(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (fdc["earlyContribShare"]) / 100, " Early contrib should be no more than 20% of Total tokens");
 
 
                     });
@@ -554,7 +554,6 @@ contract('FDC', function (accounts) {
                 });
             }
            
-            var EARLY_CONTRIB_PERC = 20;
 
             var earlyContribs = {};
             var origTotalEarlyContrib = 0;
