@@ -456,7 +456,7 @@ contract('FDC', function (accounts) {
                     .then(fdcGetterPromise.bind(null, "restrictions", [address]))
                     .then(function () {
                         console.log(" - Asserting off-chain donation tokens / restricted:" + getterValues["tokens"] + " / " + getterValues["restrictions"]);
-                        assert.equal(Math.floor(2.5*amountCents/10), getterValues["tokens"]-getterValues["restrictions"]);
+                        assert.equal(Math.floor(3.0*amountCents/10), getterValues["tokens"]-getterValues["restrictions"]);
                         console.log(" - Assert success");
                     })
             }
@@ -473,7 +473,7 @@ contract('FDC', function (accounts) {
                             chfCentsDonated[0] = chfCentsDonated[0].add(amountCents);
                             // TODO use calcDfnAmountAtTime
                             //var expectedToken = calcDfnAmountAtTime(amountCents, time, 0);
-                            var expectedToken = Math.floor(2.5*amountCents/10);
+                            var expectedToken = Math.floor(3.0*amountCents/10);
                             totalTokenExpected = totalTokenExpected.add(expectedToken);
                             validateOffChainReg(address, amountCents).then(resolve);
                         });
@@ -520,8 +520,8 @@ contract('FDC', function (accounts) {
                     (function (status) {
                         var tokensTotal = status[4];
                         console.log("Total tokens of early contrib: " + finalizedTotalEarlyContrib + "  [total: " + tokensTotal + "]");
-                        assert.isAtLeast(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (fdc["earlyContribShare"] ) / 100 - tokensTotal * .001, " Early contrib should be at least 19.99% of Total tokens");
-                        assert.isAtMost(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (fdc["earlyContribShare"]) / 100, " Early contrib should be no more than 20% of Total tokens");
+                        assert.isAtLeast(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (fdcConstants["earlyContribShare"] ) / 100 - tokensTotal * .001, " Early contrib should be at least 21.99% of Total tokens");
+                        assert.isAtMost(finalizedTotalEarlyContrib.toNumber(), tokensTotal * (fdcConstants["earlyContribShare"]) / 100, " Early contrib should be no more than 22% of Total tokens");
 
 
                     });

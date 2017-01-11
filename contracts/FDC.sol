@@ -55,6 +55,8 @@ import "Targets.sol";
 import "Parameters.sol";
 
 contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
+  // An identifying string, set by the constructor
+  string public name;
   
   /*
    * Phases
@@ -183,11 +185,16 @@ contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
    *
    * All configuration parameters are taken from base contract Parameters.
    */
-  function FDC(address _masterAuth)
+  function FDC(address _masterAuth, string _name)
     TokenTracker(earlyContribShare)
     StepFunction(round1EndTime-round1StartTime, round1InitialBonus, 
                  round1BonusSteps) 
   {
+    /*
+     * Set identifying string
+     */
+    name = _name;
+
     /*
      * Set privileged addresses for access control
      */
