@@ -21,7 +21,6 @@
  *
  */
 
-var accounts;
 var account;
 
 // *
@@ -33,7 +32,6 @@ var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Ethe
 var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically selected Ethereum provider
 var ETHEREUM_MAX_TX_CYCLES = 10; // how many cycles of forwarding attempt should we timeout before making a second tx, roughly CHK_FWD_INTERVAL x Cycles
 var ETHEREUM_HOSTED_NODES = ["http://52.56.78.165:8545", "http://35.156.229.229:8545", "http://52.60.98.105:8545"];
-var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
 
 
 // -----------------------------------------------------------------------------
@@ -47,19 +45,14 @@ var ETHEREUM_LOCAL_NODE = "http://localhost:8545";
 
 var Insight = require('bitcore-explorers').Insight;
 var bitcore = require('bitcore-lib');
-// bitcore.Networks.defaultNetwork = bitcore.Networks.testnet;
 bitcore.Networks.defaultNetwork = bitcore.Networks.livenet;
-
-var BITCOIN_FOUNDATION_ADDRESS = '17uBu7yynWbvdd7TPKFuu5qPEs6H3A3V4U'
-// var BITCOIN_FOUNDATION_ADDRESS = 'mr5u4MQPmjktx2nF718m5PguKF4v7MUefo'
+var BITCOIN_FOUNDATION_ADDRESS = '19FCgvpfKgcu9koCqt6YdTFGwE6r46nhkX'
 var BITCOIN_HOSTED_NODES = ["http://52.56.78.165:3001", "http://35.156.229.229:3001", "http://52.60.98.105:3001"];
-var BITCOIN_HOSTED_NODE = BITCOIN_HOSTED_NODES[0];
 var BITCOIN_CHK_FWD_INTERVAL = 5000;
 
 
 // All possible states of FDC contract
 var STATE_TBD = -888;
-var STATE_INVALID_CONTRACT = -999;
 var STATE_PAUSE = 0;
 var STATE_EARLY_CONTRIB = 1;
 var STATE_DON_PHASE0 = 2;
@@ -70,7 +63,7 @@ var STATE_DONE = 6;
 
 
 // -----------------------------------------------------------------------------
-
+// These constants will be initialized upon window load because of dependency on web3
 var GAS_PRICE;                      // estimate price of gas
 var MIN_DONATION;                   // minimum donation allowed
 var MAX_DONATE_GAS;                 // maximum gas used making donation
@@ -78,16 +71,15 @@ var MAX_DONATE_GAS_COST;            // estimate maximum cost of gas used
 var MIN_FORWARD_AMOUNT;             // minimum amount we will try to forward
 var VALUE_TRANSFER_GAS = 21000;
 var VALUE_TRANSFER_GAS_COST;
-// TODO if there's congestion, the gas price might go up. We need to handle
-// this better or leave sufficent margin cannot fail
 
 // FDC address
 var FDCAddr = null;
 var FDC_PRODUCTION_ADDR = "0x10105C89046aC24dd66E9aea7e810225eA08C824"
 
+var DEV_MODE = false;
+var SHOW_XPUB = true;
 
 // FDC ABI signatures
-//var donateAs = "0d9543c5";
 var donateAsWithChecksum = "ceadd9c8";
 
 
@@ -118,23 +110,17 @@ var App = function (userAccounts, testUI) {
     this.lastBitcoinNode = "hosted";
     this.donationState = STATE_TBD;
 
-    // Code for dev mode
-    // if (window.location.href.indexOf("fdc") != -1) {
-    //     FDCAddr = getParameterByName("fdc", window.location.href);
-    //     console.log("Using Custom FDC:" + FDCAddr)
-    // } else if (!FDC_PRODUCTION_ADDR) {
-    //     FDCAddr = FDC.deployed().address;
-    //     console.log("Using locally deployed FDC for testing:" + FDCAddr)
-    // } else if (FDC_PRODUCTION_ADDR) {
-    FDCAddr = FDC_PRODUCTION_ADDR;
-    // }
+    // Code for dev mode only
+    if (!DEV_MODE) {
+        FDCAddr = FDC_PRODUCTION_ADDR;
+    } else {
+        FDCAddr = FDC.deployed().address;
+    }
 
     this.setCurrentTask(this.lastTask);
     this.setGenesisDFN(undefined);
-
     this.setUiUserAddresses();
     ui.setUserSeed(undefined);
-
     this.setFunderChfReceived(undefined);
 
     // Load previous saved node information if possible
@@ -460,7 +446,7 @@ App.prototype.pollStatus = function (firstTry) {
     var fdc = FDC.at(FDCAddr);
 
     var p = Promise.resolve();
-    console.log("Querying using dfnAddr: " + dfnAddr);
+    // console.log("Querying using dfnAddr: " + dfnAddr);
     p = p.then(fdc.getStatus.call.bind(this, self.donationPhase, dfnAddr, ethAddr));
     p = p.then(function (res) {
         try {
@@ -484,7 +470,7 @@ App.prototype.pollStatus = function (firstTry) {
             if (self.ethBalance != undefined && !self.ethBalance.equals(ethFwdBalance)) {
                 self.saidBalanceTooSmall = false;
             }
-            console.log("*** Got new eth balance: " + ethFwdBalance);
+            // console.log("*** Got new eth balance: " + ethFwdBalance);
             self.ethBalance = ethFwdBalance;
 
             // new data means we can restart forwarding...
@@ -793,7 +779,8 @@ App.prototype.setUiUserAddresses = function () {
     var ETHAddr = this.accs.ETH.addr;
     var BTCAddr = this.accs.BTC.addr;
     var DFNAddr = this.accs.DFN.addr;
-    ui.setUserAddresses(ETHAddr, BTCAddr, addrWithChecksum(DFNAddr));
+    var DFNAcct = this.accs.DFNAccount.xpub;
+    ui.setUserAddresses(ETHAddr, BTCAddr, addrWithChecksum(DFNAddr), DFNAcct);
 }
 
 App.prototype.setFunderChfReceived = function (chf) {
@@ -872,7 +859,6 @@ window.onload = function () {
     console.log("User interface ready.");
 
     // Initialize constants
-    // TODO: dynamic gas price
     GAS_PRICE = web3.toBigNumber(20000000000); // 20 Shannon
     MIN_DONATION = web3.toWei('1', 'ether');
     MAX_DONATE_GAS = 200000; // highest measured gas cost: 138048
@@ -898,7 +884,7 @@ window.onload = function () {
     // If loading fails, then simply wait user to generate new seed or import seed
     userAccounts.loadStates(function () {
         // Load user addresses from saved state
-        ui.setUserAddresses(app.accs.ETH.addr, app.accs.BTC.addr, addrWithChecksum(app.accs.DFN.addr));
+        app.setUiUserAddresses();
 
         // Skip all terms and seed generation steps
         ui.readTerms();

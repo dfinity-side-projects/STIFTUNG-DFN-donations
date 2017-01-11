@@ -29,13 +29,16 @@ var Accounts = function (seedStr) {
 
     // single quote == hardened derivation
     this.HDPathDFN = "m/44'/223'/0'/0/0"; // key controlling DFN allocation
+    this.HDPathDFNAccount = "m/44'/223'/0'"; // Account level path for DFN allocation
     this.HDPathETHForwarder = "m/44'/60'/0'/0/0";  // ETH key forwarding donation for HDPathDFN key
     this.HDPathBTCForwarder = "m/44'/0'/0'/0/0";   // BTC key forwarding donation for HDPathDFN key
 
     // this.seed = seedStr;
     this.DFN = {};
+    this.DFNAccount = {};
     this.ETH = {};
     this.BTC = {};
+
 
 
 }
@@ -83,11 +86,14 @@ Accounts.prototype.generateKeys = function (seedStr) {
     var code = new this.Mnemonic(seedStr);
     var masterKey = code.toHDPrivateKey();
     var DFNPriv = masterKey.derive(this.HDPathDFN);
+    var DFNAccount = masterKey.derive(this.HDPathDFNAccount);
     var ETHPriv = masterKey.derive(this.HDPathETHForwarder);
     var BTCPriv = masterKey.derive(this.HDPathBTCForwarder);
-
     var DFNPrivPadded = "0x" + padPrivkey(DFNPriv.toObject().privateKey);
     this.DFN.addr = this.HDPrivKeyToAddr(DFNPrivPadded);
+    // console.log(seedStr);
+    // console.log(DFNAccount.xpubkey);
+    this.DFNAccount.xpub = DFNAccount.xpubkey;
 
     this.ETH.priv = "0x" + padPrivkey(ETHPriv.toObject().privateKey);
     this.ETH.addr = this.HDPrivKeyToAddr(this.ETH.priv);
@@ -107,10 +113,12 @@ Accounts.prototype.saveStates = function () {
     ) {
         saveToStorage({
             "dfn-address": this.DFN.addr,
+            "dfn-account-xpub": this.DFNAccount.xpub,
             "eth-address": this.ETH.addr,
             "eth-private-key": this.ETH.priv,
             "btc-address": this.BTC.addr,
             "btc-private-key": this.BTC.priv,
+
 
         }, function () {
             // ui.logger("DFN, BTC and ETH address successfully saved in Chrome storage.");
@@ -125,6 +133,7 @@ Accounts.prototype.loadStates = function (successFn) {
     var self = this;
     loadfromStorage([
         "dfn-address",
+        "dfn-account-xpub",
         "eth-address",
         "eth-private-key",
         "btc-address",
@@ -140,6 +149,7 @@ Accounts.prototype.loadStates = function (successFn) {
             self.ETH.priv = s["eth-private-key"];
             self.BTC.addr = s["btc-address"];
             self.BTC.priv = s["btc-private-key"];
+            self.DFNAccount.xpub = s["dfn-account-xpub"];
             console.log("Loaded DFN addr:" + self.DFN.addr);
             successFn();
         }

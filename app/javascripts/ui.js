@@ -28,16 +28,16 @@
  * and binding of UI event handlers
  */
 
+// TODO: US country code
+var US_COUNTRY_CODE = "USA";
 
 // Constructor
 var UI = function () {
     this.tasks = ["task-agree", "task-create-seed", "task-understand-fwd-eth", "task-donate"];
     this.locationDetected = "";
-}
+};
 
 
-// TODO: US country code
-var US_COUNTRY_CODE = "USA";
 
 /*
  * Wire up event handlers of UI.
@@ -97,6 +97,10 @@ UI.prototype.wireUpDOM = function () {
     this.bindGlobalListener("show-dfinities-info", "showDialog", "dfinities-info");
     this.bindGlobalListener("close-dfinities-info", "closeDialog", "dfinities-info");
 
+    if (SHOW_XPUB) {
+        showElement("dfn-xpub")
+    }
+
     // Disable agree terms button by default, unless all checkboxes are confirmed and location check passed
     disableButton("agree-terms-button");
 }
@@ -133,7 +137,7 @@ UI.prototype.bindGlobalListener = function (element, uiHandler, argument) {
 
 // Set the amount Genesis DFN to be recommended for user
 UI.prototype.setGenesisDFN = function (dfn) {
-    console.log("Setting genesis DFN: " + dfn);
+    // console.log("Setting genesis DFN: " + dfn);
     var e = document.getElementById("genesis-dfinities-amount");
     var e2 = document.getElementById("genesis-dfinities-amount-2");
     if (dfn == undefined) {
@@ -207,12 +211,14 @@ UI.prototype.setRemainingETH = function (re) {
 
 // Set the forwarding address the user should send ETH donations to
 // Set the DFN address the user might want ot communicate to  Dfinity Stiftung
-UI.prototype.setUserAddresses = function (efa, bfa, dfa) {
+UI.prototype.setUserAddresses = function (efa, bfa, dfa, dfnAcctXpub) {
     var ethExt = getChildWithClass(document.getElementById("eth-forwarding-address"), "eth-address");
     var ethFor = document.getElementById("eth-forwarding-address-explained");
     var btcExt = getChildWithClass(document.getElementById("btc-forwarding-address"), "eth-address");
     var btcFor = document.getElementById("btc-forwarding-address-explained");
     var dfn = document.getElementById("dfn-address");
+    var dfnAcct = document.getElementById("dfn-xpub");
+    console.log(dfnAcctXpub);
     if (efa == undefined) {
         ethExt.innerHTML = "<not generated>";
         btcExt.innerHTML = "<not generated>";
@@ -224,6 +230,7 @@ UI.prototype.setUserAddresses = function (efa, bfa, dfa) {
         btcExt.innerHTML = bfa;
         btcFor.innerHTML = bfa;
         dfn.innerHTML = dfa;
+        dfnAcct.innerHTML = dfnAcctXpub;
         showElement("genesis-dfinities-info-icon", "inline-block");
     }
 }
