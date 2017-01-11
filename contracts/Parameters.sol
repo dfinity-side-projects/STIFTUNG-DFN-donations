@@ -45,12 +45,12 @@ contract Parameters {
    *  done
    */
 
-  // The start of round 0 is set to 2017-01-14 19:00 of timezone Europe/Zurich
-  uint public constant round0StartTime      = 1484416800; 
+  // The start of round 0 is set to 2017-01-17 19:00 of timezone Europe/Zurich
+  uint public constant round0StartTime      = 1484676000; 
   
-  // The start of round 1 is set to 2017-05-15 19:00 of timezone Europe/Zurich
-  // TZ="Europe/Zurich" date -d "2017-05-15 19:00" "+%s"
-  uint public constant round1StartTime      = 1494867600; 
+  // The start of round 1 is set to 2017-05-17 19:00 of timezone Europe/Zurich
+  // TZ="Europe/Zurich" date -d "2017-05-17 19:00" "+%s"
+  uint public constant round1StartTime      = 1495040400; 
   
   // Transition times that are defined by duration
   uint public constant round0EndTime        = round0StartTime + 6 weeks;
@@ -83,7 +83,7 @@ contract Parameters {
   uint public constant minDonation = 1 ether; 
  
   // Bonus in percent added to donations throughout donation round 0 
-  uint public constant round0Bonus = 150; 
+  uint public constant round0Bonus = 200; 
   
   // Bonus in percent added to donations at beginning of donation round 1  
   uint public constant round1InitialBonus = 25;
