@@ -1,5 +1,6 @@
 module.exports = function(deployer, network) {
     if (network != "live") {
+	var name = "Testnet FDC"; 
         var accounts = web3.eth.accounts;
         var walletAddr = accounts[0];
         var registrar = accounts[1];
@@ -13,7 +14,7 @@ module.exports = function(deployer, network) {
         // Deploy FDC using the standard accounts provided by testRPC for testing
         // purposes. These can be accessed from any test unit :)
         //
-        deployer.deploy(FDC, registrar).then(function() {
+        deployer.deploy(FDC, registrar, name).then(function() {
             // deployed OK!
             var fdc = FDC.deployed();
             console.log("FDC deployed at "+fdc.address+"\nUsing controllers:\n"+
@@ -36,8 +37,9 @@ module.exports = function(deployer, network) {
         //
         // Deploy FDC with master from Ledger wallet
         //
-        var masterAddr = "0xb2a97344DC2156491be2Fd241bdc48ba6F1ad38D";
+	var name = "STIFTUNG Dfinity FDC"; 
+        var masterAddr = "0x651D3FA1fC80459D235b233Fa8356b265883E073";
 
-        deployer.deploy(FDC, masterAddr);
+        deployer.deploy(FDC, masterAddr, name);
     }
 };
