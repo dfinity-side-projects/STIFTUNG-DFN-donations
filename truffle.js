@@ -17,11 +17,11 @@ module.exports = {
   networks: {
   "live": {
     network_id: "default", // Ethereum public network
-    host: "ec2-54-149-199-242.us-west-2.compute.amazonaws.com",
+    host: "54.201.221.105",
     port: 8545,
       gas: 3000000,
       gasPrice: 20000000000,
-      from: "733dcdb9a7c60067d65ec731c49e95ed995e59fd",
+      from: "cf49327643ac9ee9188f6c74d08f35bf91bce055"
   },
   "morden": {
     network_id: 2,        // Official Ethereum test network
