@@ -45,8 +45,8 @@ contract Parameters {
    *  done
    */
 
-  // The start of round 0 is set to 2017-01-17 19:00 of timezone Europe/Zurich
-  uint public constant round0StartTime      = 1485108000; 
+  // The start of round 0 is set to 2017-01-24 19:00 of timezone Europe/Zurich
+  uint public constant round0StartTime      = 1484676000 + 1 weeks; 
   
   // The start of round 1 is set to 2017-05-17 19:00 of timezone Europe/Zurich
   // TZ="Europe/Zurich" date -d "2017-05-17 19:00" "+%s"
