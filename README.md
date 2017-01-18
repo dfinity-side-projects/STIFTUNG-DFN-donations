@@ -120,7 +120,6 @@ File structure:
 ### Build instructions
 Building the extension is quite straightforward:
 
-    cd FDC-chrome-extension
     truffle build
     ./prep-extension.sh
 
@@ -131,4 +130,4 @@ All the tests are primarily designed for ethereumjs-testrpc environment as it re
 Simply: 
 
     truffle test fdc/fdc_testrpc.js
-
+    
