@@ -14,9 +14,9 @@ contract multiauth is multiowned {
 
   function multiauth (address[] _owners, uint _required) multiowned(_owners, _required) { }
 
-  event Proposal(uint n, bytes32 hash);
-  event Confirmation(uint n, bytes32 hash);
-  event Execution(uint n, bytes32 hash);
+  event Proposed(uint n, bytes32 hash);
+  event Confirmed(uint n, bytes32 hash);
+  event Executed(uint n, bytes32 hash);
 
   function propose(bytes _data) public onlyowner returns (uint) {
     nProposals++;
