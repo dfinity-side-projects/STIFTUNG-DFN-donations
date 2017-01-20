@@ -30,7 +30,7 @@ contract multiauth is multiowned {
     proposalHash[nProposals] = hash;
     proposalNumber[hash] = nProposals;
 
-    Proposal(nProposals, hash);
+    Proposed(nProposals, hash);
 
     // auto-confirm each proposal by msg.sender
     confirm(hash);
@@ -42,7 +42,7 @@ contract multiauth is multiowned {
     uint n = proposalNumber[hash];
     if (n == 0) { throw; } // no proposal found (we don't allow confirmation before proposal)
 
-    Confirmation(n, hash);
+    Confirmed(n, hash);
 
     if (confirmAndCheck(hash)) {
       bytes memory data = new bytes(proposalData[hash].length);
@@ -53,7 +53,7 @@ contract multiauth is multiowned {
       delete proposalNumber[hash];
 
       if (!toAddr.call(data)) { throw; }
-      Execution(n, hash);
+      Executed(n, hash);
     }
 
     return true;
