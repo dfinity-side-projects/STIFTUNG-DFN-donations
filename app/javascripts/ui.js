@@ -20,6 +20,7 @@
  *  Refer to FDC code for detailed logic on donation.
  *
  */
+"use strict";
 
 /**
  *  User interface wrapper
@@ -36,8 +37,6 @@ var UI = function () {
     this.tasks = ["task-agree", "task-create-seed", "task-understand-fwd-eth", "task-donate"];
     this.locationDetected = "";
 };
-
-
 
 /*
  * Wire up event handlers of UI.
@@ -116,7 +115,7 @@ UI.prototype.afterAppLoaded = function () {
 UI.prototype.bindUIListener = function (element, uiHandler, argument) {
     const self = this;
     document.getElementById(element).addEventListener("click", function() {
-        if (argument !=null && argument!= undefined && argument.startsWith("$")) {
+        if (argument !=null && argument!== undefined && argument.startsWith("$")) {
             var argVal = document.getElementById(argument.substr(1,argument.length-1)).value;
             self[uiHandler](argVal);
         } else {
@@ -561,22 +560,6 @@ UI.prototype.hideValidateSeed = function () {
     closeDialog('verify-dfn-seed');
 }
 
-function addClass(element, className) {
-    document.getElementById(element).className += className + " ";
-}
-
-function removeClass(element, className) {
-    document.getElementById(element).className = document.getElementById(element).className.replace(className, '');
-}
-function showDialog(dialogId) {
-    showElement(dialogId);
-    document.body.className += " modal-open";
-}
-
-function closeDialog(dialogId) {
-    hideElement(dialogId);
-    document.body.className = document.body.className.replace(/[\w]*modal-open[\w]*/g, '');
-}
 
 UI.prototype.showTerms = function () {
     showDialog("terms");
@@ -695,7 +678,7 @@ UI.prototype.hideWithdrawEth = function () {
 UI.prototype.withdrawETH = function () {
     var addr = document.getElementById('withdraw-eth-addr').value;
     // We accept either all lower case or all upper case except the 'x' in '0x' or a valid checksum
-    if ((addr.length == 42) &&
+    if ((addr.length === 42) &&
         (addr == addr.toLowerCase() || addr.slice(2) == addr.toUpperCase().slice(2) || EthJSUtil.isValidChecksumAddress(addr))
     ) {
         app.withdrawETH(addr);
@@ -825,3 +808,19 @@ function getChildWithClass(e, c) {
     }
 }
 
+function addClass(element, className) {
+    document.getElementById(element).className += className + " ";
+}
+
+function removeClass(element, className) {
+    document.getElementById(element).className = document.getElementById(element).className.replace(className, '');
+}
+function showDialog(dialogId) {
+    showElement(dialogId);
+    document.body.className += " modal-open";
+}
+
+function closeDialog(dialogId) {
+    hideElement(dialogId);
+    document.body.className = document.body.className.replace(/[\w]*modal-open[\w]*/g, '');
+}

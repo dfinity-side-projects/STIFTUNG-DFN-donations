@@ -2,6 +2,9 @@
 **/.*.swp
 **/*.log
 
+#private files
+extension.pem
+
 # Directories used by tools like mocha & istanbul
 coverage
 shippable
@@ -14,4 +17,5 @@ shippable
 build/
 dist/
 app/javascripts/fdc_test_addr.js
+
 

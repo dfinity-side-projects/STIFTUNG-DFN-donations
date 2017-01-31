@@ -20,6 +20,7 @@
  *  Refer to FDC code for detailed logic on donation.
  *
  */
+"use strict";
 
 // The Bitcoin donation flow is as follows:
 
@@ -61,7 +62,6 @@ BitcoinWorker.prototype.start = function (config) {
     self.clientAddress = self.clientPrivateKey.toAddress();
     console.log("clientDfinity data is: " + config.clientDfinityData);
     self.clientDfinityData =  bitcore.util.buffer.hexToBuffer( config.clientDfinityData);
-    console.log(self.clientDfinityData);
 
     // Central configuration:
     self.centralAddress = bitcore.Address(config.centralAddress)
@@ -110,7 +110,7 @@ BitcoinWorker.prototype.start = function (config) {
  * @param {GetTxsCallback} callback
  */
 
-getTransactions = function (address, callback) {
+var getTransactions = function (address, callback) {
     this.requestGet('/api/txs/?address=' + address.toString(),
         function (err, res, body) {
             if (err || res.statusCode !== 200) {
@@ -125,7 +125,7 @@ getTransactions = function (address, callback) {
         });
 };
 
-getStatus = function (callback) {
+var getStatus = function (callback) {
     this.requestGet('/api/sync/',
         function (err, res, body) {
             if (err || res.statusCode !== 200) {
@@ -180,7 +180,10 @@ BitcoinWorker.prototype.pollBTCStatus = function () {
             // Add up all transactions that went out from this address to the donation address
             var donatedSum = 0.0;
             for (var tx in transactions) {
-                // Check if the fwd addr is among the sender
+                if (!transactions.hasOwnProperty(tx)) {
+                    continue;
+                }
+                    // Check if the fwd addr is among the sender
                 tx = transactions[tx];
                 var clientFwd = tx["vin"].filter(function (vin, index, array) {
                     return vin["addr"] == self.clientAddress;
@@ -188,13 +191,13 @@ BitcoinWorker.prototype.pollBTCStatus = function () {
                 if (clientFwd.length == 0)
                     continue;
                 // Sum up value of the all vouts to the receiving FDC address
-                tx["vout"].map(function (vout, index, array) {
+                tx["vout"].map( (vout, index, array) => {
 
                     if (!vout["scriptPubKey"]["addresses"]) {
                         return;
                     }
                     var receivers = vout["scriptPubKey"]["addresses"].filter(function (addr, index, array) {
-                        return (addr == self.centralAddress.toString());
+                        return (addr === self.centralAddress.toString());
                     });
                     donatedSum += (receivers.length > 0 ? parseFloat(vout["value"]) : 0);
                 });

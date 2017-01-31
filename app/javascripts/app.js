@@ -20,6 +20,7 @@
  *  Refer to FDC code for detailed logic on donation.
  *
  */
+"use strict";
 
 var account;
 
@@ -31,36 +32,33 @@ var ETHEREUM_CHK_FWD_INTERVAL = 1000; // not actual... pauses
 var ETHEREUM_POLLING_INTERVAL = 5000; // the time we wait before re-polling Etheruem provider for new data
 var ETHEREUM_CONN_MAX_RETRIES = 10;   // max number of retries to automatically selected Ethereum provider
 var ETHEREUM_MAX_TX_CYCLES = 10; // how many cycles of forwarding attempt should we timeout before making a second tx, roughly CHK_FWD_INTERVAL x Cycles
-var ETHEREUM_HOSTED_NODES = ["http://52.56.78.165:8545", "http://35.156.229.229:8545", "http://52.60.98.105:8545"];
+var ETHEREUM_HOSTED_NODES = ["http://eth.frankfurt.dfinity.build:80", "http://eth.tokyo.dfinity.build:80"];
 
 
 // -----------------------------------------------------------------------------
 // TODO
 
 // The following configuration needs changes for production:
-// - Change defaultNetwork to `livenet`
 // - Change FOUNDATION_ADDRESS to a valid livenet bitcoin address
 // - Change HOSTED_NODES to a list of Insight root URLs
-// - Adjust bitcoin polling interval (recommended: >10000)
 
 var Insight = require('bitcore-explorers').Insight;
 var bitcore = require('bitcore-lib');
 bitcore.Networks.defaultNetwork = bitcore.Networks.livenet;
 var BITCOIN_FOUNDATION_ADDRESS = '19FCgvpfKgcu9koCqt6YdTFGwE6r46nhkX'
-var BITCOIN_HOSTED_NODES = ["http://52.56.78.165:3001", "http://35.156.229.229:3001", "http://52.60.98.105:3001"];
-var BITCOIN_CHK_FWD_INTERVAL = 5000;
+var BITCOIN_HOSTED_NODES = ["http://btc.frankfurt.dfinity.build:80", "http://btc.tokyo.dfinity.build:80"];
+var BITCOIN_CHK_FWD_INTERVAL = 10000;
 
 
 // All possible states of FDC contract
-var STATE_TBD = -888;
-var STATE_PAUSE = 0;
-var STATE_EARLY_CONTRIB = 1;
-var STATE_DON_PHASE0 = 2;
-var STATE_DON_PHASE1 = 3;
-var STATE_OFFCHAIN_REG = 4;
-var STATE_FINALIZATION = 5;
-var STATE_DONE = 6;
-
+const STATE_TBD = -888;
+const STATE_PAUSE = 0;
+const STATE_EARLY_CONTRIB = 1;
+const STATE_DON_PHASE0 = 2;
+const STATE_DON_PHASE1 = 3;
+const STATE_OFFCHAIN_REG = 4;
+const STATE_FINALIZATION = 5;
+const STATE_DONE = 6;
 
 // -----------------------------------------------------------------------------
 // These constants will be initialized upon window load because of dependency on web3
@@ -69,7 +67,7 @@ var MIN_DONATION;                   // minimum donation allowed
 var MAX_DONATE_GAS;                 // maximum gas used making donation
 var MAX_DONATE_GAS_COST;            // estimate maximum cost of gas used
 var MIN_FORWARD_AMOUNT;             // minimum amount we will try to forward
-var VALUE_TRANSFER_GAS = 21000;
+const VALUE_TRANSFER_GAS = 21000;
 var VALUE_TRANSFER_GAS_COST;
 
 // FDC address
@@ -77,7 +75,7 @@ var FDCAddr = null;
 var FDC_PRODUCTION_ADDR = "0x1b2B5a7331B4CD621376ffC068c4A473CBC2e11D"
 
 var DEV_MODE = false;
-var SHOW_XPUB = true;
+var SHOW_XPUB = false;
 
 // FDC ABI signatures
 var donateAsWithChecksum = "ceadd9c8";
@@ -88,7 +86,7 @@ var donateAsWithChecksum = "ceadd9c8";
 // *
 
 // Constructor
-var App = function (userAccounts, testUI) {
+var App = function (userAccounts) {
     ui.logger("Initializing main extension application...");
 
     this.tryForwardBalance = true;    // try to forward wallet balance
@@ -96,8 +94,8 @@ var App = function (userAccounts, testUI) {
 
     this.ethFwdTimeout = undefined;   // handle to current timer for Ethereum forwarding
     this.ethPollTimeout = undefined;  // handle to current timer for Ethereum polling
-    this.ethConnectionRetries = 0;    // number consecutive provider connection fails
-    this.txWaitCycles = 0;            // counter of waiting cycles for last tx submitted (to prevent unneccesary resubmitting same tx)
+    this.ethConnectionRetries = 0;    // number of consecutive provider connection fails
+    this.txWaitCycles = 0;            // waiting cycle counter since last tx submitted (to prevent unnecessary resubmitting same tx)
     this.saidBalanceTooSmall = false; // told user balance too small?
     this.ethConnected = -1;
     this.lastTxId = null;
@@ -114,14 +112,16 @@ var App = function (userAccounts, testUI) {
     if (!DEV_MODE) {
         FDCAddr = FDC_PRODUCTION_ADDR;
     } else {
+        // Dev Mode: use truffle prev deployed instance
         FDCAddr = FDC.deployed().address;
     }
 
     this.setCurrentTask(this.lastTask);
     this.setGenesisDFN(undefined);
     this.setUiUserAddresses();
-    ui.setUserSeed(undefined);
     this.setFunderChfReceived(undefined);
+
+    ui.setUserSeed(undefined);
 
     // Load previous saved node information if possible
     this.loadNodes();
@@ -148,17 +148,21 @@ Web3.prototype.isConnectedAsync = function (success, err) {
     try {
         this.currentProvider.sendAsync({
             id: 9999999999,
-            jsonrpc: '2.0',
+            jsonrpc: "2.0",
             method: 'net_listening',
             params: []
         }, function (error, result) {
             if (error != null) {
                 app.ethConnected = 0;
-                if (err) err();
+                if (err) {
+                    err();
+                }
             }
             else {
                 app.ethConnected = 1;
-                if (success) success();
+                if (success) {
+                    success();
+                }
             }
         });
         if (app.ethConnected == 1) {
@@ -183,8 +187,9 @@ App.prototype.tryForwardETH = function () {
     }
 
     // Clear any other fwding attempts
-    if (this.ethFwdTimeout)
+    if (this.ethFwdTimeout) {
         clearTimeout(this.ethFwdTimeout);
+    }
 
 
     var isConnected = web3.isConnectedAsync(this.setEthereumClientStatus.bind(ui, "OK"));
@@ -219,7 +224,6 @@ App.prototype.tryForwardETH = function () {
     // Prepare to forward
 
     var self = this;
-    var fdc = FDC.at(FDCAddr);
 
     this.saidBalanceTooSmall = false;
 
@@ -262,7 +266,7 @@ App.prototype.tryForwardETH = function () {
 
         var tx = new EthJS(txObj);
         var privBuf = EthJSUtil.toBuffer(self.accs.ETH.priv);
-        tx.sign(privBuf)
+        tx.sign(privBuf);
         var signedTx = EthJSUtil.bufferToHex(tx.serialize());
         console.log("tx payload to be sent: " + signedTx);
 
@@ -279,8 +283,9 @@ App.prototype.tryForwardETH = function () {
         ) {
             console.log("Same forwarding tx is in the queue... " + self.lastTxId);
             self.fwdingOnlyOnNewData = true;
-            if (self.lastTxId == hash)
+            if (self.lastTxId == hash) {
                 self.txWaitCycles++;
+            }
             self.scheduleTryForwardETH();
             return;
         }
@@ -552,7 +557,6 @@ App.prototype.adjustConnection = function () {
 
 // Set current task given to user making donations
 App.prototype.setCurrentTask = function (tId) {
-    this.currentTask = tId;
     ui.setCurrentTask(tId);
 }
 
@@ -609,18 +613,15 @@ App.prototype.setETHNodeInternal = function (host) {
 }
 
 App.prototype.setForwardedETH = function (fe) {
-    this.forwardedETH = fe;
     ui.setForwardedETH(fe);
 }
 
 App.prototype.setRemainingETH = function (re) {
-    this.remainingETH = re;
     ui.setRemainingETH(re);
 }
 
 
 App.prototype.setEthereumClientStatus = function (status) {
-    this.ethClientStatus = status;
     if (status == "OK") {
         // ui.logger("Connected successfully to an Etheruem node");
         ui.setEthereumClientStatus("&#10004 connected, forwarding...");
@@ -784,12 +785,10 @@ App.prototype.setUiUserAddresses = function () {
 }
 
 App.prototype.setFunderChfReceived = function (chf) {
-    this.funderChfReceived = chf;
     ui.setFunderTotalReceived(chf);
 }
 
 App.prototype.setGenesisDFN = function (dfn) {
-    this.genesisDFN = dfn;
     ui.setGenesisDFN(dfn);
 }
 
@@ -826,7 +825,7 @@ App.prototype.loadNodes = function () {
     var self = this;
     loadfromStorage([
         "bitcoin-node",
-        "ethereum-node",
+        "ethereum-node"
     ], function (s) {
         if (s["bitcoin-node"] != null) {
             self.setBitcoinNode(s["bitcoin-node"])
@@ -850,6 +849,16 @@ App.prototype.loadNodes = function () {
 var ui;  // user interface wrapper
 var app; // our main application
 
+var initEthConstants = () => {
+    GAS_PRICE = web3.toBigNumber(20000000000); // 20 Shannon
+    MIN_DONATION = web3.toWei('1', 'ether');
+    MAX_DONATE_GAS = 200000; // highest measured gas cost: 138048
+    MAX_DONATE_GAS_COST = web3.toBigNumber(MAX_DONATE_GAS).mul(GAS_PRICE);
+    MIN_FORWARD_AMOUNT = web3.toBigNumber(MIN_DONATION).plus(MAX_DONATE_GAS_COST);
+
+    VALUE_TRANSFER_GAS_COST = web3.toBigNumber(VALUE_TRANSFER_GAS).mul(GAS_PRICE);
+}
+
 window.onload = function () {
 
     // First initialize UI wrapper so we can report errors to user
@@ -859,13 +868,7 @@ window.onload = function () {
     console.log("User interface ready.");
 
     // Initialize constants
-    GAS_PRICE = web3.toBigNumber(20000000000); // 20 Shannon
-    MIN_DONATION = web3.toWei('1', 'ether');
-    MAX_DONATE_GAS = 200000; // highest measured gas cost: 138048
-    MAX_DONATE_GAS_COST = web3.toBigNumber(MAX_DONATE_GAS).mul(GAS_PRICE);
-    MIN_FORWARD_AMOUNT = web3.toBigNumber(MIN_DONATION).plus(MAX_DONATE_GAS_COST);
-
-    VALUE_TRANSFER_GAS_COST = web3.toBigNumber(VALUE_TRANSFER_GAS).mul(GAS_PRICE);
+    initEthConstants();
 
     ui.logger("Restoring default account information from storage");
 
@@ -897,6 +900,6 @@ window.onload = function () {
         // Update current connection status immediately and start Bitcoin worker
         app.pollStatus(true);
         app.startBitcoinWorker();
-    })
-}
+    });
+};
 

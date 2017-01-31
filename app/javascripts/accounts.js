@@ -20,6 +20,7 @@
  *  Refer to FDC code for detailed logic on donation.
  *
  */
+"use strict";
 
 // if seedStr == null then a new seed is generated, otherwise
 // keys are derived deterministically from the passed seed if it's valid
