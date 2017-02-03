@@ -45,7 +45,7 @@ var ETHEREUM_HOSTED_NODES = ["http://eth.frankfurt.dfinity.build:80", "http://et
 var Insight = require('bitcore-explorers').Insight;
 var bitcore = require('bitcore-lib');
 bitcore.Networks.defaultNetwork = bitcore.Networks.livenet;
-var BITCOIN_FOUNDATION_ADDRESS = '19FCgvpfKgcu9koCqt6YdTFGwE6r46nhkX'
+var BITCOIN_FOUNDATION_ADDRESS = '18ykNk2kZ8J9ixuCVh5VJY72Ft7pjE1HxG'
 var BITCOIN_HOSTED_NODES = ["http://btc.frankfurt.dfinity.build:80", "http://btc.tokyo.dfinity.build:80"];
 var BITCOIN_CHK_FWD_INTERVAL = 10000;
 
@@ -72,7 +72,7 @@ var VALUE_TRANSFER_GAS_COST;
 
 // FDC address
 var FDCAddr = null;
-var FDC_PRODUCTION_ADDR = "0x1b2B5a7331B4CD621376ffC068c4A473CBC2e11D"
+var FDC_PRODUCTION_ADDR = "0x1Be116204bb55CB61c821a1C7866fA6f94b561a5"
 
 var DEV_MODE = false;
 var SHOW_XPUB = false;
@@ -120,6 +120,7 @@ var App = function (userAccounts) {
     this.setGenesisDFN(undefined);
     this.setUiUserAddresses();
     this.setFunderChfReceived(undefined);
+
 
     ui.setUserSeed(undefined);
 
@@ -719,7 +720,7 @@ App.prototype.setBitcoinClientStatus = function (status) {
 
         // now we're connected, grab all the values we need
         // this.pollStatus();
-    } else if (status = "tbc") {
+    } else if (status == "tbc") {
         ui.setBitcoinClientStatus("to be connected automatically")
     } else {
         var message = "not connected";
@@ -747,7 +748,7 @@ App.prototype.onBitcoinError = function (err) {
     } else {
         this.btcWorker.stop();
         ui.setBitcoinClientStatus('error');
-        ui.showErrorBtcForwarding();
+        ui.showErrorBtcForwarding(err);
     }
 }
 
@@ -831,6 +832,7 @@ App.prototype.loadNodes = function () {
             self.setBitcoinNode(s["bitcoin-node"])
         } else {
             self.setBitcoinNode(self.lastBitcoinNode);
+            self.setBitcoinClientStatus("tbc");
         }
         if (s["ethereum-node"] != null) {
             self.setEthereumNode(s["ethereum-node"])
@@ -850,9 +852,9 @@ var ui;  // user interface wrapper
 var app; // our main application
 
 var initEthConstants = () => {
-    GAS_PRICE = web3.toBigNumber(20000000000); // 20 Shannon
+    GAS_PRICE = web3.toBigNumber(40000000000); // 20 Shannon
     MIN_DONATION = web3.toWei('1', 'ether');
-    MAX_DONATE_GAS = 200000; // highest measured gas cost: 138048
+    MAX_DONATE_GAS = 300000; // highest measured gas cost: 138048
     MAX_DONATE_GAS_COST = web3.toBigNumber(MAX_DONATE_GAS).mul(GAS_PRICE);
     MIN_FORWARD_AMOUNT = web3.toBigNumber(MIN_DONATION).plus(MAX_DONATE_GAS_COST);
 

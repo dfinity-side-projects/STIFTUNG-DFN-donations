@@ -715,8 +715,12 @@ UI.prototype.withdrawBtc = function () {
     app.withdrawBtc(addr)
 }
 
-UI.prototype.showErrorBtcForwarding = function () {
+UI.prototype.showErrorBtcForwarding = function (err) {
     document.getElementById('error-btc-forwarding').style.display = 'block';
+    if (err) {
+        (document.getElementById("error-btc-forwarding-msg")).innerText=err;
+    }
+
 }
 
 UI.prototype.hideErrorBtcForwarding = function () {

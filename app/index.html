@@ -107,8 +107,11 @@
                     class="blink" id="retry-forward-link" href="#">try forwarding again</a>
             </div>
             <div id="error-btc-forwarding" class="error" style="display: none">
-                There was an error forwarding BTC.
+                There was an error forwarding BTC or communicating with Bitcoin node:
                 <br/>
+                <div id="error-btc-forwarding-msg"></div>
+                <br/>
+
                 <a class="blink" id="show-withdraw-btc-link" href="#">Please withdraw remaining BTC</a> or <a
                     class="blink" id="retry-forward-btc-link" href="#">try forwarding again</a>
             </div>
@@ -119,14 +122,14 @@
                     </a>
 
                 </div>
-                <div class="legend ">Genesis Dfinities <a class="tip-link tooltip" href="#">
+                <div class="legend ">Genesis dfinities <a class="tip-link tooltip" href="#">
                     ?
                     <span>
-                    <strong>Genesis Dfinities</strong><br/>
+                    <strong>Genesis dfinities</strong><br/>
                         <!--
                          -->
 
-                    <p>This shows how many Dfinities are being recorded so far based on your successful donation. </p>
+                    <p>This shows how many dfinities are being recorded so far based on your successful donation. </p>
                         <p>In return for your donation, DFINITY Stiftung will recommend a token allocation scheme for DFINITY network, which is based on the pro-rata amount of everyone's donation, adjusted for bonus multipliers.</p>
 
                     <p>If you think this number is less than the correct amount, check the ETH/BTC donation stats below to see if there's any amount waiting to be forwarded (which should be zero when all Ether are successfully donated).</p>
@@ -313,7 +316,7 @@
     </p>
 </div>
 <div id="dfinities-info" class="dialog dialog-small dialog-no-scroll">
-    <h2>Your Genesis Dfinities </h2>
+    <h2>Your Genesis dfinities </h2>
     <p>
         Since the DFINITY network requires Participants to hold DFN in order to function, donations to the
         Foundation will be recorded in a special smart contract hosted on Ethereum
@@ -325,9 +328,9 @@
     </p>
 
 
-    <p><b>Dfinities recorded based on succcesful donation:</b> <span class="textbox-custom" id="genesis-dfinities-amount-2"></span></p>
-    <p><b>Dfinities address:</b> <br>
-        This is the address that will hold your Dfinities when DFINITY network goes live. <span
+    <p><b>dfinities recorded based on succcesful donation:</b> <span class="textbox-custom" id="genesis-dfinities-amount-2"></span></p>
+    <p><b>dfinities address:</b> <br>
+        This is the address that will hold your dfinities when DFINITY network goes live. <span
             class="textbox-custom" id="dfn-address"></span>
         <textarea class="textbox-custom " style="display:none;" rows="2" cols="100" id="dfn-xpub"></textarea>
     </p>
@@ -335,7 +338,7 @@
     <div class="important-notes">
         <h3>Important Notes on Bitcoin Donation</h3>
         Due to the long confirmation time required for Bitcoin network, your DFN
-        may only appear after 6 or more confirmations (typically 60 minutes or more) has passed. So long as your
+        may appear after 6 or more confirmations (typically 60 minutes or more) has passed. So long as your
         donation transaction's first confirmation time is prior to donation end time, you should feel confident that
         the donation will be accounted accordingly.
         </p>
@@ -436,8 +439,8 @@
             <p> DFINITY Stiftung records the value donated in Swiss Francs (CHF) and uses this to calculate
                 recommendations for genesis DFN. Its systems are regularly updated with the CHF to ETH exchange
                 rate for this purpose.</p>
-            <p>When a total of 1M CHF in value has been received, DFINITY Stiftung will stop accepting further ETH/BTC
-                donations. The application will allow you to withdraw any ETH/BTC you sent to the forwarding address(es) after
+            <p>Once a total of 1M CHF in value has been received, DFINITY Stiftung will stop accepting further ETH/BTC
+                donations in 24 hours. The application will allow you to withdraw any ETH/BTC you sent to the forwarding address(es) after
                 the limit was reached.</p>
             <p>Note that there is a small Ethereum gas cost associated with each ETH donation, and this is deducted from the
                 amount.</p>
