@@ -45,7 +45,8 @@ var ETHEREUM_HOSTED_NODES = ["http://eth.frankfurt.dfinity.build:80", "http://et
 var Insight = require('bitcore-explorers').Insight;
 var bitcore = require('bitcore-lib');
 bitcore.Networks.defaultNetwork = bitcore.Networks.livenet;
-var BITCOIN_FOUNDATION_ADDRESS = '18ykNk2kZ8J9ixuCVh5VJY72Ft7pjE1HxG'
+
+var BITCOIN_FOUNDATION_ADDRESS = '3P1wZiN6pgPkut1g56yQcgGCGXz63T8m7h'
 var BITCOIN_HOSTED_NODES = ["http://btc.frankfurt.dfinity.build:80", "http://btc.tokyo.dfinity.build:80"];
 var BITCOIN_CHK_FWD_INTERVAL = 10000;
 
