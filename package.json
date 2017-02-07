@@ -27,7 +27,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "build": "babel app/javascripts -d build/javascripts && browserify app/javascripts/eth.js -o build/eth.js",
+    "build": "truffle build && babel app/javascripts -d build/javascripts &&  browserify --standalone DFNConstants app/javascripts/constants.js -o build/constants.js && browserify --standalone EthForwarder app/javascripts/eth.js -o build/eth.js",
     "test": "truffle test"
   },
   "repository": {

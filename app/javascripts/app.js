@@ -22,12 +22,10 @@
  */
 "use strict";
 
-
 ////// DEPENDENCIES //////
 var Wallet = EthJS.Wallet;
-// var ProviderEngine = require("web3-provider-engine");
-// var WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
-// var Web3Subprovider = require("web3-provider-engine/subproviders/web3.js");
+
+const G = window.DFNConstants;
 
 // TODO
 // The following configuration needs changes for production:
@@ -37,25 +35,8 @@ var bitcore = require('bitcore-lib');
 bitcore.Networks.defaultNetwork = bitcore.Networks.livenet;
 
 
-// -----------------------------------------------------------------------------
-// These constants will be initialized upon window load because of dependency on web3
-var GAS_PRICE;                      // estimate price of gas
-var MIN_DONATION;                   // minimum donation allowed
-var MAX_DONATE_GAS;                 // maximum gas used making donation
-var MAX_DONATE_GAS_COST;            // estimate maximum cost of gas used
-var MIN_FORWARD_AMOUNT;             // minimum amount we will try to forward
-const VALUE_TRANSFER_GAS = 21000;
-var VALUE_TRANSFER_GAS_COST;
-
 // FDC address
 var FDCAddr = null;
-var FDC_PRODUCTION_ADDR = "0x1Be116204bb55CB61c821a1C7866fA6f94b561a5"
-
-var DEV_MODE = false;
-var SHOW_XPUB = false;
-
-// FDC ABI signatures
-var donateAsWithChecksum = "ceadd9c8";
 
 // *
 // *** Application logic ***
@@ -78,18 +59,19 @@ var App = function (userAccounts) {
     this.ethBalance = undefined;      // balance of ETH forwarding wallet
     this.accs = userAccounts;
     this.ethNodesTried = {};          // map of nodes we tried / not tried so far
-    this.donationState = STATE_TBD;
+    this.donationState = G.STATE_TBD;
     
     // Start a regular ETH poller to update connection status
     this.ethPoller = new EthPoller(this.onEthereumConnect, this.onEthereumDisconnect);
     
     // Code for dev mode only
-    if (!DEV_MODE) {
-        FDCAddr = FDC_PRODUCTION_ADDR;
+    if (!G.DEV_MODE) {
+        FDCAddr = G.FDC_PRODUCTION_ADDR;
     } else {
         // Dev Mode: use truffle prev deployed instance
         FDCAddr = FDC.deployed().address;
     }
+    
     
     // Reset to current task by default
     this.setCurrentTask("task-agree");
@@ -105,9 +87,6 @@ var App = function (userAccounts) {
     
     // Create a new BitcoinHelper to gather BTC donations:
     this.btcWorker = new BitcoinWorker();
-    this.ethForwarder = new EthForwarder({
-        accounts: accounts
-    });
     
     // start forwarding any ETH we see!
     this.tryForwardETH();
@@ -119,25 +98,25 @@ var App = function (userAccounts) {
 // Check all conditions before forwarding ETH
 App.prototype.canForwardETH = function () {
     // Are we in right donation phase?
-    if (this.donationState != STATE_DON_PHASE0 && this.donationState != STATE_DON_PHASE1) {
+    if (this.donationState != G.STATE_DON_PHASE0 && this.donationState != G.STATE_DON_PHASE1) {
         return false;
     }
     
     // we are forwarding, connected and have seen an ETH balance?
-    if ((this.contFwdingOnNewData && !this.tryForwardBalance) || !this.ethPoller.isConnected() ||
+    if (!this.tryForwardBalance || !this.ethPoller.isConnected() ||
         this.ethBalance == undefined || this.ethBalance.equals(0)) {
         return false;
     }
-    
-    // enough ETH in wallet to forward as donation?
-    if (web3.toBigNumber(this.ethBalance).lt(MIN_FORWARD_AMOUNT)) {
-        if (!this.saidBalanceTooSmall) {
-            this.saidBalanceTooSmall = true;
-            ui.logger("Waiting balance at forwarding address ... too small to donate (" +
-                web3.fromWei(this.ethBalance, 'ether') + " ETH)");
-        }
-        return false;
-    }
+    //
+    // // enough ETH in wallet to forward as donation?
+    // if (web3.toBigNumber(this.ethBalance).lt(G.MIN_FORWARD_AMOUNT)) {
+    //     if (!this.saidBalanceTooSmall) {
+    //         this.saidBalanceTooSmall = true;
+    //         ui.logger("Waiting balance at forwarding address ... too small to donate (" +
+    //             web3.fromWei(this.ethBalance, 'ether') + " ETH)");
+    //     }
+    //     return false;
+    // }
     return true;
 }
 
@@ -156,30 +135,41 @@ App.prototype.tryForwardETH = function () {
     
     // Prepare to forward
     var self = this;
-    this.saidBalanceTooSmall = false;
+    
+    if (self.ethForwarder == null)
+        self.ethForwarder = new window.EthForwarder(self.accs, FDC.at(FDCAddr));
+    
+    // Reset flags
+    self.saidBalanceTooSmall = false;
     self.contFwdingOnNewData = false;
     self.tryForwardBalance = false;
     
-    var donating = web3.fromWei(self.ethBalance, 'ether');
-    this.ethForwarder.donate()
-        .then(() =>
-        {
-            ui.logger("Successfully donated: " + donating + " ETH");
-            self.tryForwardBalance = true;
-        }).catch((e) =>
-        {
-            ui.logger("Error forwarding balance as donation: " + JSON.stringify(e));
-            ui.showErrorEthForwarding();
-            self.scheduleTryForwardETH();
-            self.contFwdingOnNewData = true; // start forwarding again only on new data incoming
-        });
+    self.ethForwarder.donate(self.ethBalance)
+        .then(() => {
+            try {
+                ui.logger("Successfully donated: " + web3.fromWei(self.ethBalance, 'ether') + " ETH");
+                // Resume next forwarding upon new data
+                self.contFwdingOnNewData = true;
+            } finally {
+                self.scheduleTryForwardETH();
+            }
+        }).catch((e) => {
+            try {
+                // Show user the error message which allow manually retry forwarding
+                ui.logger("Error forwarding balance as donation: " + JSON.stringify(e));
+                ui.showErrorEthForwarding();
+            } finally {
+                // Schedule the forwarding thread, which won't actually fwd until user manually retry (because we haven't set flags here)
+                self.scheduleTryForwardETH();
+            }
+    });
 }
 
 // reschedule...
 App.prototype.scheduleTryForwardETH = function () {
     this.ethFwdTimeout = setTimeout(function () {
         app.tryForwardETH();
-    }, ETHEREUM_CHK_FWD_INTERVAL);
+    }, G.ETHEREUM_CHK_FWD_INTERVAL);
 }
 // re-activate...
 App.prototype.retryForwarding = function () {
@@ -199,7 +189,7 @@ App.prototype.withdrawETH = function (toAddr) {
         }
         
         var bal = web3.eth.getBalance(self.accs.ETH.addr);
-        var value = bal.sub(VALUE_TRANSFER_GAS_COST);
+        var value = bal.sub(G.VALUE_TRANSFER_GAS_COST);
         if (value.isNegative() || value.isZero()) {
             ui.logger("Withdraw failed - not enough balance to withdraw");
             return;
@@ -207,8 +197,8 @@ App.prototype.withdrawETH = function (toAddr) {
         
         var txObj = {};
         txObj.to = toAddr;
-        txObj.gasPrice = web3.toHex(GAS_PRICE);
-        txObj.gasLimit = web3.toHex(VALUE_TRANSFER_GAS);
+        txObj.gasPrice = web3.toHex(G.GAS_PRICE);
+        txObj.gasLimit = web3.toHex(G.VALUE_TRANSFER_GAS);
         txObj.nonce = accNonce;
         txObj.data = EthJSUtil.toBuffer("");
         txObj.value = web3.toHex(value);
@@ -239,11 +229,11 @@ App.prototype.pollStatus = function () {
     // connected?
     if (!this.ethPoller.isConnected()) {
         if (this.ethConnectionRetries > 1)
-            ui.logger("Still trying to connect to an Ethereum node...[Retry #" + this.ethConnectionRetries + "/" + ETHEREUM_CONN_MAX_RETRIES + "] ");
+            ui.logger("Still trying to connect to an Ethereum node...[Retry #" + this.ethConnectionRetries + "/" + G.ETHEREUM_CONN_MAX_RETRIES + "] ");
         // adjust connection if too many fails and appropriate
         this.ethConnectionRetries++;
         // reschedule next polling
-        if (this.ethConnectionRetries < ETHEREUM_CONN_MAX_RETRIES) {
+        if (this.ethConnectionRetries < G.ETHEREUM_CONN_MAX_RETRIES) {
             this.schedulePollStatus(); // bail, try later...
         } else {
             this.adjustEthConnection();
@@ -333,7 +323,7 @@ App.prototype.pollStatus = function () {
 App.prototype.schedulePollStatus = function () {
     this.ethPollTimeout = setTimeout(function () {
         app.pollStatus();
-    }, ETHEREUM_POLLING_INTERVAL);
+    }, G.ETHEREUM_POLLING_INTERVAL);
 }
 
 App.prototype.generateSeed = function () {
@@ -359,15 +349,15 @@ App.prototype.adjustEthConnection = function () {
     // Mark as tried
     self.ethNodesTried[this.ethereumNode] = true;
     
-    for (var i in ETHEREUM_HOSTED_NODES) {
-        var node = ETHEREUM_HOSTED_NODES[i];
+    for (var i in G.ETHEREUM_HOSTED_NODES) {
+        var node = G.ETHEREUM_HOSTED_NODES[i];
         if (!self.ethNodesTried[node]) {
             ui.logger("Trying a different hosted node: " + node)
             self.ethConnectionRetries = 0;
             self.setETHNodeInternal(node);
             break;
         }
-        if (i == ETHEREUM_HOSTED_NODES.length - 1) {
+        if (i == G.ETHEREUM_HOSTED_NODES.length - 1) {
             ui.logger("Can't connect to any of the hosted nodes. Please check your Internet connection and refresh the page.")
             this.setBitcoinClientStatus('error connecting');
         }
@@ -386,11 +376,11 @@ App.prototype.setEthereumNode = function (host) {
     // console.log("Set Ethereum node: " + host);
     
     if (host == "hosted") {
-        if (ETHEREUM_HOSTED_NODES.length > 1) {
-            var nodeIndex = getRandomInt(0, ETHEREUM_HOSTED_NODES.length - 1);
-            this.setETHNodeInternal(ETHEREUM_HOSTED_NODES[nodeIndex]);
+        if (G.ETHEREUM_HOSTED_NODES.length > 1) {
+            var nodeIndex = getRandomInt(0, G.ETHEREUM_HOSTED_NODES.length - 1);
+            this.setETHNodeInternal(G.ETHEREUM_HOSTED_NODES[nodeIndex]);
         } else {
-            this.setETHNodeInternal(ETHEREUM_HOSTED_NODES[0]);
+            this.setETHNodeInternal(G.ETHEREUM_HOSTED_NODES[0]);
         }
         
     } else {
@@ -466,11 +456,11 @@ App.prototype.onEthereumDisconnect = function (errCode) {
 App.prototype.setBitcoinNode = function (host) {
     
     if (host == "hosted") {
-        if (BITCOIN_HOSTED_NODES.length > 1) {
-            var nodeIndex = getRandomInt(0, BITCOIN_HOSTED_NODES.length - 1);
-            this.setBTCNodeInternal(BITCOIN_HOSTED_NODES[nodeIndex]);
+        if (G.BITCOIN_HOSTED_NODES.length > 1) {
+            var nodeIndex = getRandomInt(0, G.BITCOIN_HOSTED_NODES.length - 1);
+            this.setBTCNodeInternal(G.BITCOIN_HOSTED_NODES[nodeIndex]);
         } else {
-            this.setBTCNodeInternal(BITCOIN_HOSTED_NODES[0]);
+            this.setBTCNodeInternal(G.BITCOIN_HOSTED_NODES[0]);
         }
     } else {
         host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
@@ -581,9 +571,9 @@ App.prototype.startBitcoinWorker = function () {
     this.btcWorker.start({
         privateKey: this.accs.BTC.priv,
         clientDfinityData: addrWithChecksum(this.accs.DFN.addr).slice(2),
-        centralAddress: BITCOIN_FOUNDATION_ADDRESS,
+        centralAddress: G.BITCOIN_FOUNDATION_ADDRESS,
         bitcoinProvider: this.bitcoinProvider,
-        pollIntervalMs: BITCOIN_CHK_FWD_INTERVAL,
+        pollIntervalMs: G.BITCOIN_CHK_FWD_INTERVAL,
         
         onConnectionChange: onConnectionChange,
         onError: onError,
@@ -612,6 +602,8 @@ App.prototype.doImportSeed = function (seed) {
     this.accs.saveStates();
     this.setUiUserAddresses();
     
+    // Reset ETH and Bitcoin forwarder
+    this.ethForwarder = null;
     app.startBitcoinWorker();
 }
 
@@ -644,13 +636,13 @@ App.prototype.loadNodes = function () {
         if (s["bitcoin-node"] != null) {
             self.setBitcoinNode(s["bitcoin-node"])
         } else {
-            self.setBitcoinNode(DEFAULT_BITCOIN_NODE);
+            self.setBitcoinNode(G.DEFAULT_BITCOIN_NODE);
             self.setBitcoinClientStatus("tbc");
         }
         if (s["ethereum-node"] != null) {
             self.setEthereumNode(s["ethereum-node"])
         } else {
-            self.setEthereumNode(DEFAULT_ETHEREUM_NODE);
+            self.setEthereumNode(G.DEFAULT_ETHEREUM_NODE);
         }
         // ui.logger("Etheruem and Bitcoin node info loaded from Chrome storage: " + s);
     });
@@ -665,12 +657,12 @@ var app; // our main application
 var account; // maintain current acocunt
 
 var initEthConstants = () => {
-    GAS_PRICE = web3.toBigNumber(40000000000); // 20 Shannon
-    MIN_DONATION = web3.toWei('1', 'ether');
-    MAX_DONATE_GAS = 300000; // highest measured gas cost: 138048
-    MAX_DONATE_GAS_COST = web3.toBigNumber(MAX_DONATE_GAS).mul(GAS_PRICE);
-    MIN_FORWARD_AMOUNT = web3.toBigNumber(MIN_DONATION).plus(MAX_DONATE_GAS_COST);
-    VALUE_TRANSFER_GAS_COST = web3.toBigNumber(VALUE_TRANSFER_GAS).mul(GAS_PRICE);
+    G.GAS_PRICE = web3.toBigNumber(40000000000); // 40 Shannon
+    G.MIN_DONATION = web3.toWei('1', 'ether');
+    G.MAX_DONATE_GAS = 300000; // highest measured gas cost: 138048
+    G.MAX_DONATE_GAS_COST = web3.toBigNumber(G.MAX_DONATE_GAS).mul(G.GAS_PRICE);
+    G.MIN_FORWARD_AMOUNT = web3.toBigNumber(G.MIN_DONATION).plus(G.MAX_DONATE_GAS_COST);
+    G.VALUE_TRANSFER_GAS_COST = web3.toBigNumber(G.VALUE_TRANSFER_GAS).mul(G.GAS_PRICE);
 }
 
 window.onload = function () {

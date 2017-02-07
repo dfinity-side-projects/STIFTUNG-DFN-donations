@@ -32,6 +32,7 @@
 // TODO: US country code
 var US_COUNTRY_CODE = "USA";
 
+
 // Constructor
 var UI = function () {
     this.tasks = ["task-agree", "task-create-seed", "task-understand-fwd-eth", "task-donate"];
@@ -96,7 +97,7 @@ UI.prototype.wireUpDOM = function () {
     this.bindGlobalListener("show-dfinities-info", "showDialog", "dfinities-info");
     this.bindGlobalListener("close-dfinities-info", "closeDialog", "dfinities-info");
 
-    if (SHOW_XPUB) {
+    if (G.SHOW_XPUB) {
         showElement("dfn-xpub")
     }
 
@@ -372,7 +373,7 @@ UI.prototype.isTaskReady = function (taskId) {
 UI.prototype.setDonationState = function (state, startTime) {
 
     // Don't update UI if still in unknown state (e.g. recovering from a previous failure)
-    if (state == STATE_TBD) {
+    if (state == G.STATE_TBD) {
         return;
     }
 
@@ -389,7 +390,7 @@ UI.prototype.setDonationState = function (state, startTime) {
     hideElement("error-donation-over");
     hideElement("error-donation-not-started");
 
-    if (state == STATE_PAUSE || state == STATE_EARLY_CONTRIB) {
+    if (state == G.STATE_PAUSE || state == G.STATE_EARLY_CONTRIB) {
         setElementText("donation-state", "DONATION NOT STARTED");
 
         addClass("donation-state", "not-in-progress");
@@ -400,25 +401,25 @@ UI.prototype.setDonationState = function (state, startTime) {
             setElementText("donation-start-time", new Date(startTime * 1000).toString());
         // hideElement("error-donation-over");
     }
-    else if (state == STATE_OFFCHAIN_REG || state == STATE_FINALIZATION || state == STATE_DONE) {
+    else if (state == G.STATE_OFFCHAIN_REG || state == G.STATE_FINALIZATION || state == G.STATE_DONE) {
 
         addClass("donation-state", "not-in-progress");
-        if (state == STATE_OFFCHAIN_REG) {
+        if (state == G.STATE_OFFCHAIN_REG) {
             setElementText("donation-state", "SEED DONATION OVER");
-        } else if (state == STATE_FINALIZATION || state == STATE_DONE) {
+        } else if (state == G.STATE_FINALIZATION || state == G.STATE_DONE) {
             setElementText("donation-state", "DONATION ENDED");
         }
 
         showElement("error-donation-over");
         // hideElement("error-donation-not-started");
-    } else if (state == STATE_DON_PHASE0) {
+    } else if (state == G.STATE_DON_PHASE0) {
         setElementText("donation-state", "SEED DONATION IN PROGRESS");
         addClass("donation-state", "in-progress");
 
-    } else if (state == STATE_DON_PHASE1) {
+    } else if (state == G.STATE_DON_PHASE1) {
         setElementText("donation-state", "MAIN DONATION ROUND IN PROGRESS");
         addClass("donation-state", "in-progress");
-    } else if (state == STATE_INVALID_CONTRACT) {
+    } else if (state == G.STATE_INVALID_CONTRACT) {
         setElementText("donation-state", "INVALID CONTRACT");
         addClass("donation-state", "in-progress");
         showElement("error-donation-contract-invalid");
