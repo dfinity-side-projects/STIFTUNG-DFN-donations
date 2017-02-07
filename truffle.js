@@ -6,6 +6,7 @@ module.exports = {
       "javascripts/accounts.js",
       "javascripts/btc.js",
       "javascripts/ui.js",
+      "javascripts/ethConnPolling.js",
       "javascripts/app.js"
     ],
     "app.css": [
@@ -14,6 +15,7 @@ module.exports = {
     "images/": "images/",
     "deps/": "deps/"
   },
+  
   networks: {
   "live": {
     network_id: "default", // Ethereum public network
@@ -42,7 +44,7 @@ module.exports = {
   "development": {
     network_id: "dev",
     host: "localhost",
-    port: 7000
+    port: 8585
   }
 }
 };

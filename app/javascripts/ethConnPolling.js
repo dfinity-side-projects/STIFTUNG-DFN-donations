@@ -75,6 +75,8 @@ EthPoller.prototype.onPingError = function(error) {
 
 // Extend Web3 with asynchronous connection polling function
 Web3.prototype.asyncPing = function(poller) {
+	if (!this.connectionId)
+		this.connectionId = poller.connectionId;
 	var connectionId = this.connectionId;
     this.currentProvider.sendAsync(
     	// ping asynchronously...	

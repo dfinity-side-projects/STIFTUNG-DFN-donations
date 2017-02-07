@@ -9,19 +9,25 @@
   "dependencies": {
     "babel": "^6.5.2",
     "babel-cli": "^6.22.2",
+    "bip39": "^2.2.0",
     "bitcore-explorers": "maraoz/bitcore-explorers",
     "bitcore-lib": "^0.13.19",
     "bitcore-mnemonic": "^1.1.1",
+    "browserify": "^14.0.0",
     "ecb-exchange-rates": "0.0.7",
+    "ethereumjs-util": "github:ethereumjs/ethereumjs-util",
+    "ethereumjs-wallet": "^0.6.0",
     "nedb": "^1.8.0",
     "node-coindesk": "^0.2.0",
     "open-exchange-rates": "^0.3.0",
     "request-promise": "^4.1.1",
-    "terminal-kit": "^0.25.6"
+    "terminal-kit": "^0.25.6",
+    "web3": "^0.18.2",
+    "web3-provider-engine": "^8.6.1"
   },
   "devDependencies": {},
   "scripts": {
-      "build": "babel app/javascripts -d build/javascripts",
+    "build": "babel app/javascripts -d build/javascripts && browserify app/javascripts/eth.js -o build/eth.js",
     "test": "truffle test"
   },
   "repository": {
