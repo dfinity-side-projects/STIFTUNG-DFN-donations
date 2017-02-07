@@ -39,9 +39,6 @@ var Accounts = function (seedStr) {
     this.DFNAccount = {};
     this.ETH = {};
     this.BTC = {};
-
-
-
 }
 
 

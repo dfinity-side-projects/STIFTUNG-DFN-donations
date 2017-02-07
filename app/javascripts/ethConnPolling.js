@@ -21,6 +21,7 @@ var EthPoller = function (onConnected, onConnectionError, pingInterval) {
 		this.pingInterval = DEFAULT_ETH_CONN_POLLING_INTERVAL;
 	this.hPollTimeout = 0;
 	this.connectionId = 0; // keep track node reconfigs
+	this.schedulePing();
 }
 
 // Returns whether the Ethereum node was connected when the last ping was
@@ -56,7 +57,7 @@ EthPoller.prototype.ping = function() {
 
 // Connection ping success
 EthPoller.prototype.onPingSuccess = function() {
-	if (this.onConnected && !connected)
+	if (this.onConnected && !this.connected)
 		try { this.onConnected(); } catch(e) {} //untrusted
 	this.connected = true;	
 	// setup next ping...
@@ -65,7 +66,7 @@ EthPoller.prototype.onPingSuccess = function() {
 
 // Connection ping error
 EthPoller.prototype.onPingError = function(error) {
-	if (this.onConnectionError && connected)
+	if (this.onConnectionError && this.connected)
 		try { this.onConnectionError(error); } catch(e) {} //untrusted
 	this.connected = false;	
 	// setup next ping...
