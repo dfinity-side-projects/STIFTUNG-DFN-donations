@@ -92,7 +92,7 @@ var App = function (userAccounts) {
     ui.logger("Initializing main extension application...");
 
     this.tryForwardBalance = true;    // try to forward wallet balance
-    this.fwdingOnlyOnNewData = false; // used to indicate set fwding on new poll data
+    this.contFwdingOnNewData = false; // used to indicate set fwding on new poll data
 
     this.ethFwdTimeout = undefined;   // handle to current timer for Ethereum forwarding
     this.ethPollTimeout = undefined;  // handle to current timer for Ethereum polling
@@ -108,6 +108,9 @@ var App = function (userAccounts) {
 
     // Start a regular ETH poller to update connection status
     this.ethPoller = new EthPoller(this.onEthereumConnect, this.onEthereumDisconnect);
+    
+    // Create a transaction pipeliner for setting nonces...
+    this.ethTxPipeline = new EthTxPipeline();
 
     // Code for dev mode only
     if (!DEV_MODE) {
@@ -142,15 +145,13 @@ var App = function (userAccounts) {
 // Check all conditions before forwarding ETH
 App.prototype.canForwardETH = function()  {
     // Are we in right donation phase?
-    if (this.donationState != STATE_DON_PHASE0 && this.donationState != STATE_DON_PHASE1) {
+    if (this.donationState != STATE_DON_PHASE0 && this.donationState != STATE_DON_PHASE1)
         return false;
-    }
 
     // we are forwarding, connected and have seen an ETH balance?
-    if ((this.fwdingOnlyOnNewData && !this.tryForwardBalance) || !this.ethPoller.isConnected() ||
-        this.ethBalance == undefined || this.ethBalance.equals(0)) {
+    if (!this.tryForwardBalance || !this.ethPoller.isConnected() ||
+        this.ethBalance == undefined || this.ethBalance.equals(0))
         return false;
-    }
 
     // enough ETH in wallet to forward as donation?
     if (web3.toBigNumber(this.ethBalance).lt(MIN_FORWARD_AMOUNT)) {
@@ -161,145 +162,98 @@ App.prototype.canForwardETH = function()  {
         }
         return false;
     }
+    
     return true;
 }
 
-
+App.prototype.onForwardingError = function(error) {
+    
+}
 
 // Forward any ETH we can see lying in our wallet as a donation!
-App.prototype.tryForwardETH = function () {
-
-    // Clear any other fwding attempts
-    if (this.ethFwdTimeout) {
-        clearTimeout(this.ethFwdTimeout);
+App.prototype.tryForwardETH = function() {
+  if (this.ethFwdTimeout) clearTimeout(this.ethFwdTimeout);
+  
+  // we are forwarding, connected and have seen an ETH balance?
+  if (!this.tryForwardBalance || !web3.isConnected() ||
+       this.ethBalance == undefined || this.ethBalance.equals(0)) {
+    // try again later!
+    this.scheduleTryForwardETH();
+    return;
+  }
+  
+  // enough ETH in wallet to foward as donation?
+  if (web3.toBigNumber(this.ethBalance).lt(MIN_FORWARD_AMOUNT)) {
+    if (!this.saidBalanceTooSmall) {
+      this.saidBalanceTooSmall = true;      
+      ui.logger("Waiting balance at forwarding address too small to donate (" +
+        web3.fromWei(this.ethBalance, 'ether') + " ETH)");
     }
-
-    // Check all mandatory states for forwarding
-    if (!this.canForwardETH()) {
-        this.scheduleTryForwardETH();
-        return;
-    }
-
-    // Prepare to forward
+    this.scheduleTryForwardETH();
+  } else {
+    // yes...
     var self = this;
+    var fdc = FDC.deployed();    
     this.saidBalanceTooSmall = false;
-    self.fwdingOnlyOnNewData = false;
+    var donating = web3.fromWei(this.ethBalance, 'ether');
+    ui.logger("Forwarding " + donating + " ETH...");
+    // will continue forwarding only on success!
     self.tryForwardBalance = false;
+    self.contFwdingOnNewData = false;
 
-    // handle connection error issues
-    var handleConnErr =  (e) => {
+    var fOnFwdTxFailed = function(e) {
         try {
-            ui.logger("Error forwarding balance as donation: " + JSON.stringify(e));
+            ui.logger("Error forwarding balance as donation: "+e+" "+JSON.stringify(e));
             ui.showErrorEthForwarding();
-        } finally {
-            self.fwdingOnlyOnNewData = true;
             // user must manually restart forwarding.. otherwise a smart contract
             // error would cause all their balance to be used up in gas when retrying!
-        }
-    }
-    var donating = web3.fromWei(self.ethBalance, 'ether');
-
-    // Get connection to calculate nonce
-    web3.eth.getTransactionCount(self.accs.ETH.addr, function (err, accNonce) {
-        if (err) {
-            handleConnErr(err);
-            return;
-        }
-
-        var tx = constructFwdTx(accNonce, self.accs.ETH.addr);
-        if (self.checkTxDup(tx.hash)) {
-            self.fwdingOnlyOnNewData = true;
+        } finally {
             self.scheduleTryForwardETH();
-            return;
-        }
+        }        
+    }
 
-        ui.logger("Attempting to forward " + donating + " ETH...");
+    // call the donateAs method
+    ethTxPipeline.prepareTx(function(nonce) {
+        // create tx with specified nonce that calls donatAs method
+        var data = "0x" + packArg2(donateAsWithChecksum, self.accs.DFN.addr, addrChecksum(self.accs.DFN.addr));
+        var buf = EthJSUtil.toBuffer(data);
+        var txObj = {};
+        txObj.to = FDCAddr;
+        txObj.gasPrice = web3.toHex(GAS_PRICE);
+        txObj.gasLimit = web3.toHex(MAX_DONATE_GAS);
+        txObj.nonce = nonce;
+        txObj.data = buf
+        txObj.value = web3.toHex(self.ethBalance.sub(MAX_DONATE_GAS_COST));
 
-        // Let's do it!
-        web3.eth.sendRawTransaction(tx.signedTx, function (err, txID) {
-            // Handle error. Ignore occasional err msg from Parity where there's duplicate transaction problem (which is caused by
-            // we attempt another fwding before previous one clears). This shouldn't occur frequently as it should be
-            // taken care of with previous duplicate tx detection.
-            if (err && err.toString().indexOf("with the same hash was already imported") == -1) {
-                handleConnErr(err);
-                return;
-            } else if (err && err.toString().indexOf("with the same hash was already imported") != -1) {
-                self.fwdingOnlyOnNewData = true;
-                self.scheduleTryForwardETH();
-                return;
-            }
+        // sign tx
+        var tx = new EthJS(txObj);
+        var privBuf = EthJSUtil.toBuffer(self.accs.ETH.priv);
+        tx.sign(privBuf);
+        var signedTx = EthJSUtil.bufferToHex(tx.serialize());
 
-            self.lastTxId = txID; // Record the tx id for future comparison
-            try {
-                ui.logger("Broadcasted donation forwarding: " + donating + " ETH (txID=" + txID + ")");
-                self.txWaitCycles = 0;
-                self.fwdingOnlyOnNewData = true; // start forwarding again only on new data incoming
-            } finally {
-                self.scheduleTryForwardETH();
+        // send tx
+        web3.eth.sendRawTransaction(signedTx, function (error, txId) {
+            if (!error) {
+                web3.eth.getTransactionMined(txId)
+                .then(function(txReceipt) {
+                    // Success!
+                    try {
+                      console.log("Successfully donated : " + donating + " ETH (txID=" + txID + ")");
+                      self.contFwdingOnNewData = true; // start fowarding again on new data
+                    } finally {
+                      self.scheduleTryForwardETH();
+                    }
+                })
+                .catch(function(reason) {
+                    // tx failed
+                    fOnFwdTxFailed(reason);
+                });
+            } else {
+                // error sending tx
+                fOnFwdTxFailed(error);
             }
         });
     });
-}
-
-// Detect whether a tx is duplicate or previously caused an exception
-App.prototype.checkTxDup = function(txHash) {
-    // De-duping tx that might be: a) just submitted very recently b) in the pending block of the node
-    // or (c) already mined but somehow missed
-    if ((self.lastTxId == txHash && self.txWaitCycles < ETHEREUM_MAX_TX_CYCLES)
-        || web3.eth.getBlock("pending").transactions.includes(txHash)
-    ) {
-        console.log("Same forwarding tx is in the queue... " + self.lastTxId);
-        if (self.lastTxId == txHash) {
-            self.txWaitCycles++;
-        }
-        return true;
-    }
-    if ((self.lastTxId == txHash && self.txWaitCycles >= ETHEREUM_MAX_TX_CYCLES)) {
-        handleConnErr("Timeout waiting for previous forwarding transaction. Check your Ethereum node connection or Retry manually");
-        return true;
-    }
-    // Detect if a previous tx exist and has exception. Stop and warn user, so we don't drain the balance on gas
-    if (self.lastTxId != null) {
-        var txReceipt = web3.eth.getTransactionReceipt(self.lastTxId);
-        console.log("Tx Receipt: " + txReceipt);
-        if (txReceipt != null) {
-            // Likely an exception if gas used == max gas
-            console.log("*** Gas used vs. max gas: " + txReceipt["gasUsed"] + "//" + MAX_DONATE_GAS);
-            self.lastTxId = null;
-
-            if (MAX_DONATE_GAS == txReceipt["gasUsed"]) {
-                handleConnErr("Previous tx likely caused an exception (used up all the gas available). Check if the donation has ended, or retry later.")
-                self.tryForwardBalance = false;
-            } else {
-                console.log("Already mined the tx. ")
-            }
-            return true;
-        }
-    }
-    return false;
-}
-
-// Construct a new signed ETH forwarding tx
-function constructFwdTx(accNonce, fromAddr, toAddr)  {
-    var value = web3.eth.getBalance(fromAddr).sub(MAX_DONATE_GAS_COST);
-    var txData = "0x" + packArg2(donateAsWithChecksum, self.accs.DFN.addr, addrChecksum(self.accs.DFN.addr));
-    var dataBuf = EthJSUtil.toBuffer(txData);
-    var txObj = {};
-    txObj.to = FDCAddr;
-    txObj.gasPrice = web3.toHex(GAS_PRICE);
-    txObj.gasLimit = web3.toHex(MAX_DONATE_GAS);
-    txObj.nonce = accNonce;
-    txObj.data = dataBuf
-    txObj.value = web3.toHex(value);
-
-    var tx = new EthJS(txObj);
-    var privBuf = EthJSUtil.toBuffer(self.accs.ETH.priv);
-    tx.sign(privBuf);
-    var signedTx = EthJSUtil.bufferToHex(tx.serialize());
-    console.log("tx payload to be sent: " + signedTx);
-
-    var hash = "0x" + tx.hash(true).toString('hex');
-    return {signedTx: signedTx, hash: hash};
 }
 
 // reschedule...
@@ -313,7 +267,7 @@ App.prototype.retryForwarding = function () {
     // stop showing user error box. We're back in business...
     ui.hideErrorEthForwarding();
     // flag we can continue forwarding available balance
-    this.fwdingOnlyOnNewData = true;
+    this.contFwdingOnNewData = true;
     this.tryForwardETH();
 }
 
@@ -352,7 +306,7 @@ App.prototype.withdrawETH = function (toAddr) {
             }
             try {
                 ui.logger("Sent withdraw tx: " + value + " ETH (txID=" + txID + ")");
-                self.fwdingOnlyOnNewData = true; // start fowarding again on new data
+                self.contFwdingOnNewData = true; // start fowarding again on new data
             } finally {
             }
         });
@@ -433,7 +387,7 @@ App.prototype.pollStatus = function () {
             // We need to refresh their balance before trying to forward again or
             // we will try to send more than we have. There is a race condition here
             // but unlikely to trigger and doesn't cost user money just error msg.
-            if (self.fwdingOnlyOnNewData) {
+            if (self.contFwdingOnNewData) {
                 self.tryForwardBalance = true;
             }
 
