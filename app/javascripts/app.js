@@ -23,7 +23,6 @@
 "use strict";
 
 ////// DEPENDENCIES //////
-var Wallet = EthJS.Wallet;
 
 const G = window.DFNConstants;
 
