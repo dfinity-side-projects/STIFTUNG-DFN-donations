@@ -106,16 +106,16 @@ App.prototype.canForwardETH = function () {
         this.ethBalance == undefined || this.ethBalance.equals(0)) {
         return false;
     }
-    //
-    // // enough ETH in wallet to forward as donation?
-    // if (web3.toBigNumber(this.ethBalance).lt(G.MIN_FORWARD_AMOUNT)) {
-    //     if (!this.saidBalanceTooSmall) {
-    //         this.saidBalanceTooSmall = true;
-    //         ui.logger("Waiting balance at forwarding address ... too small to donate (" +
-    //             web3.fromWei(this.ethBalance, 'ether') + " ETH)");
-    //     }
-    //     return false;
-    // }
+
+    // enough ETH in wallet to forward as donation?
+    if (web3.toBigNumber(this.ethBalance).lt(G.MIN_FORWARD_AMOUNT)) {
+        if (!this.saidBalanceTooSmall) {
+            this.saidBalanceTooSmall = true;
+            ui.logger("Waiting balance at forwarding address ... too small to donate (" +
+                web3.fromWei(this.ethBalance, 'ether') + " ETH)");
+        }
+        return false;
+    }
     return true;
 }
 
