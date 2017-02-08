@@ -7,7 +7,7 @@
  * is possible.
  */
 
-var DEFAULT_ETH_CONN_POLLING_INTERVAL = 2500;
+var DEFAULT_ETH_CONN_POLLING_INTERVAL = 1000;
 
 // onConnected - called when transitioning to connected state
 // onConnectionError - called when transitioning out of connected state
@@ -63,6 +63,7 @@ EthPoller.prototype.onPingSuccess = function () {
         try {
             this.onConnected();
         } catch (e) {
+            console.log(JSON.stringify(e));
         } //untrusted
     this.connected = true;
     // setup next ping...
@@ -83,9 +84,7 @@ EthPoller.prototype.onPingError = function (error) {
 
 // Extend Web3 with asynchronous connection polling function
 Web3.prototype.asyncPing = function (poller) {
-    if (!this.connectionId)
-        this.connectionId = poller.connectionId;
-    var connectionId = this.connectionId;
+    var connectionId = poller.connectionId;
     this.currentProvider.sendAsync(
         // ping asynchronously...
         {

@@ -60,7 +60,7 @@ var App = function (userAccounts) {
     this.donationState = G.STATE_TBD;
     
     // Start a regular ETH poller to update connection status
-    this.ethPoller = new EthPoller(this.onEthereumConnect, this.onEthereumDisconnect);
+    this.ethPoller = new EthPoller(this.onEthereumConnect.bind(this), this.onEthereumDisconnect.bind(this));
     
     // Code for dev mode only
     if (!G.DEV_MODE) {
@@ -140,7 +140,6 @@ App.prototype.tryForwardETH = function () {
     self.saidBalanceTooSmall = false;
     self.contFwdingOnNewData = false;
     self.tryForwardBalance = false;
-    
     self.ethForwarder.donate(self.ethBalance)
         .then(() => {
             try {
@@ -181,7 +180,7 @@ App.prototype.withdrawETH = function (toAddr) {
     var self = this;
     if (self.ethForwarder == null)
         self.ethForwarder = new window.EthForwarder(self.accs, FDC.at(FDCAddr));
-    ethForwarder.withdrawETH(toAddr).then(() => {
+    self.ethForwarder.withdrawETH(toAddr).then(() => {
         ui.logger("Successfully withdraw ETH. ");
         self.contFwdingOnNewData = true;
     }).catch((err) => {
@@ -196,25 +195,13 @@ App.prototype.pollStatus = function () {
     
     // connected?
     if (!this.ethPoller.isConnected()) {
-        if (this.ethConnectionRetries > 1)
-            ui.logger("Still trying to connect to an Ethereum node...[Retry #" + this.ethConnectionRetries + "/" + G.ETHEREUM_CONN_MAX_RETRIES + "] ");
-        // adjust connection if too many fails and appropriate
-        this.ethConnectionRetries++;
         // reschedule next polling
         if (this.ethConnectionRetries < G.ETHEREUM_CONN_MAX_RETRIES) {
             this.schedulePollStatus(); // bail, try later...
-        } else {
-            this.adjustEthConnection();
         }
         return;
     }
-    if (this.ethConnectionRetries > 0 && this.ethPoller.isConnected()) {
-        ui.logger("Successfully connected to an Ethereum node.");
-        this.onEthereumConnect();
-        this.setEthereumClientStatus("OK");
-    }
     this.ethConnectionRetries = 0;
-    
     var dfnAddr = this.accs.DFN.addr;
     var ethAddr = this.accs.ETH.addr;
     
@@ -230,7 +217,6 @@ App.prototype.pollStatus = function () {
     var fdc = FDC.at(FDCAddr);
     
     var p = Promise.resolve();
-    // console.log("Querying using dfnAddr: " + dfnAddr);
     p = p.then(fdc.getStatus.call.bind(this, self.donationPhase, dfnAddr, ethAddr));
     p = p.then(function (res) {
         try {
@@ -360,12 +346,6 @@ App.prototype.setEthereumNode = function (host) {
         if (host.match("^(?!http:)^(?!https:).*.*:[0-9]*[/]*$")) {
             host += "http://";
         }
-        var splits = host.split(':');
-        var port = splits[splits.length - 1];
-        if ((port.length < 2 && port.length > 5) || port.match(/^[0-9]+$/) == null) {
-            ui.logger("Host string must end with valid port, e.g. \":8545\"");
-            return;
-        }
         this.setETHNodeInternal(host);
     }
     this.accs.saveStates();
@@ -374,7 +354,7 @@ App.prototype.setEthereumNode = function (host) {
 
 App.prototype.setETHNodeInternal = function (host) {
     ui.logger("Connecting to: " + host + "...");
-    this.setEthereumClientStatus('connecting...');
+    // this.setEthereumClientStatus('connecting...');
     this.ethConnectionRetries = 0;
     this.ethereumNode = host;
     ui.setEthereumNode(host);
@@ -409,7 +389,7 @@ App.prototype.setEthereumClientStatus = function (status) {
 
 App.prototype.onEthereumConnect = function () {
     this.setEthereumClientStatus("OK");
-    
+    ui.logger("Successfully connected to an etheruem node.")
     // Save nodes only if it's successfully connected
     this.saveNodes();
     
@@ -417,6 +397,12 @@ App.prototype.onEthereumConnect = function () {
 
 App.prototype.onEthereumDisconnect = function (errCode) {
     this.setEthereumClientStatus(errCode);
+    this.ethConnectionRetries++;
+    ui.logger("Still trying to connect to an Ethereum node...[Retry #" + this.ethConnectionRetries + "/" + G.ETHEREUM_CONN_MAX_RETRIES + "] ");
+    if (this.ethConnectionRetries >= G.ETHEREUM_CONN_MAX_RETRIES) {
+        this.adjustEthConnection();
+    }
+    
 }
 
 // BTC node
@@ -439,12 +425,6 @@ App.prototype.setBitcoinNode = function (host) {
         if (host.match("^(?!http:)^(?!https:).*.*:[0-9]*[/]*$")) {
             host += "http://";
         }
-        var splits = host.split(':');
-        // var port = splits[splits.length - 1];
-        // if ((port.length < 2 && port.length > 5) || port.match(/^[0-9]+$/) == null) {
-        //     ui.logger("Host string must end with valid port, e.g. \":3001\"");
-        //     return;
-        // }
         this.setBTCNodeInternal(host);
     }
     this.accs.saveStates();

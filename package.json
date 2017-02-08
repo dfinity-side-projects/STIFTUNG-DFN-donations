@@ -10,6 +10,7 @@
     "babel": "^6.5.2",
     "babel-cli": "^6.22.2",
     "babel-preset-es2017": "^6.22.0",
+    "babili": "0.0.11",
     "bip39": "^2.2.0",
     "bitcore-explorers": "maraoz/bitcore-explorers",
     "bitcore-lib": "^0.13.19",
@@ -23,6 +24,7 @@
     "open-exchange-rates": "^0.3.0",
     "request-promise": "^4.1.1",
     "terminal-kit": "^0.25.6",
+    "uglify-js": "^2.7.5",
     "web3": "^0.18.2",
     "web3-provider-engine": "^8.6.1"
   },
@@ -33,6 +35,7 @@
   "scripts": {
     "build:all": "truffle build && babel app/javascripts/*.es7 -d build && browserify --standalone DFNConstants app/javascripts/constants.js -o build/constants.js && browserify --standalone EthForwarder build/app/javascripts/eth.js -o build/eth.js",
     "build:js": "babel app/javascripts/*.es7 -d build && browserify --standalone DFNConstants app/javascripts/constants.js -o build/constants.js && browserify --standalone EthForwarder build/app/javascripts/eth.js -o build/eth.js",
+    "minify": "babili build/eth.js -d .",
     "test": "truffle test"
   },
   "repository": {

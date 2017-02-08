@@ -58,47 +58,52 @@ EthForwarder.prototype.donate = function (wei) {
     });
 }
 
-////// Withdraw all remaining ETH from forwarding address to specified toAddr ////
+/*
+ * Withdraw all remaining ETH from forwarding address to specified toAddr 
+ * 
+ * This function could throw exception and it should be handled by the caller.
+ */
 EthForwarder.prototype.withdrawETH = async function (toAddr) {
     var self = this;
-    try {
-        // TODO: change to async get balance
-        var bal = web3.eth.getBalance(self.accounts.ETH.addr);
-        var value = bal.sub(G.VALUE_TRANSFER_GAS_COST);
-        if (value.isNegative() || value.isZero()) {
-            ui.logger("Withdraw failed - not enough balance to withdraw");
-            return;
-        }
-        
-        // Get nonce & construct tx object
-        var nonce = await web3.eth.getTransactionCountAsync(self.accounts.ETH.addr);
-        var txObj = {
-            to: toAddr,
-            gasPrice: web3.toHex(G.GAS_PRICE),
-            gasLimit: web3.toHex(G.VALUE_TRANSFER_GAS),
-            nonce: nonce,
-            data: EthJSUtil.toBuffer(""),
-            value: web3.toHex(value)
-        }
-        var tx = new EthJS.Tx(txObj);
-        
-        // Sign tx with priv key
-        var privBuf = EthJSUtil.toBuffer(self.accounts.ETH.priv);
-        tx.sign(privBuf)
-        var signedTx = EthJSUtil.bufferToHex(tx.serialize());
-        
-        // Broadcast the tx
-        var txID = await web3.eth.sendRawTransactionAsync(signedTx);
-        
-        // Wait for withdraw tx mined
-        await getTransactionMined(txID, G.VALUE_TRANSFER_GAS);
-        
-        // Success
-        ui.logger("Successfully withdraw tx: " + value + " ETH (txID=" + txID + ")");
-    } catch (err) {
-        ui.logger("Withdraw failed - Failed to send transaction: " + JSON.stringify(err));
-        console.log(err);
+    // TODO: change to async get balance
+    var bal = await web3.eth.getBalanceAsync(self.accounts.ETH.addr);
+    var value = bal.sub(G.VALUE_TRANSFER_GAS_COST);
+    if (value.isNegative() || value.isZero()) {
+        throw new Error("Withdraw failed - not enough balance to withdraw");
+        return;
     }
+    
+    // Get nonce & construct tx object
+    var nonce = await web3.eth.getTransactionCountAsync(self.accounts.ETH.addr);
+    var txObj = {
+        to: toAddr,
+        gasPrice: web3.toHex(G.GAS_PRICE),
+        gasLimit: web3.toHex(G.VALUE_TRANSFER_GAS),
+        nonce: nonce,
+        data: EthJSUtil.toBuffer(""),
+        value: web3.toHex(value)
+    }
+    var tx = new EthJS.Tx(txObj);
+    
+    // Sign tx with priv key
+    var privBuf = EthJSUtil.toBuffer(self.accounts.ETH.priv);
+    tx.sign(privBuf)
+    var signedTx = EthJSUtil.bufferToHex(tx.serialize());
+    
+    // Broadcast the tx
+    var txID = await web3.eth.sendRawTransactionAsync(signedTx);
+    
+    // Wait for withdraw tx mined
+    await getTransactionMined(txID, G.VALUE_TRANSFER_GAS);
+}
+
+function delayPromise(ms){
+    var ctr, rej, p = new Promise(function (resolve, reject) {
+        ctr = setTimeout(resolve, ms);
+        rej = reject;
+    });
+    p.cancel = function(){ clearTimeout(ctr); rej(Error("Cancelled"))};
+    return p; 
 }
 
 // Utility function to ensure a tx is either mined or timeout / exception
@@ -106,49 +111,31 @@ async function getTransactionMined(txnHash, txnGas, interval, timeout) {
     var interval = interval ? interval : G.ETHEREUM_POLLING_INTERVAL;
     var timeout = timeout ? timeout : G.ETHEREUM_TX_TIMEOUT;
     var delay = 0;
-    var transactionMinedAsync = async(txnHash, txnGas, resolve, reject) => {
-        try {
-            var receipt = await web3.eth.getTransactionReceiptAsync(txnHash);
-            if (receipt == null || receipt.blockNumber == null) {
-                // Receipt not yet ready... poll again after interval
-                delay += interval;
-                if (delay >= timeout)
-                    reject(new Error("Timed Out Waiting For TX"));
-                else
-                    setTimeout(function () {
-                        transactionMinedAsync(txnHash, txnGas, resolve, reject);
-                    }, interval);
+    var transactionMinedAsync = async(txnHash, txnGas) => {
+        var receipt = await web3.eth.getTransactionReceiptAsync(txnHash);
+        if (receipt == null || receipt.blockNumber == null) {
+            // Receipt not yet ready... poll again after interval
+            delay += interval;
+            if (delay >= timeout) {
+                throw new Error("Timed Out Waiting For TX");
             } else {
-                // we got a tx receipt. Interrogate gas used to see if
-                // it ran successfully
-                console.log("Receipt ...");
-                console.log(receipt);
-                if (receipt.gasUsed < txnGas)
-                // success!
-                    resolve(receipt);
-                else
-                // failure / exception was thrown
-                    reject(new Error("Exception: Out of Gas"));
+                await delayPromise(interval);
+                await transactionMinedAsync(txnHash, txnGas);
             }
-        } catch (error) {
-            // probably encountered connection failure
-            // TODO change code to continue in case connection failure we
-            // should not reject for that reason.
-            reject(error);
+        } else {
+            // we got a tx receipt. Interrogate gas used to see if
+            // it ran successfully
+            console.log("Receipt ...");
+            console.log(receipt);
+            if (receipt.gasUsed < txnGas)
+            // success!
+                return receipt;
+            else
+            // failure / exception was thrown
+                throw new Error("Exception: Out of Gas");
         }
     };
-    
-    if (Array.isArray(txnHash)) {
-        var promises = [];
-        for (var i = 0; i < txnHash.length; i++) {
-            promises.push(web3.eth.getTransactionMined(txnHash[i], txnGas[i], interval, timeout));
-        }
-        return Promise.all(promises);
-    } else {
-        return new Promise(function (resolve, reject) {
-            return transactionMinedAsync(txnHash, txnGas, resolve, reject);
-        });
-    }
+    return transactionMinedAsync(txnHash, txnGas);
 };
 
 module.exports = EthForwarder;
