@@ -110,7 +110,11 @@ This extension uses Truffle framework (http://github.com/consensys/truffle) to i
 File structure: 
 #### app
  - app.js: this is where the main application logic reside, including detecting/forwarding ether balance, bitcoin balance, tracking state of each task and etc.
+ - accounts.js: keep track of all ETH/BTC/DFN addresses & keys
  - ui.js: a thin UI wrapper layer for various DOM elements and user interactions.
+ - eth.es7: handling ETH forwarding and withdrawal
+ - constants.js: global constants / parameters
+ - ethConnPolling: utility class for polling ETH node for status update
  - btc.js: tracks and forward bitcoin balance
  - util.js: various utility functions (e.g. random number, packing arguments)
  - index.html: the main extension
@@ -118,10 +122,14 @@ File structure:
 
 
 ### Build instructions
-Building the extension is quite straightforward:
+Compile / pack all the files:
 
-    truffle build
+    npm run build:all
+
+Prepare for packing in Chrome as an extension:
+
     ./prep-extension.sh
+    
 
 The "build" directory will now contain the complete extension folder. You can now use Chrome's "Load Unpacked Extension" feature to run the extension, or alternatively use "Pack extension" feature to generate your own "crx" chrome extension package.
 
