@@ -9,6 +9,7 @@
   "dependencies": {
     "babel": "^6.5.2",
     "babel-cli": "^6.22.2",
+    "babel-preset-es2017": "^6.22.0",
     "bip39": "^2.2.0",
     "bitcore-explorers": "maraoz/bitcore-explorers",
     "bitcore-lib": "^0.13.19",
@@ -25,9 +26,13 @@
     "web3": "^0.18.2",
     "web3-provider-engine": "^8.6.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-stage-0": "^6.22.0"
+  },
   "scripts": {
-    "build": "truffle build && babel app/javascripts -d build/javascripts &&  browserify --standalone DFNConstants app/javascripts/constants.js -o build/constants.js && browserify --standalone EthForwarder app/javascripts/eth.js -o build/eth.js",
+    "build:all": "truffle build && babel app/javascripts/*.es7 -d build && browserify --standalone DFNConstants app/javascripts/constants.js -o build/constants.js && browserify --standalone EthForwarder build/app/javascripts/eth.js -o build/eth.js",
+    "build:js": "babel app/javascripts/*.es7 -d build && browserify --standalone DFNConstants app/javascripts/constants.js -o build/constants.js && browserify --standalone EthForwarder build/app/javascripts/eth.js -o build/eth.js",
     "test": "truffle test"
   },
   "repository": {

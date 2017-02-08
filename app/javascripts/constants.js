@@ -6,11 +6,9 @@ const constants = {
     ETHEREUM_POLLING_INTERVAL: 5000, // the time we wait before re-polling Etheruem provider for new data
     ETHEREUM_CONN_MAX_RETRIES: 10,   // max number of retries to automatically selected Ethereum provider
     ETHEREUM_MAX_TX_CYCLES: 10, // how many cycles of forwarding attempt should we timeout before making a second tx, roughly CHK_FWD_INTERVAL x Cycles
-    ETHEREUM_TX_TIMEOUT: 240000,
+    ETHEREUM_TX_TIMEOUT: 240000, // how many ms delay before timeout / fail a ETH tx
     ETHEREUM_HOSTED_NODES: ["http://eth.frankfurt.dfinity.build:80", "http://eth.tokyo.dfinity.build:80"],
-    
-    
-    VALUE_TRANSFER_GAS: 21000,
+    VALUE_TRANSFER_GAS: 28000,
     
     // These ETH constants will be initialized upon window load because of dependency on web3
     GAS_PRICE: undefined,                      // estimate price of gas

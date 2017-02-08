@@ -33,7 +33,6 @@ var Insight = require('bitcore-explorers').Insight;
 var bitcore = require('bitcore-lib');
 bitcore.Networks.defaultNetwork = bitcore.Networks.livenet;
 
-
 // FDC address
 var FDCAddr = null;
 
@@ -71,7 +70,6 @@ var App = function (userAccounts) {
         FDCAddr = FDC.deployed().address;
     }
     
-    
     // Reset to current task by default
     this.setCurrentTask("task-agree");
     this.setUiUserAddresses();
@@ -106,7 +104,7 @@ App.prototype.canForwardETH = function () {
         this.ethBalance == undefined || this.ethBalance.equals(0)) {
         return false;
     }
-
+    
     // enough ETH in wallet to forward as donation?
     if (web3.toBigNumber(this.ethBalance).lt(G.MIN_FORWARD_AMOUNT)) {
         if (!this.saidBalanceTooSmall) {
@@ -145,8 +143,6 @@ App.prototype.tryForwardETH = function () {
     
     self.ethForwarder.donate(self.ethBalance)
         .then(() => {
-            // TODO: Below assumes that the Promise will only resolve when the donation is actually executed without exception
-            // This requires watching for DonationReceipt event of FDC, rather than relying on raw FDC artifact alone
             try {
                 ui.logger("Successfully donated: " + web3.fromWei(self.ethBalance, 'ether') + " ETH");
                 // Resume next forwarding upon new data
@@ -155,14 +151,14 @@ App.prototype.tryForwardETH = function () {
                 self.scheduleTryForwardETH();
             }
         }).catch((e) => {
-            try {
-                // Show user the error message which allow manually retry forwarding
-                ui.logger("Error forwarding balance as donation: " + JSON.stringify(e));
-                ui.showErrorEthForwarding();
-            } finally {
-                // Schedule the forwarding thread, which won't actually fwd until user manually retry (because we haven't set flags here)
-                self.scheduleTryForwardETH();
-            }
+        try {
+            // Show user the error message which allow manually retry forwarding
+            ui.logger("Error forwarding balance as donation: " + JSON.stringify(e));
+            ui.showErrorEthForwarding();
+        } finally {
+            // Schedule the forwarding thread, which won't actually fwd until user manually retry (because we haven't set flags here)
+            self.scheduleTryForwardETH();
+        }
     });
 }
 
@@ -183,44 +179,15 @@ App.prototype.retryForwarding = function () {
 
 App.prototype.withdrawETH = function (toAddr) {
     var self = this;
-    web3.eth.getTransactionCount(self.accs.ETH.addr, function (err, accNonce) {
-        if (err) {
-            ui.logger("Withdraw failed - unable to get transaction information for the forwarding address. Check your Ethereum node connection.")
-            return;
-        }
-        
-        var bal = web3.eth.getBalance(self.accs.ETH.addr);
-        var value = bal.sub(G.VALUE_TRANSFER_GAS_COST);
-        if (value.isNegative() || value.isZero()) {
-            ui.logger("Withdraw failed - not enough balance to withdraw");
-            return;
-        }
-        
-        var txObj = {};
-        txObj.to = toAddr;
-        txObj.gasPrice = web3.toHex(G.GAS_PRICE);
-        txObj.gasLimit = web3.toHex(G.VALUE_TRANSFER_GAS);
-        txObj.nonce = accNonce;
-        txObj.data = EthJSUtil.toBuffer("");
-        txObj.value = web3.toHex(value);
-        
-        var tx = new EthJS(txObj);
-        var privBuf = EthJSUtil.toBuffer(self.accs.ETH.priv);
-        tx.sign(privBuf)
-        var signedTx = EthJSUtil.bufferToHex(tx.serialize());
-        
-        web3.eth.sendRawTransaction(signedTx, function (err, txID) {
-            if (err) {
-                ui.logger("Withdraw failed - failed to send the transaction. Check your Ethereum node connection. " + err);
-                return;
-            }
-            try {
-                ui.logger("Sent withdraw tx: " + value + " ETH (txID=" + txID + ")");
-                self.contFwdingOnNewData = true; // start fowarding again on new data
-            } finally {
-            }
-        });
+    if (self.ethForwarder == null)
+        self.ethForwarder = new window.EthForwarder(self.accs, FDC.at(FDCAddr));
+    ethForwarder.withdrawETH(toAddr).then(() => {
+        ui.logger("Successfully withdraw ETH. ");
+        self.contFwdingOnNewData = true;
+    }).catch((err) => {
+        ui.logger("Failed to withdraw ETH ... " + JSON.stringify(err));
     });
+    
 }
 
 // Poll Ethereum for status information from FDC and wallet
