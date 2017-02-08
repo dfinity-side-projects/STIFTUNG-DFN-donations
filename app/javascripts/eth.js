@@ -22,38 +22,40 @@ var EthForwarder = function (accounts, fdc) {
     engine.addProvider(new Web3Subprovider(ethProvider));
     engine.start(); // Required by the provider engine.
     FDC.setProvider(engine);
+    
+    // Make sure we get the new return structure on tx (logs, receipt, txHash)
+    FDC.next_gen = true;
+    FDC.synchronization_timeout = G.ETHEREUM_TX_TIMEOUT;
 }
+
 
 //// Donate specified value (minus gas cost). From/to address are all extracted from associated accounts object. ////
 EthForwarder.prototype.donate = function(wei) {
     var self = this;
     return new Promise((success,reject) => {
-        console.log(wei.toString());
         const donating = web3.toBigNumber(wei - G.MAX_DONATE_GAS_COST);
         if (donating < 0) {
-            reject("Not enough value to cover donation tx cost");
+            reject(new Error("Not enough value to cover donation tx cost"));
             return;
         }
-        console.log(donating.toString());
-        self.fdc.donateAsWithChecksum(self.accounts.DFN.addr, addrChecksum(self.accounts.DFN.addr).slice(2), {
+        self.fdc.donateAsWithChecksum(self.accounts.DFN.addr, addrChecksum(self.accounts.DFN.addr), {
             from: self.accounts.ETH.addr,
             value: donating,
             gas: G.MAX_DONATE_GAS,
             gasPrice: G.GAS_PRICE
-        }).then((txId) => {
-            console.log('Tx submitted: ' + txId);
+        }).then((result) => {
+            // console.log('Tx submitted: ' + txId);
+            if (result.receipt.gasUsed < G.MAX_DONATE_GAS)
+                // success!
+                success(result.receipt);
+            else
+                // failure / exception was thrown
+                reject(new Error("Exception: Running Out of Gas / TX Exception occurred"));
         }).catch((e) => {
             console.log(e);
             reject(e);
         });
-        self.fdc.DonationReceipt({fromBlock: "latest"}).watch(function(error, result) {
-            console.log("Events for DonationReceipt");
-            if (error == null) {
-                console.log(result.args);
-                /// TODO: Look for Donation Receipt
-                success();
-            }
-        });
+        
     });
 }
 

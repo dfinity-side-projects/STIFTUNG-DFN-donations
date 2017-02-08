@@ -6,6 +6,7 @@ const constants = {
     ETHEREUM_POLLING_INTERVAL: 5000, // the time we wait before re-polling Etheruem provider for new data
     ETHEREUM_CONN_MAX_RETRIES: 10,   // max number of retries to automatically selected Ethereum provider
     ETHEREUM_MAX_TX_CYCLES: 10, // how many cycles of forwarding attempt should we timeout before making a second tx, roughly CHK_FWD_INTERVAL x Cycles
+    ETHEREUM_TX_TIMEOUT: 240000,
     ETHEREUM_HOSTED_NODES: ["http://eth.frankfurt.dfinity.build:80", "http://eth.tokyo.dfinity.build:80"],
     
     
