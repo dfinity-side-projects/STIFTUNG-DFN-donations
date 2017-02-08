@@ -41,11 +41,18 @@ EthForwarder.prototype.donate = function(wei) {
             gas: G.MAX_DONATE_GAS,
             gasPrice: G.GAS_PRICE
         }).then((txId) => {
-            console.log(txId);
-            success(txId);
+            console.log('Tx submitted: ' + txId);
         }).catch((e) => {
             console.log(e);
             reject(e);
+        });
+        self.fdc.DonationReceipt({fromBlock: "latest"}).watch(function(error, result) {
+            console.log("Events for DonationReceipt");
+            if (error == null) {
+                console.log(result.args);
+                /// TODO: Look for Donation Receipt
+                success();
+            }
         });
     });
 }

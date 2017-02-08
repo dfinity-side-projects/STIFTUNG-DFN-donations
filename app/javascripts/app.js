@@ -145,6 +145,8 @@ App.prototype.tryForwardETH = function () {
     
     self.ethForwarder.donate(self.ethBalance)
         .then(() => {
+            // TODO: Below assumes that the Promise will only resolve when the donation is actually executed without exception
+            // This requires watching for DonationReceipt event of FDC, rather than relying on raw FDC artifact alone
             try {
                 ui.logger("Successfully donated: " + web3.fromWei(self.ethBalance, 'ether') + " ETH");
                 // Resume next forwarding upon new data
