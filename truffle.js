@@ -25,6 +25,13 @@ module.exports = {
       gasPrice: 20000000000,
       from: "cf49327643ac9ee9188f6c74d08f35bf91bce055"
   },
+  "frankfurt": {
+    network_id: "default", // Ethereum public network
+    host: "eth.frankfurt.dfinity.build",
+    port: 8545,
+      gas: 3000000,
+      gasPrice: 20000000000,
+  },
   "morden": {
     network_id: 2,        // Official Ethereum test network
     host: "178.25.19.88", // Random IP for example purposes (do not use)

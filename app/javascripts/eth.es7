@@ -27,6 +27,11 @@ var EthForwarder = function (accounts, fdc) {
     
     // Promisify all web3 functions
     Promise.promisifyAll(web3.eth);
+
+    // Turn off the warnings
+    Promise.config({
+        warnings: false
+    });
 }
 
 //// Donate specified value (minus gas cost). From/to address are all extracted from associated accounts object. ////
