@@ -6,6 +6,7 @@ module.exports = {
       "javascripts/accounts.js",
       "javascripts/btc.js",
       "javascripts/ui.js",
+      "javascripts/ethConnPolling.js",
       "javascripts/app.js"
     ],
     "app.css": [
@@ -14,6 +15,7 @@ module.exports = {
     "images/": "images/",
     "deps/": "deps/"
   },
+  
   networks: {
   "live": {
     network_id: "default", // Ethereum public network
@@ -22,6 +24,13 @@ module.exports = {
       gas: 3000000,
       gasPrice: 20000000000,
       from: "cf49327643ac9ee9188f6c74d08f35bf91bce055"
+  },
+  "frankfurt": {
+    network_id: "default", // Ethereum public network
+    host: "eth.frankfurt.dfinity.build",
+    port: 8545,
+      gas: 3000000,
+      gasPrice: 20000000000,
   },
   "morden": {
     network_id: 2,        // Official Ethereum test network
@@ -42,7 +51,7 @@ module.exports = {
   "development": {
     network_id: "dev",
     host: "localhost",
-    port: 7000
+    port: 8585
   }
 }
 };

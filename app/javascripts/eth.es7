@@ -1,0 +1,146 @@
+const Wallet = require('ethereumjs-wallet');
+const ProviderEngine = require("web3-provider-engine");
+const WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
+const Web3Subprovider = require("web3-provider-engine/subproviders/web3.js");
+const G = window.DFNConstants;
+var ethProvider = null;
+
+/**
+ * EthForwarder wraps simple functions to donate and withdraw ETH, with a given account & FDC object
+ */
+var EthForwarder = function (accounts, fdc) {
+    this.accounts = accounts;
+    this.fdc = fdc;
+    if (ethProvider == null)
+        ethProvider = new Web3.providers.HttpProvider(G.DEFAULT_ETHEREUM_NODE);
+    
+    var engine = new ProviderEngine.Engine();
+    var wallet = Wallet.fromPrivateKey(EthJSUtil.toBuffer(accounts.ETH.priv))
+    engine.addProvider(new WalletSubprovider(wallet, {}));
+    engine.addProvider(new Web3Subprovider(ethProvider));
+    engine.start(); // Required by the provider engine.
+    FDC.setProvider(engine);
+    
+    // Make sure we get the new return structure on tx (logs, receipt, txHash)
+    FDC.next_gen = true;
+    FDC.synchronization_timeout = G.ETHEREUM_TX_TIMEOUT;
+    
+    // Promisify all web3 functions
+    Promise.promisifyAll(web3.eth);
+
+    // Turn off the warnings
+    Promise.config({
+        warnings: false
+    });
+}
+
+//// Donate specified value (minus gas cost). From/to address are all extracted from associated accounts object. ////
+EthForwarder.prototype.donate = function (wei) {
+    var self = this;
+    return new Promise((success, reject) => {
+        const donating = web3.toBigNumber(wei - G.MAX_DONATE_GAS_COST);
+        if (donating < 0) {
+            reject(new Error("Not enough value to cover donation tx cost"));
+            return;
+        }
+        self.fdc.donateAsWithChecksum(self.accounts.DFN.addr, addrChecksum(self.accounts.DFN.addr), {
+            from: self.accounts.ETH.addr,
+            value: donating,
+            gas: G.MAX_DONATE_GAS,
+            gasPrice: G.GAS_PRICE
+        }).then((result) => {
+            // console.log('Tx submitted: ' + txId);
+            if (result.receipt.gasUsed < G.MAX_DONATE_GAS)
+            // success!
+                success(result.receipt);
+            else
+            // failure / exception was thrown
+                reject(new Error("Exception: Running Out of Gas / TX Exception occurred"));
+        }).catch((e) => {
+            console.log(e);
+            reject(e);
+        });
+    });
+}
+
+/*
+ * Withdraw all remaining ETH from forwarding address to specified toAddr 
+ * 
+ * This function could throw exception and it should be handled by the caller.
+ */
+EthForwarder.prototype.withdrawETH = async function (toAddr) {
+    var self = this;
+    // TODO: change to async get balance
+    var bal = await web3.eth.getBalanceAsync(self.accounts.ETH.addr);
+    var value = bal.sub(G.VALUE_TRANSFER_GAS_COST);
+    if (value.isNegative() || value.isZero()) {
+        throw new Error("Withdraw failed - not enough balance to withdraw");
+        return;
+    }
+    
+    // Get nonce & construct tx object
+    var nonce = await web3.eth.getTransactionCountAsync(self.accounts.ETH.addr);
+    var txObj = {
+        to: toAddr,
+        gasPrice: web3.toHex(G.GAS_PRICE),
+        gasLimit: web3.toHex(G.VALUE_TRANSFER_GAS),
+        nonce: nonce,
+        data: EthJSUtil.toBuffer(""),
+        value: web3.toHex(value)
+    }
+    var tx = new EthJS.Tx(txObj);
+    
+    // Sign tx with priv key
+    var privBuf = EthJSUtil.toBuffer(self.accounts.ETH.priv);
+    tx.sign(privBuf)
+    var signedTx = EthJSUtil.bufferToHex(tx.serialize());
+    
+    // Broadcast the tx
+    var txID = await web3.eth.sendRawTransactionAsync(signedTx);
+    
+    // Wait for withdraw tx mined
+    await getTransactionMined(txID, G.VALUE_TRANSFER_GAS);
+}
+
+function delayPromise(ms){
+    var ctr, rej, p = new Promise(function (resolve, reject) {
+        ctr = setTimeout(resolve, ms);
+        rej = reject;
+    });
+    p.cancel = function(){ clearTimeout(ctr); rej(Error("Cancelled"))};
+    return p; 
+}
+
+// Utility function to ensure a tx is either mined or timeout / exception
+async function getTransactionMined(txnHash, txnGas, interval, timeout) {
+    var interval = interval ? interval : G.ETHEREUM_POLLING_INTERVAL;
+    var timeout = timeout ? timeout : G.ETHEREUM_TX_TIMEOUT;
+    var delay = 0;
+    var transactionMinedAsync = async(txnHash, txnGas) => {
+        var receipt = await web3.eth.getTransactionReceiptAsync(txnHash);
+        if (receipt == null || receipt.blockNumber == null) {
+            // Receipt not yet ready... poll again after interval
+            delay += interval;
+            if (delay >= timeout) {
+                throw new Error("Timed Out Waiting For TX");
+            } else {
+                await delayPromise(interval);
+                await transactionMinedAsync(txnHash, txnGas);
+            }
+        } else {
+            // we got a tx receipt. Interrogate gas used to see if
+            // it ran successfully
+            console.log("Receipt ...");
+            console.log(receipt);
+            if (receipt.gasUsed < txnGas)
+            // success!
+                return receipt;
+            else
+            // failure / exception was thrown
+                throw new Error("Exception: Out of Gas");
+        }
+    };
+    return transactionMinedAsync(txnHash, txnGas);
+};
+
+module.exports = EthForwarder;
