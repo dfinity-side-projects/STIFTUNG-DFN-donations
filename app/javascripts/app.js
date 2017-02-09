@@ -139,10 +139,14 @@ App.prototype.tryForwardETH = function() {
     self.saidBalanceTooSmall = false;
     self.contFwdingOnNewData = false;
     self.tryForwardBalance = false;
-    self.ethForwarder.donate(self.ethBalance)
+    
+    // Save the to be donated amount
+    const donating = self.ethBalance;
+    ui.logger("Forwarding " + web3.fromWei(donating, 'ether') + " ether ... waiting for confirmation.")
+    self.ethForwarder.donate(donating)
         .then(() => {
             try {
-                ui.logger("Successfully donated: " + web3.fromWei(self.ethBalance, 'ether') + " ETH");
+                ui.logger("Successfully donated: " + web3.fromWei(donating, 'ether') + " ETH");
                 // Resume next forwarding upon new data
                 self.contFwdingOnNewData = true;
             } finally {
@@ -151,7 +155,7 @@ App.prototype.tryForwardETH = function() {
         }).catch((e) => {
             try {
                 // Show user the error message which allow manually retry forwarding
-                ui.logger("Error forwarding balance as donation: " + JSON.stringify(e));
+                ui.logger("Error forwarding balance as donation -  " + e.toString());
                 ui.showErrorEthForwarding();
             } finally {
                 // Schedule the forwarding thread, which won't actually fwd until user manually retry (because we haven't set flags here)
@@ -184,7 +188,7 @@ App.prototype.withdrawETH = function(toAddr) {
         ui.logger("Successfully withdraw ETH. ");
         self.contFwdingOnNewData = true;
     }).catch((err) => {
-        ui.logger("Failed to withdraw ETH ... " + JSON.stringify(err));
+        ui.logger("Failed to withdraw ETH ... " + err.toString());
     });
 }
 
@@ -262,7 +266,7 @@ App.prototype.pollStatus = function() {
         }
     }).catch(function(e) {
         try {
-            ui.logger("Error querying Ethereum: " + e + " " + JSON.stringify(e));
+            ui.logger("Error querying Ethereum: " + e + " " + e.toString());
             throw e;
         } finally {
             // do this all over again...
@@ -441,7 +445,7 @@ App.prototype.setBTCNodeInternal = function(host) {
     this.bitcoinNode = host;
     ui.setBitcoinNode(host);
 
-    this.bitcoinProvider =new Insight(this.bitcoinNode);
+    this.bitcoinProvider = new Insight(this.bitcoinNode);
     // Update to new btc provider for btcWorker
     this.btcWorker.setBitcoinProvider(this.bitcoinProvider);
 

@@ -144,69 +144,75 @@ BitcoinWorker.prototype.stop = function() {
 
 BitcoinWorker.prototype.pollBTCStatus = function() {
     var self = this;
-    self.callProvider("getStatus").then(function(status) {
-        if (status) {
-            status = JSON.parse(status);
-            if (status["status"] != undefined || status["error"] == "null") {
-                self.setConnected(true);
+    self.callProvider("getStatus")
+        .then(function(status) {
+            if (status) {
+                status = JSON.parse(status);
+                if (status["status"] != undefined || status["error"] == "null") {
+                    self.setConnected(true);
+                } else {
+                    self.setConnected(false);
+                    throw new Error("Not connected to BTC node.");
+                }
             } else {
                 self.setConnected(false);
                 throw new Error("Not connected to BTC node.");
             }
-        } else {
-            self.setConnected(false);
-            throw new Error("Not connected to BTC node.");
-        }
 
-    }).then(self.getClientUtxos.bind(self)).then(function(utxos) {
-        if (!self.isConnected)
-            return;
-        // 1. Update Pending BTC balance based on UTXO status
-        // self.log('PollBTCStatus(): Saw ' + utxos.length + ' UTXOs')
-        if (utxos.length == 0 || utxos == undefined) {
-            ui.setRemainingBTC(0);
-            return;
-        }
-
-        var sum = Unit.fromSatoshis(utxoSum(utxos));
-        // self.log("Sum of all UTXO:" + sum);
-
-        // Update remaining BTC;
-        ui.setRemainingBTC(sum.toBTC());
-    }).then(self.getTransactions.bind(self, self.clientAddress)).then(
-        // 2. Update "Donated" Balance between
-        function(transactions) {
-
-            // Add up all transactions that went out from this address to the donation address
-            var donatedSum = 0.0;
-            for (var tx in transactions) {
-                if (!transactions.hasOwnProperty(tx)) {
-                    continue;
-                }
-                // Check if the fwd addr is among the sender
-                tx = transactions[tx];
-                var clientFwd = tx["vin"].filter(function(vin, index, array) {
-                    return vin["addr"] == self.clientAddress;
-                });
-                if (clientFwd.length == 0)
-                    continue;
-                // Sum up value of the all vouts to the receiving FDC address
-                tx["vout"].map((vout, index, array) => {
-
-                    if (!vout["scriptPubKey"]["addresses"]) {
-                        return;
-                    }
-                    var receivers = vout["scriptPubKey"]["addresses"].filter(
-                        function(addr, index, array) {
-                            return (addr === self.centralAddress.toString());
-                        });
-                    donatedSum += (receivers.length > 0 ? parseFloat(vout[
-                        "value"]) : 0);
-                });
+        }).then(self.getClientUtxos.bind(self)).then(function(utxos) {
+            if (!self.isConnected)
+                return;
+            // 1. Update Pending BTC balance based on UTXO status
+            // self.log('PollBTCStatus(): Saw ' + utxos.length + ' UTXOs')
+            if (utxos.length == 0 || utxos == undefined) {
+                ui.setRemainingBTC(0);
+                return;
             }
-            ui.setForwardedBTC(donatedSum);
-        });
 
+            var sum = Unit.fromSatoshis(utxoSum(utxos));
+            // self.log("Sum of all UTXO:" + sum);
+
+            // Update remaining BTC;
+            ui.setRemainingBTC(sum.toBTC());
+        })
+        .then(self.getTransactions.bind(self, self.clientAddress))
+        .then(
+            // 2. Update "Donated" Balance between
+            function(transactions) {
+
+                // Add up all transactions that went out from this address to the donation address
+                var donatedSum = 0.0;
+                for (var tx in transactions) {
+                    if (!transactions.hasOwnProperty(tx)) {
+                        continue;
+                    }
+                    // Check if the fwd addr is among the sender
+                    tx = transactions[tx];
+                    var clientFwd = tx["vin"].filter(function(vin, index, array) {
+                        return vin["addr"] == self.clientAddress;
+                    });
+                    if (clientFwd.length == 0)
+                        continue;
+                    // Sum up value of the all vouts to the receiving FDC address
+                    tx["vout"].map((vout, index, array) => {
+
+                        if (!vout["scriptPubKey"]["addresses"]) {
+                            return;
+                        }
+                        var receivers = vout["scriptPubKey"]["addresses"].filter(
+                            function(addr, index, array) {
+                                return (addr === self.centralAddress.toString());
+                            });
+                        donatedSum += (receivers.length > 0 ? parseFloat(vout[
+                            "value"]) : 0);
+                    });
+                }
+                ui.setForwardedBTC(donatedSum);
+            })
+        .catch((err) => {
+            self.setConnected(false);
+            throw new Error("BTC Connection failed: " + JSON.stringify(err));
+        });
 }
 
 BitcoinWorker.prototype.tryForwardBTC = function() {
@@ -300,7 +306,7 @@ BitcoinWorker.prototype.callProvider = function(method) {
 BitcoinWorker.prototype.setConnected = function(isConnected) {
     if (this.isConnected !== isConnected) {
         this.isConnected = isConnected
-        if (this.listeners) 
+        if (this.listeners)
             this.listeners.onConnectionChange(this.isConnected)
     }
 }

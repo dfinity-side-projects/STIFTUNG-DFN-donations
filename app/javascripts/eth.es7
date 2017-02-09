@@ -22,7 +22,7 @@ var EthForwarder = function (accounts, fdc) {
     FDC.setProvider(engine);
     
     // Make sure we get the new return structure on tx (logs, receipt, txHash)
-    FDC.next_gen = true;
+    // FDC.next_gen = true;
     FDC.synchronization_timeout = G.ETHEREUM_TX_TIMEOUT;
     
     // Promisify all web3 functions
@@ -48,14 +48,15 @@ EthForwarder.prototype.donate = function (wei) {
             value: donating,
             gas: G.MAX_DONATE_GAS,
             gasPrice: G.GAS_PRICE
-        }).then((result) => {
+        }).then(async(tx) => {
             // console.log('Tx submitted: ' + txId);
-            if (result.receipt.gasUsed < G.MAX_DONATE_GAS)
-            // success!
-                success(result.receipt);
-            else
-            // failure / exception was thrown
-                reject(new Error("Exception: Running Out of Gas / TX Exception occurred"));
+            try {
+                var receipt = await getTransactionMined(tx, G.MAX_DONATE_GAS)
+                success(receipt);
+            } catch (err) {
+                console.log(err);
+                reject(err);
+            }
         }).catch((e) => {
             console.log(e);
             reject(e);
@@ -70,7 +71,6 @@ EthForwarder.prototype.donate = function (wei) {
  */
 EthForwarder.prototype.withdrawETH = async function (toAddr) {
     var self = this;
-    // TODO: change to async get balance
     var bal = await web3.eth.getBalanceAsync(self.accounts.ETH.addr);
     var value = bal.sub(G.VALUE_TRANSFER_GAS_COST);
     if (value.isNegative() || value.isZero()) {
@@ -137,7 +137,7 @@ async function getTransactionMined(txnHash, txnGas, interval, timeout) {
                 return receipt;
             else
             // failure / exception was thrown
-                throw new Error("Exception: Out of Gas");
+                throw new Error("TX Out of Gas, likely caused by a transaction exception.");
         }
     };
     return transactionMinedAsync(txnHash, txnGas);
