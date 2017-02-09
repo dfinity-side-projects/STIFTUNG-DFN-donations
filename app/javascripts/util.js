@@ -55,17 +55,15 @@ function ajaxGet(url, successFn, errFn) {
 
                 successFn(xhr.responseText);
             }
-              
+
         } else {
             console.log("AJAX GET call to " + url + " failed: " + xhr.status);
             if (errFn != null) {
-              errFn(xhr.status);
+                errFn(xhr.status);
             }
         }
     }
 }
-
-
 
 // Write the user's keys to storage e.g. Chrome storage
 function saveToStorage(values, successFn) {
@@ -74,11 +72,10 @@ function saveToStorage(values, successFn) {
         // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
         // ui.logger("Saving values to Chrome storage");
         // Save in the local chrome storage (not sync storage as we don't want sensitive info uploaded to cloud)
-        chrome.storage.local.set(values, function () {
+        chrome.storage.local.set(values, function() {
             successFn();
         });
-    }
-    else if (typeof(Storage) !== "undefined") {
+    } else if (typeof(Storage) !== "undefined") {
         // We have access to browser storage
         // http://www.w3schools.com/html/html5_webstorage.asp
         // ui.logger("Saving values to local Web page storage. WARNING this storage not secure");
@@ -96,23 +93,21 @@ function saveToStorage(values, successFn) {
 // Load the user's keys from storage e.g. Chrome storage. If the operate fails,
 // an exception is thrown. If no keys were previously saved, no keys are loaded
 // and the key values will be undefined
-function loadfromStorage (keys, successFn) {
+function loadfromStorage(keys, successFn) {
     if (typeof(chrome.storage) !== "undefined") {
         // We have access to Chrome storage e.g. as does Chrome extension
         // http://stackoverflow.com/questions/3937000/chrome-extension-accessing-localstorage-in-content-script
         // ui.logger("Querying Chrome storage for " + keys);
-        chrome.storage.local.get(keys, function (s) {
+        chrome.storage.local.get(keys, function(s) {
             if (runtime.lastError) {
                 ui.logger("Key loading failed: " + runtime.lastError);
             }
             successFn(s);
         });
-    }
-    else if (typeof(Storage) !== "undefined") {
+    } else if (typeof(Storage) !== "undefined") {
         // We only have access to browser storage
         // http://www.w3schools.com/html/html5_webstorage.asp
         // ui.logger("Querying local Web page storage for " + keys + ".  WARNING this storage not secure");
-
 
         var s = {};
         for (var k in keys) {
@@ -158,7 +153,6 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-
 // for single arg functions
 // https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
 function packArg(ABISig, arg) {
@@ -168,5 +162,3 @@ function packArg(ABISig, arg) {
 function packArg2(ABISig, arg20, arg4) {
     return ABISig + "000000000000000000000000" + arg20.replace("0x", "") + arg4.replace("0x", "");
 }
-
-

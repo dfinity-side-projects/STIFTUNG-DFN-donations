@@ -24,15 +24,15 @@
 
 // if seedStr == null then a new seed is generated, otherwise
 // keys are derived deterministically from the passed seed if it's valid
-var Accounts = function (seedStr) {
+var Accounts = function(seedStr) {
     this.Mnemonic = require('bitcore-mnemonic');
     this.bitcore = require('bitcore-lib')
 
     // single quote == hardened derivation
     this.HDPathDFN = "m/44'/223'/0'/0/0"; // key controlling DFN allocation
     this.HDPathDFNAccount = "m/44'/223'/0'"; // Account level path for DFN allocation
-    this.HDPathETHForwarder = "m/44'/60'/0'/0/0";  // ETH key forwarding donation for HDPathDFN key
-    this.HDPathBTCForwarder = "m/44'/0'/0'/0/0";   // BTC key forwarding donation for HDPathDFN key
+    this.HDPathETHForwarder = "m/44'/60'/0'/0/0"; // ETH key forwarding donation for HDPathDFN key
+    this.HDPathBTCForwarder = "m/44'/0'/0'/0/0"; // BTC key forwarding donation for HDPathDFN key
 
     // this.seed = seedStr;
     this.DFN = {};
@@ -41,24 +41,22 @@ var Accounts = function (seedStr) {
     this.BTC = {};
 }
 
-
-
 // https://github.com/bitpay/bitcore-lib/blob/master/docs/hierarchical.md
 // keys are compressed and
 // https://github.com/ethereumjs/ethereumjs-util/blob/master/docs/index.md#pubtoaddress
 // expects the 32 bytes without the leading compression-indicating
 // byte (see YP eq 213)
 
-Accounts.prototype.HDPrivKeyToAddr = function (privHex) {
+Accounts.prototype.HDPrivKeyToAddr = function(privHex) {
     /* TODO: verify padding, sometimes we get:
 
      ethereumjs-util.js:16925 Uncaught RangeError: private key length is invalid(…)
-     exports.isBufferLength	@	ethereumjs-util.js:16925
-     publicKeyCreate	@	ethereumjs-util.js:17454
-     exports.privateToPublic	@	ethereumjs-util.js:6400
-     exports.privateToAddress	@	ethereumjs-util.js:6501
-     Accounts.HDPrivKeyToAddr	@	app.js:57286
-     Accounts	@	app.js:57263
+     exports.isBufferLength @   ethereumjs-util.js:16925
+     publicKeyCreate    @   ethereumjs-util.js:17454
+     exports.privateToPublic    @   ethereumjs-util.js:6400
+     exports.privateToAddress   @   ethereumjs-util.js:6501
+     Accounts.HDPrivKeyToAddr   @   app.js:57286
+     Accounts   @   app.js:57263
 
      which likely is the common padding bug of privkey being less than 32 bytes
      */
@@ -66,20 +64,19 @@ Accounts.prototype.HDPrivKeyToAddr = function (privHex) {
     return EthJSUtil.bufferToHex(addrBuf);
 }
 
-
 // Generate an HD seed string. Note that we *never* store the seed. With the
 // seed, an attacker can gain access to the user's DFN later.
-Accounts.prototype.generateSeed = function () {
+Accounts.prototype.generateSeed = function() {
     var code = new this.Mnemonic(this.Mnemonic.Words.ENGLISH);
     return code.toString();
 
-//  return this.Mnemonic(this.Mnemonic.Words.ENGLISH).toString();
+    //  return this.Mnemonic(this.Mnemonic.Words.ENGLISH).toString();
 }
 
 // Generate 1. the user's DFINITY address 2. their forwarding addresses, and
 // 3. the private keys for the forwarding addresses. Note that we *never* store
 // the seed. With the seed, an attacker cn gain access to the user's DFN later.
-Accounts.prototype.generateKeys = function (seedStr) {
+Accounts.prototype.generateKeys = function(seedStr) {
     //var code = new this.Mnemonic(this.Mnemonic.Words.ENGLISH);
     var code = new this.Mnemonic(seedStr);
     var masterKey = code.toHDPrivateKey();
@@ -102,7 +99,7 @@ Accounts.prototype.generateKeys = function (seedStr) {
 }
 
 // Write the user's keys to storage e.g. Chrome storage
-Accounts.prototype.saveStates = function () {
+Accounts.prototype.saveStates = function() {
     if (this.DFN.addr != undefined &&
         this.ETH.addr != undefined &&
         this.ETH.priv != undefined &&
@@ -117,8 +114,7 @@ Accounts.prototype.saveStates = function () {
             "btc-address": this.BTC.addr,
             "btc-private-key": this.BTC.priv,
 
-
-        }, function () {
+        }, function() {
             // ui.logger("DFN, BTC and ETH address successfully saved in Chrome storage.");
         });
     }
@@ -127,7 +123,7 @@ Accounts.prototype.saveStates = function () {
 // Load the user's keys from storage e.g. Chrome storage. If the operate fails,
 // an exception is thrown. If no keys were previously saved, no keys are loaded
 // and the key values will be undefined
-Accounts.prototype.loadStates = function (successFn) {
+Accounts.prototype.loadStates = function(successFn) {
     var self = this;
     loadfromStorage([
         "dfn-address",
@@ -136,12 +132,12 @@ Accounts.prototype.loadStates = function (successFn) {
         "eth-private-key",
         "btc-address",
         "btc-private-key",
-    ], function (s) {
+    ], function(s) {
 
-        if (s["dfn-address"] != null && s["dfn-address"] != undefined
-            && s["eth-address"]!= null && s["eth-private-key"]!=null
-            && s["btc-address"] != null && s["btc-private-key"]!= null
-           ) {
+        if (s["dfn-address"] != null && s["dfn-address"] != undefined && s["eth-address"] != null &&
+            s["eth-private-key"] != null && s["btc-address"] != null && s["btc-private-key"] !=
+            null
+        ) {
             self.DFN.addr = s["dfn-address"];
             self.ETH.addr = s["eth-address"];
             self.ETH.priv = s["eth-private-key"];
@@ -155,7 +151,6 @@ Accounts.prototype.loadStates = function (successFn) {
         // ui.logger("DFN, BTC and ETH address loaded successfully. ");
     });
 }
-
 
 function padPrivkey(privHex) {
     return ("0000000000000000" + privHex).slice(-64);

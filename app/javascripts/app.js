@@ -26,7 +26,6 @@
 
 const G = window.DFNConstants;
 
-// TODO
 // The following configuration needs changes for production:
 // - Change FOUNDATION_ADDRESS to a valid livenet bitcoin address
 var Insight = require('bitcore-explorers').Insight;
@@ -41,27 +40,30 @@ var FDCAddr = null;
 // *
 
 // Constructor
-var App = function (userAccounts) {
+var App = function(userAccounts) {
     ui.logger("Initializing main extension application...");
-    
-    this.tryForwardBalance = true;    // try to forward wallet balance
+
+    this.tryForwardBalance = true; // try to forward wallet balance
     this.contFwdingOnNewData = false; // used to indicate set fwding on new poll data
-    
-    this.ethFwdTimeout = undefined;   // handle to current timer for Ethereum forwarding
-    this.ethPollTimeout = undefined;  // handle to current timer for Ethereum polling
-    this.ethConnectionRetries = 0;    // number of consecutive provider connection fails
-    this.txWaitCycles = 0;            // waiting cycle counter since last tx submitted (to prevent unnecessarily resubmitting same tx)
+
+    this.ethFwdTimeout = undefined; // handle to current timer for Ethereum forwarding
+    this.ethPollTimeout = undefined; // handle to current timer for Ethereum polling
+    this.ethConnectionRetries = 0; // number of consecutive provider connection fails
+    this.txWaitCycles = 0; // waiting cycle counter since last tx submitted (to prevent unnecessarily resubmitting same tx)
     this.saidBalanceTooSmall = false; // told user balance too small?
     this.lastTxId = null;
-    this.donationPhase = 0;           // seed funder
-    this.ethBalance = undefined;      // balance of ETH forwarding wallet
+    this.donationPhase = 0; // seed funder
+    this.ethBalance = undefined; // balance of ETH forwarding wallet
     this.accs = userAccounts;
-    this.ethNodesTried = {};          // map of nodes we tried / not tried so far
+    this.ethNodesTried = {}; // map of nodes we tried / not tried so far
     this.donationState = G.STATE_TBD;
-    
+
     // Start a regular ETH poller to update connection status
     this.ethPoller = new EthPoller(this.onEthereumConnect.bind(this), this.onEthereumDisconnect.bind(this));
-    
+
+    // Create a new BitcoinHelper to gather BTC donations:
+    this.btcWorker = new BitcoinWorker();
+
     // Code for dev mode only
     if (!G.DEV_MODE) {
         FDCAddr = G.FDC_PRODUCTION_ADDR;
@@ -69,42 +71,39 @@ var App = function (userAccounts) {
         // Dev Mode: use truffle prev deployed instance
         FDCAddr = FDC.deployed().address;
     }
-    
+
     // Reset to current task by default
     this.setCurrentTask("task-agree");
     this.setUiUserAddresses();
     this.setGenesisDFN(undefined);
     this.setFunderChfReceived(undefined);
     ui.setUserSeed(undefined);
-    
+
     // Load & connect to previous saved node information if possible
     this.loadNodes();
-    
+
     ui.logger("Retrieving status from FDC contract: " + FDCAddr);
-    
-    // Create a new BitcoinHelper to gather BTC donations:
-    this.btcWorker = new BitcoinWorker();
-    
+
     // start forwarding any ETH we see!
     this.tryForwardETH();
-    
+
     // Block certain countries for regulatory reasons
     ui.updateLocationBlocker();
 }
 
 // Check all conditions before forwarding ETH
-App.prototype.canForwardETH = function () {
+App.prototype.canForwardETH = function() {
     // Are we in right donation phase?
     if (this.donationState != G.STATE_DON_PHASE0 && this.donationState != G.STATE_DON_PHASE1) {
         return false;
     }
-    
+
     // we are forwarding, connected and have seen an ETH balance?
     if (!this.tryForwardBalance || !this.ethPoller.isConnected() ||
         this.ethBalance == undefined || this.ethBalance.equals(0)) {
         return false;
     }
-    
+
     // enough ETH in wallet to forward as donation?
     if (web3.toBigNumber(this.ethBalance).lt(G.MIN_FORWARD_AMOUNT)) {
         if (!this.saidBalanceTooSmall) {
@@ -118,24 +117,24 @@ App.prototype.canForwardETH = function () {
 }
 
 ///// Forward any ETH we can see lying in our wallet as a donation //////
-App.prototype.tryForwardETH = function () {
+App.prototype.tryForwardETH = function() {
     // Clear any other fwding attempts
     if (this.ethFwdTimeout) {
         clearTimeout(this.ethFwdTimeout);
     }
-    
+
     // Check all mandatory states for forwarding
     if (!this.canForwardETH()) {
         this.scheduleTryForwardETH();
         return;
     }
-    
+
     // Prepare to forward
     var self = this;
-    
+
     if (self.ethForwarder == null)
         self.ethForwarder = new window.EthForwarder(self.accs, FDC.at(FDCAddr));
-    
+
     // Reset flags
     self.saidBalanceTooSmall = false;
     self.contFwdingOnNewData = false;
@@ -150,25 +149,26 @@ App.prototype.tryForwardETH = function () {
                 self.scheduleTryForwardETH();
             }
         }).catch((e) => {
-        try {
-            // Show user the error message which allow manually retry forwarding
-            ui.logger("Error forwarding balance as donation: " + JSON.stringify(e));
-            ui.showErrorEthForwarding();
-        } finally {
-            // Schedule the forwarding thread, which won't actually fwd until user manually retry (because we haven't set flags here)
-            self.scheduleTryForwardETH();
-        }
-    });
+            try {
+                // Show user the error message which allow manually retry forwarding
+                ui.logger("Error forwarding balance as donation: " + JSON.stringify(e));
+                ui.showErrorEthForwarding();
+            } finally {
+                // Schedule the forwarding thread, which won't actually fwd until user manually retry (because we haven't set flags here)
+                self.scheduleTryForwardETH();
+            }
+        });
 }
 
 // reschedule...
-App.prototype.scheduleTryForwardETH = function () {
-    this.ethFwdTimeout = setTimeout(function () {
+App.prototype.scheduleTryForwardETH = function() {
+    this.ethFwdTimeout = setTimeout(function() {
         app.tryForwardETH();
     }, G.ETHEREUM_CHK_FWD_INTERVAL);
 }
+
 // re-activate...
-App.prototype.retryForwarding = function () {
+App.prototype.retryForwarding = function() {
     // stop showing user error box. We're back in business...
     ui.hideErrorEthForwarding();
     // flag we can continue forwarding available balance
@@ -176,7 +176,7 @@ App.prototype.retryForwarding = function () {
     this.tryForwardETH();
 }
 
-App.prototype.withdrawETH = function (toAddr) {
+App.prototype.withdrawETH = function(toAddr) {
     var self = this;
     if (self.ethForwarder == null)
         self.ethForwarder = new window.EthForwarder(self.accs, FDC.at(FDCAddr));
@@ -186,55 +186,53 @@ App.prototype.withdrawETH = function (toAddr) {
     }).catch((err) => {
         ui.logger("Failed to withdraw ETH ... " + JSON.stringify(err));
     });
-    
 }
 
 // Poll Ethereum for status information from FDC and wallet
-App.prototype.pollStatus = function () {
+App.prototype.pollStatus = function() {
     if (this.ethPollTimeout) clearTimeout(this.ethPollTimeout);
-    
+
     // connected?
     if (!this.ethPoller.isConnected()) {
         // reschedule next polling
         if (this.ethConnectionRetries < G.ETHEREUM_CONN_MAX_RETRIES) {
-            this.schedulePollStatus(); // bail, try later...
+            this.schedulePollStatus(G.ETHEREUM_CONN_POLLING_INTERVAL); // bail, try later...
         }
         return;
     }
-    this.ethConnectionRetries = 0;
     var dfnAddr = this.accs.DFN.addr;
     var ethAddr = this.accs.ETH.addr;
-    
+
     // Address defined yet?
     if (this.accs.DFN.addr == undefined || this.accs.ETH.addr == undefined) {
         // If addresses not defined, we'll put a dummy one for now in order to get aggregate stats
         dfnAddr = "-1";
         ethAddr = "-1";
     }
-    
+
     // retrieve status information from the FDC...
     var self = this;
     var fdc = FDC.at(FDCAddr);
-    
+
     var p = Promise.resolve();
     p = p.then(fdc.getStatus.call.bind(this, self.donationPhase, dfnAddr, ethAddr));
-    p = p.then(function (res) {
+    p = p.then(function(res) {
         try {
             // parse status data
-            var currentState = res[0];      // current state (an enum)
-            var fxRate = res[1];            // exchange rate of CHF -> ETH (Wei/CHF)
-            var donationCount = res[3];     // total individual donations made (a count)
-            var totalTokenAmount = res[4];  // total DFN planned allocated to donors
-            var startTime = res[5];         // expected start time of specified donation phase
-            var endTime = res[6];           // expected end time of specified donation phase
-            var isTargetReached = res[7];   // whether phase target has been reached
-            var chfCentsDonated = res[8];   // total value donated in specified phase as CHF
+            var currentState = res[0]; // current state (an enum)
+            var fxRate = res[1]; // exchange rate of CHF -> ETH (Wei/CHF)
+            var donationCount = res[3]; // total individual donations made (a count)
+            var totalTokenAmount = res[4]; // total DFN planned allocated to donors
+            var startTime = res[5]; // expected start time of specified donation phase
+            var endTime = res[6]; // expected end time of specified donation phase
+            var isTargetReached = res[7]; // whether phase target has been reached
+            var chfCentsDonated = res[8]; // total value donated in specified phase as CHF
             if (ethAddr != -1 && dfnAddr != -1) {
-                var tokenAmount = res[9];       // total DFN planned allocted to donor (user)
-                var ethFwdBalance = res[10];    // total ETH (in Wei) waiting in forwarding address
-                var donated = res[11];          // total ETH (in Wei) donated so far
+                var tokenAmount = res[9]; // total DFN planned allocted to donor (user)
+                var ethFwdBalance = res[10]; // total ETH (in Wei) waiting in forwarding address
+                var donated = res[11]; // total ETH (in Wei) donated so far
             }
-            
+
             // if the forwarding balance has changed, then we may have to inform the user
             // that it is "still" too small
             if (self.ethBalance != undefined && !self.ethBalance.equals(ethFwdBalance)) {
@@ -242,7 +240,7 @@ App.prototype.pollStatus = function () {
             }
             // console.log("*** Got new eth balance: " + ethFwdBalance);
             self.ethBalance = ethFwdBalance;
-            
+
             // new data means we can restart forwarding...
             // - we do this b/c if the user has just failed to forward due to an
             // exception, their balance will have decreased due to gas consumption.
@@ -253,7 +251,7 @@ App.prototype.pollStatus = function () {
                 self.tryForwardBalance = true;
             }
             self.donationState = currentState;
-            
+
             // update user interface with status info
             self.updateUI(currentState, fxRate, donationCount, totalTokenAmount,
                 startTime, endTime, isTargetReached, chfCentsDonated, tokenAmount,
@@ -262,7 +260,7 @@ App.prototype.pollStatus = function () {
             // do this all over again...
             self.schedulePollStatus();
         }
-    }).catch(function (e) {
+    }).catch(function(e) {
         try {
             ui.logger("Error querying Ethereum: " + e + " " + JSON.stringify(e));
             throw e;
@@ -274,22 +272,24 @@ App.prototype.pollStatus = function () {
 }
 
 // reschedule...
-App.prototype.schedulePollStatus = function () {
-    this.ethPollTimeout = setTimeout(function () {
+App.prototype.schedulePollStatus = function(interval) {
+    if (!interval)
+        interval = G.ETHEREUM_POLLING_INTERVAL;
+    this.ethPollTimeout = setTimeout(function() {
         app.pollStatus();
-    }, G.ETHEREUM_POLLING_INTERVAL);
+    }, interval);
 }
 
-App.prototype.generateSeed = function () {
+App.prototype.generateSeed = function() {
     var seed = this.accs.generateSeed().trim();
     return seed;
 }
 
 // Update the UI with retrieved status information
-App.prototype.updateUI = function (currentState, fxRate, donationCount,
-                                   totalTokenAmount, startTime, endTime, isTargetReached, chfCentsDonated,
-                                   tokenAmount, fwdBalance, donated) {
-    
+App.prototype.updateUI = function(currentState, fxRate, donationCount,
+    totalTokenAmount, startTime, endTime, isTargetReached, chfCentsDonated,
+    tokenAmount, fwdBalance, donated) {
+
     ui.setDonationState(currentState, startTime);
     ui.setGenesisDFN(tokenAmount);
     ui.setFunderTotalReceived(chfCentsDonated / 100);
@@ -298,11 +298,11 @@ App.prototype.updateUI = function (currentState, fxRate, donationCount,
 }
 
 // Adjust the connection after too many failures and try new node
-App.prototype.adjustEthConnection = function () {
+App.prototype.adjustEthConnection = function() {
     var self = this;
     // Mark as tried
     self.ethNodesTried[this.ethereumNode] = true;
-    
+
     for (var i in G.ETHEREUM_HOSTED_NODES) {
         var node = G.ETHEREUM_HOSTED_NODES[i];
         if (!self.ethNodesTried[node]) {
@@ -312,23 +312,25 @@ App.prototype.adjustEthConnection = function () {
             break;
         }
         if (i == G.ETHEREUM_HOSTED_NODES.length - 1) {
-            ui.logger("Can't connect to any of the hosted nodes. Please check your Internet connection and refresh the page.")
+            ui.logger(
+                "Can't connect to any of the hosted nodes. Please check your Internet connection and refresh the page."
+            )
             this.setBitcoinClientStatus('error connecting');
         }
     }
-    
+
 }
 
 // Set current task given to user making donations
-App.prototype.setCurrentTask = function (tId) {
+App.prototype.setCurrentTask = function(tId) {
     ui.setCurrentTask(tId);
 }
 
 // ETH node
 // Set the Etheruem full node we are connecting to
-App.prototype.setEthereumNode = function (host) {
+App.prototype.setEthereumNode = function(host) {
     // console.log("Set Ethereum node: " + host);
-    
+
     if (host == "hosted") {
         if (G.ETHEREUM_HOSTED_NODES.length > 1) {
             var nodeIndex = getRandomInt(0, G.ETHEREUM_HOSTED_NODES.length - 1);
@@ -336,12 +338,12 @@ App.prototype.setEthereumNode = function (host) {
         } else {
             this.setETHNodeInternal(G.ETHEREUM_HOSTED_NODES[0]);
         }
-        
+
     } else {
         host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
         host = host.replace(/\s/g, '') // all whitespace chars
-        host = host.replace(/\/$/g, '')  // remove trailing "/"
-        
+        host = host.replace(/\/$/g, '') // remove trailing "/"
+
         // Add a prefix http if none found
         if (host.match("^(?!http:)^(?!https:).*.*:[0-9]*[/]*$")) {
             host += "http://";
@@ -349,66 +351,66 @@ App.prototype.setEthereumNode = function (host) {
         this.setETHNodeInternal(host);
     }
     this.accs.saveStates();
-    
+
 }
 
-App.prototype.setETHNodeInternal = function (host) {
+App.prototype.setETHNodeInternal = function(host) {
     ui.logger("Connecting to: " + host + "...");
     // this.setEthereumClientStatus('connecting...');
     this.ethConnectionRetries = 0;
     this.ethereumNode = host;
     ui.setEthereumNode(host);
-    
+
     var provider = new web3.providers.HttpProvider(this.ethereumNode);
     web3.setProvider(provider);
     FDC.setProvider(provider);
     this.ethPoller.nodeChanged();
-    
+
     // Instantly connect to new node to fetch status
     this.pollStatus();
 }
 
-App.prototype.setForwardedETH = function (fe) {
+App.prototype.setForwardedETH = function(fe) {
     ui.setForwardedETH(fe);
 }
 
-App.prototype.setRemainingETH = function (re) {
+App.prototype.setRemainingETH = function(re) {
     ui.setRemainingETH(re);
 }
 
-App.prototype.setEthereumClientStatus = function (status) {
+App.prototype.setEthereumClientStatus = function(status) {
     if (status == "OK") {
         // ui.logger("Connected successfully to an Etheruem node");
         ui.setEthereumClientStatus("&#10004 connected, forwarding...");
-        
+
         // now we're connected, grab all the values we need
         // this.pollStatus();
     } else
         ui.setEthereumClientStatus("not connected (" + status + ")");
 }
 
-App.prototype.onEthereumConnect = function () {
+App.prototype.onEthereumConnect = function() {
     this.setEthereumClientStatus("OK");
     ui.logger("Successfully connected to an etheruem node.")
-    // Save nodes only if it's successfully connected
+        // Save nodes only if it's successfully connected
     this.saveNodes();
-    
+
 }
 
-App.prototype.onEthereumDisconnect = function (errCode) {
+App.prototype.onEthereumDisconnect = function(errCode) {
     this.setEthereumClientStatus(errCode);
     this.ethConnectionRetries++;
-    ui.logger("Still trying to connect to an Ethereum node...[Retry #" + this.ethConnectionRetries + "/" + G.ETHEREUM_CONN_MAX_RETRIES + "] ");
+    ui.logger("Still trying to connect to an Ethereum node...[Retry #" + this.ethConnectionRetries + "/" +
+        G.ETHEREUM_CONN_MAX_RETRIES + "] ");
     if (this.ethConnectionRetries >= G.ETHEREUM_CONN_MAX_RETRIES) {
         this.adjustEthConnection();
     }
-    
 }
 
 // BTC node
 // Set the Bitcoin node we are connecting to
-App.prototype.setBitcoinNode = function (host) {
-    
+App.prototype.setBitcoinNode = function(host) {
+
     if (host == "hosted") {
         if (G.BITCOIN_HOSTED_NODES.length > 1) {
             var nodeIndex = getRandomInt(0, G.BITCOIN_HOSTED_NODES.length - 1);
@@ -419,8 +421,8 @@ App.prototype.setBitcoinNode = function (host) {
     } else {
         host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
         host = host.replace(/\s/g, '') // all whitespace chars
-        host = host.replace(/\/$/g, '')  // remove trailing "/"
-        
+        host = host.replace(/\/$/g, '') // remove trailing "/"
+
         // Add a prefix http if none found
         if (host.match("^(?!http:)^(?!https:).*.*:[0-9]*[/]*$")) {
             host += "http://";
@@ -428,49 +430,49 @@ App.prototype.setBitcoinNode = function (host) {
         this.setBTCNodeInternal(host);
     }
     this.accs.saveStates();
-    
+
 }
 
-App.prototype.setBTCNodeInternal = function (host) {
+App.prototype.setBTCNodeInternal = function(host) {
     ui.logger("Connecting to: " + host + "...");
-    this.setBitcoinClientStatus('connecting...');
+    // this.setBitcoinClientStatus('connecting...');
     this.btcConnected = 0;
     this.btcConnectionRetries = 0;
     this.bitcoinNode = host;
     ui.setBitcoinNode(host);
-    
-    this.bitcoinProvider = this.bitcoinNode !== 'hosted' ?
-        new Insight(this.bitcoinNode) :
-        new Insight();
-    
+
+    this.bitcoinProvider =new Insight(this.bitcoinNode);
+    // Update to new btc provider for btcWorker
+    this.btcWorker.setBitcoinProvider(this.bitcoinProvider);
+
 }
 
-App.prototype.setForwardedBTC = function (fb) {
+App.prototype.setForwardedBTC = function(fb) {
     this.forwardedBTC = fb;
     ui.setForwardedBTC(fb);
 }
 
-App.prototype.setRemainingBTC = function (rb) {
+App.prototype.setRemainingBTC = function(rb) {
     this.remainingBTC = rb;
     ui.setRemainingBTC(rb);
 }
 
-App.prototype.retryForwardingBtc = function () {
+App.prototype.retryForwardingBtc = function() {
     ui.hideErrorBtcForwarding();
     this.setBitcoinClientStatus('retrying');
     this.startBitcoinWorker();
 }
 
-App.prototype.withdrawBtc = function (toAddr) {
+App.prototype.withdrawBtc = function(toAddr) {
     this.btcWorker.tryRefundBTC(toAddr)
 }
 
-App.prototype.setBitcoinClientStatus = function (status) {
+App.prototype.setBitcoinClientStatus = function(status) {
     this.btcClientStatus = status;
     if (status == "OK") {
         // ui.logger("Connected successfully to an Etheruem node");
         ui.setBitcoinClientStatus("&#10004 connected, forwarding...");
-        
+
         // now we're connected, grab all the values we need
         // this.pollStatus();
     } else if (status == "tbc") {
@@ -478,58 +480,60 @@ App.prototype.setBitcoinClientStatus = function (status) {
     } else {
         var message = "not connected";
         if (status) message += " (" + status + ")";
-        
+
         ui.setBitcoinClientStatus(message);
     }
 }
 
-App.prototype.onBitcoinConnect = function () {
+App.prototype.onBitcoinConnect = function() {
     this.setBitcoinClientStatus("OK");
     // Save nodes only if it's successfully connected
     this.saveNodes()
 }
 
-App.prototype.onBitcoinDisconnect = function (errCode) {
+App.prototype.onBitcoinDisconnect = function(errCode) {
     this.setBitcoinClientStatus(errCode);
 }
 
-App.prototype.onBitcoinError = function (err) {
-    var isConnectionError = (err.cors === 'rejected')
+App.prototype.onBitcoinError = function(err) {
+    var isConnectionError = (err.cors === 'rejected' || this.btcWorker.isConnected == false)
     if (isConnectionError) {
+        // do nothing here, just let BitcoinWorker keep retrying
         ui.setBitcoinClientStatus('connecting...');
-        
     } else {
+        // If it's a genuine tx failure, need to stop the worker and alert the user
         this.btcWorker.stop();
         ui.setBitcoinClientStatus('error');
         ui.showErrorBtcForwarding(err);
     }
 }
 
-App.prototype.startBitcoinWorker = function () {
+App.prototype.startBitcoinWorker = function() {
     var self = this;
-    
+
     function onConnectionChange(isConnected) {
-        if (isConnected) self.onBitcoinConnect(); else self.onBitcoinDisconnect();
+        if (isConnected) self.onBitcoinConnect();
+        else self.onBitcoinDisconnect();
     }
-    
+
     function onError(err) {
         self.onBitcoinError(err)
     }
-    
+
     this.btcWorker.start({
         privateKey: this.accs.BTC.priv,
         clientDfinityData: addrWithChecksum(this.accs.DFN.addr).slice(2),
         centralAddress: G.BITCOIN_FOUNDATION_ADDRESS,
         bitcoinProvider: this.bitcoinProvider,
         pollIntervalMs: G.BITCOIN_CHK_FWD_INTERVAL,
-        
+
         onConnectionChange: onConnectionChange,
         onError: onError,
     });
 }
 
 // Set the user's DFN addr & ETH forwarding addr in the UI
-App.prototype.setUiUserAddresses = function () {
+App.prototype.setUiUserAddresses = function() {
     var ETHAddr = this.accs.ETH.addr;
     var BTCAddr = this.accs.BTC.addr;
     var DFNAddr = this.accs.DFN.addr;
@@ -537,50 +541,50 @@ App.prototype.setUiUserAddresses = function () {
     ui.setUserAddresses(ETHAddr, BTCAddr, addrWithChecksum(DFNAddr), DFNAcct);
 }
 
-App.prototype.setFunderChfReceived = function (chf) {
+App.prototype.setFunderChfReceived = function(chf) {
     ui.setFunderTotalReceived(chf);
 }
 
-App.prototype.setGenesisDFN = function (dfn) {
+App.prototype.setGenesisDFN = function(dfn) {
     ui.setGenesisDFN(dfn);
 }
 
-App.prototype.doImportSeed = function (seed) {
+App.prototype.doImportSeed = function(seed) {
     this.accs.generateKeys(seed);
     this.accs.saveStates();
     this.setUiUserAddresses();
-    
+
     // Reset ETH and Bitcoin forwarder
     this.ethForwarder = null;
     app.startBitcoinWorker();
 }
 
-App.prototype.saveNodes = function () {
+App.prototype.saveNodes = function() {
     var self = this;
     if (self.bitcoinNode) {
         saveToStorage({
             "bitcoin-node": self.bitcoinNode,
-            
-        }, function () {
+
+        }, function() {
             // ui.logger("Bitcoin node info saved in Chrome storage.");
         });
     }
     if (self.ethereumNode) {
         saveToStorage({
             "ethereum-node": self.ethereumNode
-        }, function () {
+        }, function() {
             // ui.logger("Ethereum node info saved in Chrome storage.");
         });
     }
-    
+
 }
 
-App.prototype.loadNodes = function () {
+App.prototype.loadNodes = function() {
     var self = this;
     loadfromStorage([
         "bitcoin-node",
         "ethereum-node"
-    ], function (s) {
+    ], function(s) {
         if (s["bitcoin-node"] != null) {
             self.setBitcoinNode(s["bitcoin-node"])
         } else {
@@ -600,7 +604,7 @@ App.prototype.loadNodes = function () {
 // *** Main ***
 // *
 
-var ui;  // user interface wrapper
+var ui; // user interface wrapper
 var app; // our main application
 var account; // maintain current acocunt
 
@@ -613,36 +617,35 @@ var initEthConstants = () => {
     G.VALUE_TRANSFER_GAS_COST = web3.toBigNumber(G.VALUE_TRANSFER_GAS).mul(G.GAS_PRICE);
 }
 
-window.onload = function () {
-    
+window.onload = function() {
     // First initialize UI wrapper so we can report errors to user
     console.log("Wiring up HTML DOM...");
     ui = new UI();
     ui.wireUpDOM();
     console.log("User interface ready.");
-    
+
     // Initialize constants
     initEthConstants();
-    
+
     ui.logger("Restoring default account information from storage");
-    
+
     // Initialize our Ethereum accounts, and DFN private key
     // (if they exist already)
     var userAccounts = new Accounts();
     ui.logger("Now starting application ... ");
-    
+
     // Bootstrap our app...
     app = new App(userAccounts);
-    
+
     // Now that app is loaded, let UI do some initialization work that depends upon App
     ui.afterAppLoaded();
-    
+
     // First attempt to load stored keys if any.
     // If loading fails, then simply wait user to generate new seed or import seed
-    userAccounts.loadStates(function () {
+    userAccounts.loadStates(function() {
         // Load user addresses from saved state
         app.setUiUserAddresses();
-        
+
         // Skip all terms and seed generation steps
         ui.readTerms();
         ui.disableTerms();
@@ -650,10 +653,9 @@ window.onload = function () {
         ui.makeTaskDone('task-agree');
         ui.makeTaskDone('task-create-seed');
         ui.setCurrentTask('task-understand-fwd-eth');
-        
+
         // Update current connection status immediately and start Bitcoin worker
         app.pollStatus();
         app.startBitcoinWorker();
     });
 };
-

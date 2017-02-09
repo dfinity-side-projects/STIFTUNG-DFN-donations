@@ -32,9 +32,8 @@
 // TODO: US country code
 var US_COUNTRY_CODE = "USA";
 
-
 // Constructor
-var UI = function () {
+var UI = function() {
     this.tasks = ["task-agree", "task-create-seed", "task-understand-fwd-eth", "task-donate"];
     this.locationDetected = "";
 };
@@ -46,7 +45,7 @@ var UI = function () {
  * This function should be called externally when UI elements are ready.
  *
  */
-UI.prototype.wireUpDOM = function () {
+UI.prototype.wireUpDOM = function() {
     //  Terms & Conditions
     this.bindUIListener("i-accept-terms", "checkTermsBox");
     this.bindUIListener("show-terms-task", "showTerms");
@@ -82,10 +81,12 @@ UI.prototype.wireUpDOM = function () {
     this.bindUIListener("btn-bitcoin-node", "showSelectBitcoinNode");
     this.bindUIListener("connect-hosted", "onSelectEthereumNode", "hosted");
     this.bindUIListener("connect-localhost", "onSelectEthereumNode", "http://localhost:8545");
-    this.bindUIListener("btn-custom-full-node-eth", "onSelectEthereumNode", "$custom-full-node-address-eth");
+    this.bindUIListener("btn-custom-full-node-eth", "onSelectEthereumNode",
+        "$custom-full-node-address-eth");
     this.bindUIListener("connect-hosted-btc", "onSelectBitcoinNode", "hosted");
     this.bindUIListener("connect-localhost-btc", "onSelectBitcoinNode", "http://localhost:3001");
-    this.bindUIListener("btn-custom-full-node-btc", "onSelectBitcoinNode","$custom-full-node-address-btc");
+    this.bindUIListener("btn-custom-full-node-btc", "onSelectBitcoinNode",
+        "$custom-full-node-address-btc");
     this.bindGlobalListener("close-select-full-node-eth", "closeDialog", "select-full-node-eth");
     this.bindGlobalListener("close-select-full-node-btc", "closeDialog", "select-full-node-btc");
 
@@ -107,17 +108,17 @@ UI.prototype.wireUpDOM = function () {
 
 // UI function to be called after app completed loading
 // As some handlers depend upon the App function to be loaded
-UI.prototype.afterAppLoaded = function () {
+UI.prototype.afterAppLoaded = function() {
     this.bindAppListener("retry-forward-link", "retryForwarding");
     this.bindAppListener("retry-forward-btc-link", "retryForwardingBtc");
 }
 
 // Utility function to bind an element's events to a handler in UI class
-UI.prototype.bindUIListener = function (element, uiHandler, argument) {
+UI.prototype.bindUIListener = function(element, uiHandler, argument) {
     const self = this;
     document.getElementById(element).addEventListener("click", function() {
-        if (argument !=null && argument!== undefined && argument.startsWith("$")) {
-            var argVal = document.getElementById(argument.substr(1,argument.length-1)).value;
+        if (argument != null && argument !== undefined && argument.startsWith("$")) {
+            var argVal = document.getElementById(argument.substr(1, argument.length - 1)).value;
             self[uiHandler](argVal);
         } else {
             self[uiHandler](argument);
@@ -126,17 +127,17 @@ UI.prototype.bindUIListener = function (element, uiHandler, argument) {
 }
 
 // Utility function to bind an element's events to a handler in App class
-UI.prototype.bindAppListener = function (element, uiHandler, argument) {
+UI.prototype.bindAppListener = function(element, uiHandler, argument) {
     document.getElementById(element).addEventListener("click", app[uiHandler].bind(app, [argument]));
 }
 
 // Utility function to bind an element's events to a global function
-UI.prototype.bindGlobalListener = function (element, uiHandler, argument) {
+UI.prototype.bindGlobalListener = function(element, uiHandler, argument) {
     document.getElementById(element).addEventListener("click", window[uiHandler].bind(null, [argument]));
 }
 
 // Set the amount Genesis DFN to be recommended for user
-UI.prototype.setGenesisDFN = function (dfn) {
+UI.prototype.setGenesisDFN = function(dfn) {
     // console.log("Setting genesis DFN: " + dfn);
     var e = document.getElementById("genesis-dfinities-amount");
     var e2 = document.getElementById("genesis-dfinities-amount-2");
@@ -144,17 +145,17 @@ UI.prototype.setGenesisDFN = function (dfn) {
         e.innerHTML = "? DFN";
         e2.innerHTML = "? DFN (unknown as not connected to an Ethereum node)";
         // hideElement("genesis-dfinities-info-icon");
-    }
-    else {
+    } else {
         e.innerHTML = formatCurrency(dfn, "DFN");
         e2.innerHTML = formatCurrency(dfn, "DFN");
         // showElement("genesis-dfinities-info-icon", "inline-block");
     }
 }
 
-UI.prototype.checkTermsBox = function () {
+UI.prototype.checkTermsBox = function() {
     if (document.getElementById("i-accept-terms").checked &&
-        document.getElementById("i-am-not-usa-resident").checked && this.locationDetected != US_COUNTRY_CODE ) {
+        document.getElementById("i-am-not-usa-resident").checked && this.locationDetected !=
+        US_COUNTRY_CODE) {
         enableButton("agree-terms-button");
     } else {
         disableButton("agree-terms-button");
@@ -162,7 +163,7 @@ UI.prototype.checkTermsBox = function () {
 }
 
 // Set amount of ETH forwarded so far
-UI.prototype.setForwardedETH = function (fe) {
+UI.prototype.setForwardedETH = function(fe) {
     var e = document.getElementById('donated-eth');
     if (fe == undefined)
         e.innerHTML = "?";
@@ -170,9 +171,8 @@ UI.prototype.setForwardedETH = function (fe) {
         e.innerHTML = formatCurrency(fe, "ETH", 2);
 }
 
-
 // Set amount of ETH forwarded so far
-UI.prototype.setForwardedBTC = function (fe) {
+UI.prototype.setForwardedBTC = function(fe) {
     var e = document.getElementById('donated-btc');
     if (fe == undefined)
         e.innerHTML = "?";
@@ -181,7 +181,7 @@ UI.prototype.setForwardedBTC = function (fe) {
 }
 
 // Set amount of ETH forwarded so far
-UI.prototype.setRemainingBTC = function (rb) {
+UI.prototype.setRemainingBTC = function(rb) {
     var e = document.getElementById('waiting-btc');
     if (rb == undefined)
         e.innerHTML = "?";
@@ -190,15 +190,14 @@ UI.prototype.setRemainingBTC = function (rb) {
 }
 
 // Set amount of ETH remaining in client
-UI.prototype.setRemainingETH = function (re) {
+UI.prototype.setRemainingETH = function(re) {
     var e = document.getElementById('waiting-eth');
     var e2 = document.getElementById('withdraw-waiting-eth');
 
     if (re == undefined) {
         e.innerHTML = "?";
         e2.innerHTML = "?";
-    }
-    else {
+    } else {
         e.innerHTML = formatCurrency(re, "ETH", 2);
         e2.innerHTML = formatCurrency(re, "ETH", 2);
 
@@ -211,7 +210,7 @@ UI.prototype.setRemainingETH = function (re) {
 
 // Set the forwarding address the user should send ETH donations to
 // Set the DFN address the user might want ot communicate to  Dfinity Stiftung
-UI.prototype.setUserAddresses = function (efa, bfa, dfa, dfnAcctXpub) {
+UI.prototype.setUserAddresses = function(efa, bfa, dfa, dfnAcctXpub) {
     var ethExt = getChildWithClass(document.getElementById("eth-forwarding-address"), "eth-address");
     var ethFor = document.getElementById("eth-forwarding-address-explained");
     var btcExt = getChildWithClass(document.getElementById("btc-forwarding-address"), "eth-address");
@@ -235,14 +234,14 @@ UI.prototype.setUserAddresses = function (efa, bfa, dfa, dfnAcctXpub) {
     }
 }
 
-UI.prototype.generateSeed = function () {
+UI.prototype.generateSeed = function() {
     seed = app.generateSeed();
     ui.setUserSeed(seed);
     enableButton("after-create-seed-button");
 }
 
 // Set the user seed
-UI.prototype.setUserSeed = function (seed) {
+UI.prototype.setUserSeed = function(seed) {
     var s = getChildWithClass(document.getElementById("create-dfn-seed"), "seed");
     // if (seed == undefined) {
     // s.innerHTML = "-- <a href='javascript:ui.generateSeed()'>create</a>, or <a href=''>restore from seed</a> --"
@@ -253,7 +252,7 @@ UI.prototype.setUserSeed = function (seed) {
 
 // Set the total amount of donations received so far, in CHF
 // -1 indicates "unknown"
-UI.prototype.setFunderTotalReceived = function (chf) {
+UI.prototype.setFunderTotalReceived = function(chf) {
     if (chf == undefined) {
         this.setFunderProgressBar(0);
         this.setFunderPercProgress(undefined);
@@ -265,7 +264,7 @@ UI.prototype.setFunderTotalReceived = function (chf) {
         this.setFunderChfReceived(chf);
     }
 }
-UI.prototype.setFunderProgressBar = function (perc) {
+UI.prototype.setFunderProgressBar = function(perc) {
     // Configure progress bar
     var pb = document.getElementById('main-progress-bar');
     // set LEDs
@@ -287,21 +286,21 @@ UI.prototype.setFunderProgressBar = function (perc) {
         }
     }
 }
-UI.prototype.setFunderPercProgress = function (perc) {
-    var e = document.getElementsByClassName("lower")[0];
-    if (perc == undefined)
-        e.innerHTML = "? %";
-    else
-        e.innerHTML = Math.round(perc) + "%";
-}
-// General note: when a value is undefined, this indicates that the extension "doesn't know" the value.
-// In fact, once the extension has connected to Ethereum/FDC, it will know how much money has been donated.
-// It is possible that some money might have been donated before the official start (for example we could
-// report fiat donations that had already been made, although we might choose to do this during the funder).
-// The FDC will give the extension a number - 0, or whatever - and this can be displayed. A question mark
-// is designed to show that the extension _doesn't_know_ something i.e. that it is uninitialized, not
-// connected to Ethereum or whatever
-UI.prototype.setFunderChfReceived = function (chf) {
+UI.prototype.setFunderPercProgress = function(perc) {
+        var e = document.getElementsByClassName("lower")[0];
+        if (perc == undefined)
+            e.innerHTML = "? %";
+        else
+            e.innerHTML = Math.round(perc) + "%";
+    }
+    // General note: when a value is undefined, this indicates that the extension "doesn't know" the value.
+    // In fact, once the extension has connected to Ethereum/FDC, it will know how much money has been donated.
+    // It is possible that some money might have been donated before the official start (for example we could
+    // report fiat donations that had already been made, although we might choose to do this during the funder).
+    // The FDC will give the extension a number - 0, or whatever - and this can be displayed. A question mark
+    // is designed to show that the extension _doesn't_know_ something i.e. that it is uninitialized, not
+    // connected to Ethereum or whatever
+UI.prototype.setFunderChfReceived = function(chf) {
     var e = document.getElementById("total-received");
     if (chf == undefined)
     // e.innerHTML = "0 CHF [ Funder Starting in 1h 23m ]";
@@ -313,13 +312,13 @@ UI.prototype.setFunderChfReceived = function (chf) {
 
 // Set the current task.
 // Tasks:
-//	'task-agree'
-//	'task-create-seed'
-//	'task-understand-fwd-eth'
-//	'task-donate'
-UI.prototype.setCurrentTask = function (taskId) {
+//  'task-agree'
+//  'task-create-seed'
+//  'task-understand-fwd-eth'
+//  'task-donate'
+UI.prototype.setCurrentTask = function(taskId) {
     var _ui = this;
-    var f = function () {
+    var f = function() {
         _ui.unsetNextTask('task-agree');
         _ui.unsetNextTask('task-create-seed');
         _ui.unsetNextTask('task-understand-fwd-eth');
@@ -330,20 +329,20 @@ UI.prototype.setCurrentTask = function (taskId) {
     setTimeout(f, 100);
 }
 
-UI.prototype.unsetNextTask = function (t) {
+UI.prototype.unsetNextTask = function(t) {
     document.getElementById(t).className = document.getElementById(t).className.replace(/next-task/g, '');
 }
 
-UI.prototype.makeTaskDone = function (t) {
+UI.prototype.makeTaskDone = function(t) {
     document.getElementById(t).className += "done-task ";
     this.tickTaskItem(t);
 }
 
-UI.prototype.tickTaskItem = function (t) {
+UI.prototype.tickTaskItem = function(t) {
     getChildWithClass(document.getElementById(t), "tick").childNodes[0].style.visibility = "visible";
 }
 
-UI.prototype.logger = function (text) {
+UI.prototype.logger = function(text) {
     // Place in debug log
     console.log(text);
     // Write user interface log...
@@ -357,9 +356,8 @@ UI.prototype.logger = function (text) {
     log.insertBefore(line, log.childNodes[0]);
 }
 
-
 // Tasks can only move forward if previous tasks completed.
-UI.prototype.isTaskReady = function (taskId) {
+UI.prototype.isTaskReady = function(taskId) {
     k = this.tasks.indexOf(taskId);
 
     // Look for all previous steps to see if any one not completed
@@ -370,7 +368,7 @@ UI.prototype.isTaskReady = function (taskId) {
     return true;
 }
 
-UI.prototype.setDonationState = function (state, startTime) {
+UI.prototype.setDonationState = function(state, startTime) {
 
     // Don't update UI if still in unknown state (e.g. recovering from a previous failure)
     if (state == G.STATE_TBD) {
@@ -400,8 +398,7 @@ UI.prototype.setDonationState = function (state, startTime) {
         if (startTime != undefined && startTime != 0)
             setElementText("donation-start-time", new Date(startTime * 1000).toString());
         // hideElement("error-donation-over");
-    }
-    else if (state == G.STATE_OFFCHAIN_REG || state == G.STATE_FINALIZATION || state == G.STATE_DONE) {
+    } else if (state == G.STATE_OFFCHAIN_REG || state == G.STATE_FINALIZATION || state == G.STATE_DONE) {
 
         addClass("donation-state", "not-in-progress");
         if (state == G.STATE_OFFCHAIN_REG) {
@@ -426,30 +423,29 @@ UI.prototype.setDonationState = function (state, startTime) {
     }
 }
 
-UI.prototype.cancelCreateSeed = function () {
+UI.prototype.cancelCreateSeed = function() {
     if (app.accs.ETH.addr == undefined || app.accs.DFN.addr == undefined) {
         setElementText("seed", "");
     }
     closeDialog('create-dfn-seed');
 }
 
-UI.prototype.hideCreateSeed = function () {
+UI.prototype.hideCreateSeed = function() {
     // this.markSeedGenerated();
     // document.getElementById('create-dfn-seed').style.display = 'none';
     closeDialog("create-dfn-seed");
 }
 
-UI.prototype.doImportSeed = function () {
+UI.prototype.doImportSeed = function() {
     seed = document.getElementById('imported-seed').value;
 
     try {
         app.doImportSeed(seed);
-    }
-    catch (e) {
+    } catch (e) {
         this.showImportSeedError("Error in importing seed: " + e);
         return;
     }
-//    this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
+    //    this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
 
     ui.logger("Imported new seed successfully. ETH forwarding address and DFN address have been updated.")
 
@@ -459,26 +455,25 @@ UI.prototype.doImportSeed = function () {
     this.finishCreateSeed();
 }
 
-
-UI.prototype.finishCreateSeed = function () {
+UI.prototype.finishCreateSeed = function() {
     // Make sure we completely wipe the seed.
     this.markSeedGenerated();
     this.setCurrentTask('task-understand-fwd-eth');
     this.makeTaskDone('task-create-seed');
 }
 
-UI.prototype.showImportSeed = function () {
+UI.prototype.showImportSeed = function() {
 
     closeDialog('create-dfn-seed');
     showDialog('import-dfn-seed');
 
 }
 
-UI.prototype.hideImportSeed = function () {
+UI.prototype.hideImportSeed = function() {
     closeDialog('import-dfn-seed');
 }
 
-UI.prototype.showCreateSeed = function () {
+UI.prototype.showCreateSeed = function() {
     if (!this.isTaskReady("task-create-seed")) {
         return;
     }
@@ -494,36 +489,36 @@ UI.prototype.showCreateSeed = function () {
     showDialog("create-dfn-seed");
 }
 
-UI.prototype.afterCreateSeed = function () {
+UI.prototype.afterCreateSeed = function() {
     document.getElementById('create-dfn-seed').style.display = 'none';
     this.hideCreateSeed();
     this.showValidateSeed();
 }
 
-UI.prototype.showValidateSeed = function () {
+UI.prototype.showValidateSeed = function() {
     this.hideValidateSeedError();
     // document.getElementById('verify-dfn-seed').style.display = 'block';
     showDialog('verify-dfn-seed');
 }
 
-UI.prototype.beforeValidateSeed = function () {
+UI.prototype.beforeValidateSeed = function() {
     this.hideValidateSeed();
     this.showCreateSeed();
 }
 
-UI.prototype.showImportSeedError = function (e) {
+UI.prototype.showImportSeedError = function(e) {
     showAndSetElement("import-seed-error", "Error in importing seed: " + e);
 }
 
-UI.prototype.showValidateSeedError = function () {
+UI.prototype.showValidateSeedError = function() {
     document.getElementById('verify-seed-error').style.display = 'block';
 
 }
-UI.prototype.hideValidateSeedError = function () {
+UI.prototype.hideValidateSeedError = function() {
     document.getElementById('verify-seed-error').style.display = 'none';
 }
 
-UI.prototype.doValidateSeed = function () {
+UI.prototype.doValidateSeed = function() {
     showDialog("verify-dfn-seed");
 
     var typedSeed = document.getElementById("typed-seed");
@@ -540,7 +535,7 @@ UI.prototype.doValidateSeed = function () {
 
     // Validation passed
     app.doImportSeed(s.trim());
-//    this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
+    //    this.setUserAddresses(app.accs.ETH.addr, app.accs.DFN.addr);
 
     this.hideValidateSeed();
     // Make sure we completely wipe the seed.
@@ -549,35 +544,35 @@ UI.prototype.doValidateSeed = function () {
     this.makeTaskDone('task-create-seed');
 }
 
-UI.prototype.markSeedGenerated = function () {
-    seedText = "Seed has already been generated and you should have safely copied it somewhere. Click Cancel button to proceed with the donation.";
+UI.prototype.markSeedGenerated = function() {
+    seedText =
+        "Seed has already been generated and you should have safely copied it somewhere. Click Cancel button to proceed with the donation.";
     // seedText += "<a href='javascript:ui.generateSeed()'>generate new seed</a>, but all previous information will be lost.";
     this.setUserSeed(seedText);
     showAndSetElement("typed-seed", "");
     disableButton("after-create-seed-button");
 }
 
-UI.prototype.hideValidateSeed = function () {
+UI.prototype.hideValidateSeed = function() {
     closeDialog('verify-dfn-seed');
 }
 
-
-UI.prototype.showTerms = function () {
+UI.prototype.showTerms = function() {
     showDialog("terms");
 }
 
-UI.prototype.hideTerms = function () {
+UI.prototype.hideTerms = function() {
     closeDialog("terms");
 }
 
-UI.prototype.disableTerms = function () {
+UI.prototype.disableTerms = function() {
     disableButton("agree-terms-button");
     document.getElementById("i-accept-terms").checked = true;
     document.getElementById("i-am-not-usa-resident").checked = true;
     document.getElementById("i-accept-terms").disabled = true;
     document.getElementById("i-am-not-usa-resident").disabled = true;
 }
-UI.prototype.readTerms = function () {
+UI.prototype.readTerms = function() {
 
     if (!document.getElementById("i-accept-terms").checked ||
         !document.getElementById("i-am-not-usa-resident").checked) {
@@ -602,59 +597,59 @@ UI.prototype.readTerms = function () {
 
 // BTC node config
 // Set Bitcoin node client host
-UI.prototype.setBitcoinNode = function (fn) {
+UI.prototype.setBitcoinNode = function(fn) {
     document.getElementById('btn-bitcoin-node').innerHTML = fn;
 }
 
 // Set status of Etheruem client
-UI.prototype.setBitcoinClientStatus = function (status) {
+UI.prototype.setBitcoinClientStatus = function(status) {
     document.getElementById('btc-client-status').innerHTML = status;
 }
 
-UI.prototype.showSelectBitcoinNode = function () {
+UI.prototype.showSelectBitcoinNode = function() {
     showDialog("select-full-node-btc");
-    onKeys(ui.hideSelectBitcoinNode, function () {
+    onKeys(ui.hideSelectBitcoinNode, function() {
         ui.onSelectBitcoinNode(document.getElementById('custom-full-node-address-btc').value);
     });
 }
 
-UI.prototype.hideSelectBitcoinNode = function (en) {
+UI.prototype.hideSelectBitcoinNode = function(en) {
     closeDialog("select-full-node-btc");
 }
 
-UI.prototype.onSelectBitcoinNode = function (en) {
+UI.prototype.onSelectBitcoinNode = function(en) {
     this.hideSelectBitcoinNode();
     app.setBitcoinNode(en);
 }
 
 // ETH node config
 // Set Ethereum node client host
-UI.prototype.setEthereumNode = function (fn) {
+UI.prototype.setEthereumNode = function(fn) {
     document.getElementById('btn-ethereum-node').innerHTML = fn;
 }
 
 // Set status of Etheruem client
-UI.prototype.setEthereumClientStatus = function (status) {
+UI.prototype.setEthereumClientStatus = function(status) {
     document.getElementById('eth-client-status').innerHTML = status;
 }
 
-UI.prototype.showSelectEthereumNode = function () {
+UI.prototype.showSelectEthereumNode = function() {
     showDialog("select-full-node-eth");
-    onKeys(ui.hideSelectEthereumNode, function () {
+    onKeys(ui.hideSelectEthereumNode, function() {
         ui.onSelectEthereumNode(document.getElementById('custom-full-node-address-eth').value);
     });
 }
 
-UI.prototype.hideSelectEthereumNode = function (en) {
+UI.prototype.hideSelectEthereumNode = function(en) {
     closeDialog("select-full-node-eth");
 }
 
-UI.prototype.onSelectEthereumNode = function (en) {
+UI.prototype.onSelectEthereumNode = function(en) {
     closeDialog("select-full-node-eth");
     app.setEthereumNode(en);
 }
 
-UI.prototype.showExplainForwarding = function () {
+UI.prototype.showExplainForwarding = function() {
     if (!this.isTaskReady("task-understand-fwd-eth")) {
         return;
     }
@@ -662,25 +657,26 @@ UI.prototype.showExplainForwarding = function () {
     // document.getElementById('explain-eth-forwarding').style.display = 'block';
 }
 
-UI.prototype.doneExplainForwarding = function () {
+UI.prototype.doneExplainForwarding = function() {
     closeDialog("explain-eth-forwarding");
     this.makeTaskDone('task-understand-fwd-eth');
     this.setCurrentTask('task-donate');
 }
 
-UI.prototype.showWithdrawEth = function () {
+UI.prototype.showWithdrawEth = function() {
     showDialog("withdraw-eth");
 }
 
-UI.prototype.hideWithdrawEth = function () {
+UI.prototype.hideWithdrawEth = function() {
     closeDialog("withdraw-eth");
 }
 
-UI.prototype.withdrawETH = function () {
+UI.prototype.withdrawETH = function() {
     var addr = document.getElementById('withdraw-eth-addr').value;
     // We accept either all lower case or all upper case except the 'x' in '0x' or a valid checksum
     if ((addr.length === 42) &&
-        (addr == addr.toLowerCase() || addr.slice(2) == addr.toUpperCase().slice(2) || EthJSUtil.isValidChecksumAddress(addr))
+        (addr == addr.toLowerCase() || addr.slice(2) == addr.toUpperCase().slice(2) || EthJSUtil.isValidChecksumAddress(
+            addr))
     ) {
         app.withdrawETH(addr);
         this.hideErrorEthForwarding();
@@ -690,24 +686,23 @@ UI.prototype.withdrawETH = function () {
     this.hideWithdrawEth();
 }
 
-UI.prototype.showErrorEthForwarding = function () {
+UI.prototype.showErrorEthForwarding = function() {
     document.getElementById('error-eth-forwarding').style.display = 'block';
 }
 
-UI.prototype.hideErrorEthForwarding = function () {
+UI.prototype.hideErrorEthForwarding = function() {
     document.getElementById('error-eth-forwarding').style.display = 'none';
 }
 
-
-UI.prototype.showWithdrawBtc = function () {
+UI.prototype.showWithdrawBtc = function() {
     showDialog("withdraw-btc");
 }
 
-UI.prototype.hideWithdrawBtc = function () {
+UI.prototype.hideWithdrawBtc = function() {
     closeDialog("withdraw-btc");
 }
 
-UI.prototype.withdrawBtc = function () {
+UI.prototype.withdrawBtc = function() {
     var addr = document.getElementById('withdraw-btc-addr').value;
 
     this.hideWithdrawBtc();
@@ -716,24 +711,23 @@ UI.prototype.withdrawBtc = function () {
     app.withdrawBtc(addr)
 }
 
-UI.prototype.showErrorBtcForwarding = function (err) {
+UI.prototype.showErrorBtcForwarding = function(err) {
     document.getElementById('error-btc-forwarding').style.display = 'block';
     if (err) {
-        (document.getElementById("error-btc-forwarding-msg")).innerText=err;
+        (document.getElementById("error-btc-forwarding-msg")).innerText = err;
     }
 
 }
 
-UI.prototype.hideErrorBtcForwarding = function () {
+UI.prototype.hideErrorBtcForwarding = function() {
     document.getElementById('error-btc-forwarding').style.display = 'none';
 }
 
-
-UI.prototype.updateLocationBlocker = function () {
+UI.prototype.updateLocationBlocker = function() {
     usBlocker = document.getElementById("us-person-error");
     agreeButton = document.getElementById("agree-terms-button");
     var self = this;
-    ajaxGet("http://ip-api.com/json/", function (data) {
+    ajaxGet("http://ip-api.com/json/", function(data) {
         countryCode = JSON.parse(data)["countryCode"];
 
         self.locationDetected = countryCode;
@@ -744,7 +738,7 @@ UI.prototype.updateLocationBlocker = function () {
             disableButton("agree-terms-button");
             usBlocker.style.display = 'block';
         }
-    }, function (err) {
+    }, function(err) {
         // enableButton("agree-terms-button");
         self.locationDetected = "unknown";
         usBlocker.style.display = 'none';
@@ -761,6 +755,7 @@ function disableButton(buttonId) {
 function setElementText(element, s) {
     document.getElementById(element).innerHTML = s;
 }
+
 function showAndSetElement(element, s) {
     document.getElementById(element).innerHTML = s;
     document.getElementById(element).style.display = 'block';
@@ -771,6 +766,7 @@ function showElement(element, style) {
         style = "block";
     document.getElementById(element).style.display = style;
 }
+
 function hideElement(element) {
     document.getElementById(element).style.display = 'none';
 }
@@ -818,8 +814,10 @@ function addClass(element, className) {
 }
 
 function removeClass(element, className) {
-    document.getElementById(element).className = document.getElementById(element).className.replace(className, '');
+    document.getElementById(element).className = document.getElementById(element).className.replace(className,
+        '');
 }
+
 function showDialog(dialogId) {
     showElement(dialogId);
     document.body.className += " modal-open";

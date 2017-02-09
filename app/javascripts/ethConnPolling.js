@@ -7,8 +7,6 @@
  * is possible.
  */
 
-var DEFAULT_ETH_CONN_POLLING_INTERVAL = 1000;
-
 // onConnected - called when transitioning to connected state
 // onConnectionError - called when transitioning out of connected state
 // pingInterval - interval that pings are made
@@ -18,7 +16,7 @@ var EthPoller = function (onConnected, onConnectionError, pingInterval) {
     this.onConnectionError = onConnectionError;
     this.pingInterval = pingInterval;
     if (this.pingInterval == undefined)
-        this.pingInterval = DEFAULT_ETH_CONN_POLLING_INTERVAL;
+        this.pingInterval = G.ETHEREUM_CONN_POLLING_INTERVAL;
     this.hPollTimeout = 0;
     this.connectionId = 0; // keep track node reconfigs
     this.schedulePing();

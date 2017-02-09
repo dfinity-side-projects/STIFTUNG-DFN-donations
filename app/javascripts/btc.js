@@ -46,14 +46,11 @@ var Unit = bitcore.Unit;
 
 var TX_FEE_MULTIPLIER = 2;
 
-
 function BitcoinWorker() {
     this.isWorking = false
 }
 
-
-
-BitcoinWorker.prototype.start = function (config) {
+BitcoinWorker.prototype.start = function(config) {
     console.log("Worker started");
     var self = this
 
@@ -61,27 +58,24 @@ BitcoinWorker.prototype.start = function (config) {
     self.clientPrivateKey = bitcore.PrivateKey(config.privateKey)
     self.clientAddress = self.clientPrivateKey.toAddress();
     console.log("clientDfinity data is: " + config.clientDfinityData);
-    self.clientDfinityData =  bitcore.util.buffer.hexToBuffer( config.clientDfinityData);
+    self.clientDfinityData = bitcore.util.buffer.hexToBuffer(config.clientDfinityData);
 
     // Central configuration:
     self.centralAddress = bitcore.Address(config.centralAddress)
 
     // External block explorer configuration:
     self.pollIntervalMs = config.pollIntervalMs || 5000
-    self.bitcoinProvider = config.bitcoinProvider
+    self.bitcoinProvider = config.bitcoinProvider;
     self.bitcoinProvider.__proto__.getTransactions = getTransactions;
     self.bitcoinProvider.__proto__.getStatus = getStatus;
-
 
     // self worker considers itself "connected" if the last HTTP request it made
     // was successful (starts disconnected):
     self.isConnected = false
 
     self.listeners = {
-        onConnectionChange: config.onConnectionChange || function () {
-        },
-        onError: config.onError || function () {
-        },
+        onConnectionChange: config.onConnectionChange || function() {},
+        onError: config.onError || function() {},
     }
 
     // Start watching CLIENT ADDRESS and forwarding funds:
@@ -92,14 +86,13 @@ BitcoinWorker.prototype.start = function (config) {
             return
         self.pollBTCStatus();
 
-        self.tryForwardBTC().then(function () {
+        self.tryForwardBTC().then(function() {
             setTimeout(nextWatchTick, self.pollIntervalMs)
         })
     }
 
     nextWatchTick()
 }
-
 
 /**
  *  This is a custom function we are adding to the Insight class as it current
@@ -110,9 +103,9 @@ BitcoinWorker.prototype.start = function (config) {
  * @param {GetTxsCallback} callback
  */
 
-var getTransactions = function (address, callback) {
+var getTransactions = function(address, callback) {
     this.requestGet('/api/txs/?address=' + address.toString(),
-        function (err, res, body) {
+        function(err, res, body) {
             if (err || res.statusCode !== 200) {
                 return callback(err || res);
             }
@@ -125,9 +118,9 @@ var getTransactions = function (address, callback) {
         });
 };
 
-var getStatus = function (callback) {
+var getStatus = function(callback) {
     this.requestGet('/api/sync/',
-        function (err, res, body) {
+        function(err, res, body) {
             if (err || res.statusCode !== 200) {
                 return callback(err || res);
             }
@@ -136,14 +129,22 @@ var getStatus = function (callback) {
 
 }
 
+// Set a new Bitcoin provider. Overlay custom functions.
+BitcoinWorker.prototype.setBitcoinProvider = function(provider) {
+    this.bitcoinProvider = provider;
+    this.bitcoinProvider.__proto__.getTransactions = getTransactions;
+    this.bitcoinProvider.__proto__.getStatus = getStatus;
+    this.setConnected(false);
+}
 
-BitcoinWorker.prototype.stop = function () {
+// Stop bitcoin worker
+BitcoinWorker.prototype.stop = function() {
     this.isWorking = false
 }
 
-BitcoinWorker.prototype.pollBTCStatus = function () {
+BitcoinWorker.prototype.pollBTCStatus = function() {
     var self = this;
-    self.callProvider("getStatus").then(function (status) {
+    self.callProvider("getStatus").then(function(status) {
         if (status) {
             status = JSON.parse(status);
             if (status["status"] != undefined || status["error"] == "null") {
@@ -157,8 +158,7 @@ BitcoinWorker.prototype.pollBTCStatus = function () {
             throw new Error("Not connected to BTC node.");
         }
 
-
-    }).then(self.getClientUtxos.bind(self)).then(function (utxos) {
+    }).then(self.getClientUtxos.bind(self)).then(function(utxos) {
         if (!self.isConnected)
             return;
         // 1. Update Pending BTC balance based on UTXO status
@@ -175,7 +175,7 @@ BitcoinWorker.prototype.pollBTCStatus = function () {
         ui.setRemainingBTC(sum.toBTC());
     }).then(self.getTransactions.bind(self, self.clientAddress)).then(
         // 2. Update "Donated" Balance between
-        function (transactions) {
+        function(transactions) {
 
             // Add up all transactions that went out from this address to the donation address
             var donatedSum = 0.0;
@@ -183,68 +183,67 @@ BitcoinWorker.prototype.pollBTCStatus = function () {
                 if (!transactions.hasOwnProperty(tx)) {
                     continue;
                 }
-                    // Check if the fwd addr is among the sender
+                // Check if the fwd addr is among the sender
                 tx = transactions[tx];
-                var clientFwd = tx["vin"].filter(function (vin, index, array) {
+                var clientFwd = tx["vin"].filter(function(vin, index, array) {
                     return vin["addr"] == self.clientAddress;
                 });
                 if (clientFwd.length == 0)
                     continue;
                 // Sum up value of the all vouts to the receiving FDC address
-                tx["vout"].map( (vout, index, array) => {
+                tx["vout"].map((vout, index, array) => {
 
                     if (!vout["scriptPubKey"]["addresses"]) {
                         return;
                     }
-                    var receivers = vout["scriptPubKey"]["addresses"].filter(function (addr, index, array) {
-                        return (addr === self.centralAddress.toString());
-                    });
-                    donatedSum += (receivers.length > 0 ? parseFloat(vout["value"]) : 0);
+                    var receivers = vout["scriptPubKey"]["addresses"].filter(
+                        function(addr, index, array) {
+                            return (addr === self.centralAddress.toString());
+                        });
+                    donatedSum += (receivers.length > 0 ? parseFloat(vout[
+                        "value"]) : 0);
                 });
             }
-
             ui.setForwardedBTC(donatedSum);
-
         });
 
 }
-BitcoinWorker.prototype.tryForwardBTC = function () {
+
+BitcoinWorker.prototype.tryForwardBTC = function() {
     var self = this;
 
-    // if (app.donationState != STATE_DON_PHASE0 && app.donationState != STATE_DON_PHASE1)
-    //     return Promise.resolve();
+    if (app.donationState != G.STATE_DON_PHASE0 && app.donationState != G.STATE_DON_PHASE1)
+        return Promise.resolve();
 
     return this.trySendBTC(this.centralAddress)
-        .then(function (tx) {
+        .then(function(tx) {
             if (tx) {
                 ui.logger("Successfully donated bitcoins to: " + self.centralAddress);
             }
         })
 }
 
-
-BitcoinWorker.prototype.tryRefundBTC = function (address) {
+BitcoinWorker.prototype.tryRefundBTC = function(address) {
     var self = this
 
     return this.trySendBTC(address)
-        .then(function (tx) {
+        .then(function(tx) {
             if (tx) {
                 self.log('Sent back funds to provided address ' + address)
             }
         })
 }
 
-
-BitcoinWorker.prototype.trySendBTC = function (address) {
+BitcoinWorker.prototype.trySendBTC = function(address) {
     var self = this
 
     return Promise.resolve()
-        .then(function () {
+        .then(function() {
             // self.log('Getting UTXOs')
 
             return self.getClientUtxos()
         })
-        .then(function (utxos) {
+        .then(function(utxos) {
             self.log('Found ' + utxos.length + ' UTXOs')
             if (utxos.length == 0 || utxos == undefined) return;
 
@@ -252,38 +251,33 @@ BitcoinWorker.prototype.trySendBTC = function (address) {
 
             return self.sendTransaction(tx)
         })
-        .catch(function (err) {
+        .catch(function(err) {
             self.logError(err)
             self.listeners.onError(err)
         })
 }
 
-
-BitcoinWorker.prototype.getClientUtxos = function () {
+BitcoinWorker.prototype.getClientUtxos = function() {
     return this.callProvider('getUnspentUtxos', this.clientAddress)
 }
 
-BitcoinWorker.prototype.sendTransaction = function (tx) {
+BitcoinWorker.prototype.sendTransaction = function(tx) {
     return this.callProvider('broadcast', tx)
 }
 
-
-BitcoinWorker.prototype.getTransactions = function (addr) {
+BitcoinWorker.prototype.getTransactions = function(addr) {
     return this.callProvider('getTransactions', addr)
 }
 
-
-BitcoinWorker.prototype.getSyncStatus = function (addr) {
+BitcoinWorker.prototype.getSyncStatus = function(addr) {
     return this.callProvider('getTransactions', addr)
 }
 
-
-BitcoinWorker.prototype.callProvider = function (method) {
+BitcoinWorker.prototype.callProvider = function(method) {
     var self = this
     var args = Array.prototype.slice.call(arguments, 1)
 
-
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
         function callback(err, result) {
             if (err) {
                 // Failure of provider call doesn't mean connection is bad. Many reasons could cause
@@ -303,16 +297,15 @@ BitcoinWorker.prototype.callProvider = function (method) {
     })
 }
 
-
-BitcoinWorker.prototype.setConnected = function (isConnected) {
+BitcoinWorker.prototype.setConnected = function(isConnected) {
     if (this.isConnected !== isConnected) {
         this.isConnected = isConnected
-        this.listeners.onConnectionChange(this.isConnected)
+        if (this.listeners) 
+            this.listeners.onConnectionChange(this.isConnected)
     }
 }
 
-
-BitcoinWorker.prototype.makeTransaction = function (utxos, address) {
+BitcoinWorker.prototype.makeTransaction = function(utxos, address) {
     const fee = this.calculateFee(utxos);
     const amount = utxoSum(utxos) - fee
 
@@ -328,8 +321,7 @@ BitcoinWorker.prototype.makeTransaction = function (utxos, address) {
         .sign(this.clientPrivateKey)
 }
 
-
-BitcoinWorker.prototype.calculateFee = function (utxos) {
+BitcoinWorker.prototype.calculateFee = function(utxos) {
     // Craft a fake transaction to take advantage of Bitcore's fee estimator:
     var bitcoreFee = new bitcore.Transaction()
         .from(utxos)
@@ -338,30 +330,19 @@ BitcoinWorker.prototype.calculateFee = function (utxos) {
         .addData(this.clientDfinityData)
         .getFee()
 
-
     return Math.ceil(bitcoreFee * TX_FEE_MULTIPLIER)
 }
 
-
-BitcoinWorker.prototype.log = function (...args
-)
-{
-    console.log('[BTC]',...args
-)
+BitcoinWorker.prototype.log = function(...args) {
+    console.log('[BTC]', ...args)
 }
 
-
-BitcoinWorker.prototype.logError = function (...args
-)
-{
-    console.error('[BTC]',...args
-)
+BitcoinWorker.prototype.logError = function(...args) {
+    console.error('[BTC]', ...args)
 }
-
 
 function utxoSum(utxos) {
-    return utxos.reduce(function (total, nextUtxo) {
+    return utxos.reduce(function(total, nextUtxo) {
         return total + nextUtxo.satoshis
     }, 0)
 }
-
