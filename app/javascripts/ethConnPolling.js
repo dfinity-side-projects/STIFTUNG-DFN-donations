@@ -10,10 +10,11 @@
 // onConnected - called when transitioning to connected state
 // onConnectionError - called when transitioning out of connected state
 // pingInterval - interval that pings are made
-var EthPoller = function (onConnected, onConnectionError, pingInterval) {
+var EthPoller = function (onConnected, onDisconnect, onConnectionError, pingInterval) {
     this.connected = false;
     this.onConnected = onConnected;
     this.onConnectionError = onConnectionError;
+    this.onDisconnect = onDisconnect;
     this.pingInterval = pingInterval;
     if (this.pingInterval == undefined)
         this.pingInterval = G.ETHEREUM_CONN_POLLING_INTERVAL;
@@ -32,7 +33,7 @@ EthPoller.prototype.isConnected = function () {
 // it can immediately update the change in connection status
 EthPoller.prototype.nodeChanged = function () {
     this.connectionId++;
-    this.onPingError("Ethereum node changed");
+    this.onPingError("node_changed");
 }
 
 // Schedule a ping of the Ethereum node
@@ -70,11 +71,20 @@ EthPoller.prototype.onPingSuccess = function () {
 
 // Connection ping error
 EthPoller.prototype.onPingError = function (error) {
-    if (this.onConnectionError && this.connected)
+    if (this.onConnectionError) {
         try {
             this.onConnectionError(error);
         } catch (e) {
+            console.log(e.toString());
         } //untrusted
+    }
+    if (this.onDisconnect && this.connected) {
+        try {
+            this.onDisconnect(error);
+        } catch (e) {
+            console.log(e.toString());
+        } //untrusted
+    }
     this.connected = false;
     // setup next ping...
     this.schedulePing();

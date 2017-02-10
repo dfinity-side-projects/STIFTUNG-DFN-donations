@@ -45,8 +45,8 @@ const constants = {
     donateAsWithChecksum: "ceadd9c8",
 
     default: () => {
-        constants.DEFAULT_ETHEREUM_NODE = constants.ETHEREUM_HOSTED_NODES[0];
-        constants.DEFAULT_BITCOIN_NODE = constants.BITCOIN_HOSTED_NODES[0];
+        constants.DEFAULT_ETHEREUM_NODE = "hosted";
+        constants.DEFAULT_BITCOIN_NODE = "hosted";
     }
 }
 

@@ -59,7 +59,7 @@ var App = function(userAccounts) {
     this.donationState = G.STATE_TBD;
 
     // Start a regular ETH poller to update connection status
-    this.ethPoller = new EthPoller(this.onEthereumConnect.bind(this), this.onEthereumDisconnect.bind(this));
+    this.ethPoller = new EthPoller(this.onEthereumConnect.bind(this), this.onEthereumDisconnect.bind(this), this.onEthereumConnError.bind(this));
 
     // Create a new BitcoinHelper to gather BTC donations:
     this.btcWorker = new BitcoinWorker();
@@ -81,7 +81,9 @@ var App = function(userAccounts) {
 
     // Load & connect to previous saved node information if possible
     this.loadNodes();
-
+    
+    this.setEthereumClientStatus('connecting...');
+    this.setBitcoinClientStatus('tbc');
     ui.logger("Retrieving status from FDC contract: " + FDCAddr);
 
     // start forwarding any ETH we see!
@@ -301,8 +303,8 @@ App.prototype.updateUI = function(currentState, fxRate, donationCount,
     ui.setRemainingETH(web3.fromWei(fwdBalance, 'ether'));
 }
 
-// Adjust the connection after too many failures and try new node
-App.prototype.adjustEthConnection = function() {
+// Try another eth hosted node
+App.prototype.tryAnotherHostedEthNode = function() {
     var self = this;
     // Mark as tried
     self.ethNodesTried[this.ethereumNode] = true;
@@ -311,15 +313,14 @@ App.prototype.adjustEthConnection = function() {
         var node = G.ETHEREUM_HOSTED_NODES[i];
         if (!self.ethNodesTried[node]) {
             ui.logger("Trying a different hosted node: " + node)
-            self.ethConnectionRetries = 0;
             self.setETHNodeInternal(node);
+            self.ethPoller.nodeChanged();
             break;
         }
         if (i == G.ETHEREUM_HOSTED_NODES.length - 1) {
-            ui.logger(
-                "Can't connect to any of the hosted nodes. Please check your Internet connection and refresh the page."
-            )
-            this.setBitcoinClientStatus('error connecting');
+            // Reset and start over
+            self.ethNodesTried = {};
+            this.setEthereumClientStatus('error connecting');
         }
     }
 
@@ -336,6 +337,7 @@ App.prototype.setEthereumNode = function(host) {
     // console.log("Set Ethereum node: " + host);
 
     if (host == "hosted") {
+        this.useHosted = true;
         if (G.ETHEREUM_HOSTED_NODES.length > 1) {
             var nodeIndex = getRandomInt(0, G.ETHEREUM_HOSTED_NODES.length - 1);
             this.setETHNodeInternal(G.ETHEREUM_HOSTED_NODES[nodeIndex]);
@@ -344,6 +346,7 @@ App.prototype.setEthereumNode = function(host) {
         }
 
     } else {
+        this.useHosted = false;
         host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
         host = host.replace(/\s/g, '') // all whitespace chars
         host = host.replace(/\/$/g, '') // remove trailing "/"
@@ -360,7 +363,7 @@ App.prototype.setEthereumNode = function(host) {
 
 App.prototype.setETHNodeInternal = function(host) {
     ui.logger("Connecting to: " + host + "...");
-    // this.setEthereumClientStatus('connecting...');
+    
     this.ethConnectionRetries = 0;
     this.ethereumNode = host;
     ui.setEthereumNode(host);
@@ -398,16 +401,24 @@ App.prototype.onEthereumConnect = function() {
     ui.logger("Successfully connected to an etheruem node.")
         // Save nodes only if it's successfully connected
     this.saveNodes();
-
 }
 
+// Triggered only when connection state changed from connected to disconnected state
 App.prototype.onEthereumDisconnect = function(errCode) {
-    this.setEthereumClientStatus(errCode);
-    this.ethConnectionRetries++;
-    ui.logger("Still trying to connect to an Ethereum node...[Retry #" + this.ethConnectionRetries + "/" +
-        G.ETHEREUM_CONN_MAX_RETRIES + "] ");
-    if (this.ethConnectionRetries >= G.ETHEREUM_CONN_MAX_RETRIES) {
-        this.adjustEthConnection();
+    this.setEthereumClientStatus("Connecting ...");
+}
+
+// Triggered when *each time* a connection error happened, regardless of previous state
+App.prototype.onEthereumConnError = function(errCode) {
+    if (errCode == "node_changed") {
+        this.ethConnectionRetries = 0;
+    } else {
+        this.setEthereumClientStatus(errCode);
+        this.ethConnectionRetries++;
+        ui.logger("Error connecting to an Ethereum node...[Attempt #" + this.ethConnectionRetries + "] ");
+        if (this.ethConnectionRetries >= G.ETHEREUM_CONN_MAX_RETRIES && this.useHosted) {
+            this.tryAnotherHostedEthNode();
+        }
     }
 }
 
