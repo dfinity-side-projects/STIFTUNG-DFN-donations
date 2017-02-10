@@ -37,7 +37,7 @@ EthForwarder.prototype.setSignedProvider = function(ethProvider) {
         throw new Error("Can't create a signed web3 provider without private key in the accounts object.")
     }
     this.ethProvider = ethProvider;
-    var engine = new ProviderEngine.Engine();
+    var engine = new ProviderEngine();
     var wallet = Wallet.fromPrivateKey(EthJSUtil.toBuffer(this.accounts.ETH.priv))
     engine.addProvider(new WalletSubprovider(wallet, {}));
     engine.addProvider(new Web3Subprovider(this.ethProvider));
