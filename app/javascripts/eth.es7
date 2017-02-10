@@ -8,18 +8,15 @@ var ethProvider = null;
 /**
  * EthForwarder wraps simple functions to donate and withdraw ETH, with a given account & FDC object
  */
-var EthForwarder = function (accounts, fdc) {
+var EthForwarder = function (accounts, fdc, ethProvider) {
     this.accounts = accounts;
     this.fdc = fdc;
-    if (ethProvider == null)
-        ethProvider = new Web3.providers.HttpProvider(G.DEFAULT_ETHEREUM_NODE);
     
-    var engine = new ProviderEngine.Engine();
-    var wallet = Wallet.fromPrivateKey(EthJSUtil.toBuffer(accounts.ETH.priv))
-    engine.addProvider(new WalletSubprovider(wallet, {}));
-    engine.addProvider(new Web3Subprovider(ethProvider));
-    engine.start(); // Required by the provider engine.
-    FDC.setProvider(engine);
+    // Use the first hosted nodes if nothing else available
+    if (ethProvider == null)
+        ethProvider = new Web3.providers.HttpProvider(G.ETHEREUM_HOSTED_NODES[0]);
+    
+    this.setSignedProvider(ethProvider);
     
     // Make sure we get the new return structure on tx (logs, receipt, txHash)
     // FDC.next_gen = true;
@@ -32,6 +29,20 @@ var EthForwarder = function (accounts, fdc) {
     Promise.config({
         warnings: false
     });
+}
+
+// Set a signed provider for FDC. Take httpProvider as input.
+EthForwarder.prototype.setSignedProvider = function(ethProvider) {
+    if (!this.accounts.ETH.priv) {
+        throw new Error("Can't create a signed web3 provider without private key in the accounts object.")
+    }
+    this.ethProvider = ethProvider;
+    var engine = new ProviderEngine.Engine();
+    var wallet = Wallet.fromPrivateKey(EthJSUtil.toBuffer(this.accounts.ETH.priv))
+    engine.addProvider(new WalletSubprovider(wallet, {}));
+    engine.addProvider(new Web3Subprovider(this.ethProvider));
+    engine.start(); // Required by the provider engine.
+    FDC.setProvider(engine);
 }
 
 //// Donate specified value (minus gas cost). From/to address are all extracted from associated accounts object. ////

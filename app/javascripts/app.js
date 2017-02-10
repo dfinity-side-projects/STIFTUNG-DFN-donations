@@ -135,7 +135,7 @@ App.prototype.tryForwardETH = function() {
     var self = this;
 
     if (self.ethForwarder == null)
-        self.ethForwarder = new window.EthForwarder(self.accs, FDC.at(FDCAddr));
+        self.ethForwarder = new window.EthForwarder(self.accs, FDC.at(FDCAddr), FDC.currentProvider);
 
     // Reset flags
     self.saidBalanceTooSmall = false;
@@ -185,7 +185,7 @@ App.prototype.retryForwarding = function() {
 App.prototype.withdrawETH = function(toAddr) {
     var self = this;
     if (self.ethForwarder == null)
-        self.ethForwarder = new window.EthForwarder(self.accs, FDC.at(FDCAddr));
+        self.ethForwarder = new window.EthForwarder(self.accs, FDC.at(FDCAddr),FDC.currentProvider);
     self.ethForwarder.withdrawETH(toAddr).then(() => {
         ui.logger("Successfully withdraw ETH. ");
         self.contFwdingOnNewData = true;
@@ -344,7 +344,6 @@ App.prototype.setEthereumNode = function(host) {
         } else {
             this.setETHNodeInternal(G.ETHEREUM_HOSTED_NODES[0]);
         }
-
     } else {
         this.useHosted = false;
         host = host.replace(/(\r\n|\n|\r)/gm, ""); // line breaks
@@ -372,6 +371,9 @@ App.prototype.setETHNodeInternal = function(host) {
     web3.setProvider(provider);
     FDC.setProvider(provider);
     this.ethPoller.nodeChanged();
+    if (this.ethForwarder) {
+        ethForwarder.setSignedProvider(provider);
+    }
 
     // Instantly connect to new node to fetch status
     this.pollStatus();
