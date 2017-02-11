@@ -30,7 +30,7 @@
  */
 
 // TODO: US country code
-var US_COUNTRY_CODE = "USA";
+var US_COUNTRY_CODE = "US";
 
 // Constructor
 var UI = function() {

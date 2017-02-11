@@ -9,7 +9,7 @@ const constants = {
     ETHEREUM_MAX_TX_CYCLES: 10, // how many cycles of forwarding attempt should we timeout before making a second tx, roughly CHK_FWD_INTERVAL x Cycles
     ETHEREUM_TX_TIMEOUT: 240000, // how many ms delay before timeout / fail a ETH tx
     ETHEREUM_HOSTED_NODES: ["https://eth.frankfurt.dfinity.build", "https://eth.tokyo.dfinity.build"],
-    VALUE_TRANSFER_GAS: 28000,
+    VALUE_TRANSFER_GAS: 30000,
 
     // These ETH constants will be initialized upon window load because of dependency on web3
     GAS_PRICE: undefined, // estimate price of gas
@@ -20,7 +20,7 @@ const constants = {
     VALUE_TRANSFER_GAS_COST: undefined,
 
     // BTC CONSTANTS
-    BITCOIN_FOUNDATION_ADDRESS: '3P1wZiN6pgPkut1g56yQcgGCGXz63T8m7h',
+    BITCOIN_FOUNDATION_ADDRESS: '3JqsZhBnPbUvaEcTz6opfSFwddYu1YqBvt',
     BITCOIN_HOSTED_NODES: ["https://btc.frankfurt.dfinity.build", "https://btc.tokyo.dfinity.build"],
     BITCOIN_CHK_FWD_INTERVAL: 5000,
 
@@ -39,7 +39,7 @@ const constants = {
     DEV_MODE: false,
 
     // FDC PRODUCTION ADDR
-    FDC_PRODUCTION_ADDR: "0x1b2b5a7331b4cd621376ffc068c4a473cbc2e11d",
+    FDC_PRODUCTION_ADDR: "0x1Be116204bb55CB61c821a1C7866fA6f94b561a5",
 
     // FDC ABI signatures
     donateAsWithChecksum: "ceadd9c8",
