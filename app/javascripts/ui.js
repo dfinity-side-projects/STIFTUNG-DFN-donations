@@ -450,8 +450,8 @@ UI.prototype.doImportSeed = function() {
     ui.logger("Imported new seed successfully. ETH forwarding address and DFN address have been updated.")
 
     // finish the dialog, clean up errors and move on
-    hideElement("import-dfn-seed");
     hideElement("import-seed-error");
+    closeDialog("import-dfn-seed");
     this.finishCreateSeed();
 }
 

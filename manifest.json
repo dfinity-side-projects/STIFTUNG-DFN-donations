@@ -3,7 +3,7 @@
 
   "name": "DFINITY Stiftung Donation Extension",
   "description": "Use this extension to generate DFN keys and donate ETH/BTC to DFINITY Stiftung",
-  "version": "1.0.3",
+  "version": "1.2",
   "icons": { "16": "images/dfinity-16-icon.png",
     "48": "images/dfinity-48-icon.png",
     "128": "images/dfinity-128-icon.png" },
