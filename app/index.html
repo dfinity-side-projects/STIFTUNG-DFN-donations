@@ -1,132 +1,112 @@
-
-
 <html>
 
 <head>
     <title>DFINITY Foundation Donation Widget</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans+Condensed:700|Open+Sans:400,700" rel="stylesheet">
-    <link rel="stylesheet" href="./app.css" type="text/css"/>
-
+    <link rel="stylesheet" href="./app.css" type="text/css" />
 </head>
-
 <body>
-<div id="content">
-    <!-- Logo -->
-    <div id="logo">
-        <img src="images/dfinity-logo-large.png"/>
-    </div>
-    <!-- Progress -->
-    <div id="progress">
-        <h2 id="donation-state"></h2>
-        <div class="box-content">
-            <div class="progress-bar-dashboard">
-                <div class="lower">? % Done</div>
-                <div class="upper">1M CHF Target</div>
-                <div class="progress-bar" id="main-progress-bar">
-                    <div class="complete"></div>
-                    <div class="complete"></div>
-                    <div class="complete"></div>
-                    <div class="complete"></div>
-                    <div class="complete"></div>
-                    <div class="complete"></div>
-                    <div class="complete"></div>
-                    <div class="complete"></div>
-                    <div class="complete"></div>
-                    <div></div>
-                </div>
-            </div>
-            <div id="total-received">? CHF Received.</div>
-            <div class="dim">Total value of seed funding received in ETH, BTC and fiat (recorded in Swiss Francs)</div>
+    <div id="content">
+        <!-- Logo -->
+        <div id="logo">
+            <img src="images/dfinity-logo-large.png" />
         </div>
-    </div>
-    <div class="clearfix"></div>
-    <!-- Tasks List -->
-    <div id="tasks">
-        <div class="box-header">MAKE DONATIONS</div>
-        <div class="box-content">
-            <ul>
-                <li id="show-terms-task" >
-                    <div id="task-agree"><span class="task-number">1</span> &nbsp; Review the process &amp; terms<span
-                            class="tick"><span style="visibility:hidden">&#10004</span></span>
+        <!-- Progress -->
+        <div id="progress">
+            <h2 id="donation-state"></h2>
+            <div class="box-content">
+                <div class="progress-bar-dashboard">
+                    <div class="lower">? % Done</div>
+                    <div class="upper">1M CHF Target</div>
+                    <div class="progress-bar" id="main-progress-bar">
+                        <div class="complete"></div>
+                        <div class="complete"></div>
+                        <div class="complete"></div>
+                        <div class="complete"></div>
+                        <div class="complete"></div>
+                        <div class="complete"></div>
+                        <div class="complete"></div>
+                        <div class="complete"></div>
+                        <div class="complete"></div>
+                        <div></div>
                     </div>
-                </li>
-                <li  id="show-create-seed-task" >
-                    <div id="task-create-seed"><span class="task-number">2</span> &nbsp; Create &amp; save your DFN
-                        address<span class="tick"><span style="visibility:hidden">&#10004</span></span>
-                    </div>
-                </li>
-                <li  id="show-explain-forwarding-task" >
-                    <div id="task-understand-fwd-eth"><span class="task-number">3</span> &nbsp; Understand ETH/BTC
-                        forwarding<span class="tick"><span style="visibility:hidden">&#10004</span></span>
-                    </div>
-                </li>
-                <li>
-                    <div id="task-donate"><span class="task-number">4</span> &nbsp; Make ETH/BTC donations<span
-                            class="tick"><span style="visibility:hidden">&#10004</span></span>
-                    </div>
-                </li>
-            </ul>
-            <br/>
-            <br/>
-            <br/>
-        </div>
-    </div>
-    <!-- Dashboard -->
-    <div id="dashboard">
-        <div class="box-header">YOUR STATUS</div>
-        <div class="box-content">
-            <div id="error-donation-contract-invalid" class="error" style="display: none">
-                The Foundation Donation Contract currently configured with this software is invalid and the donation
-                cannot proceed. This software may be outdated, corrupt or mis-configured.
-                <br>
-                Please visit official <a href="http://dfinity.network">DFINITY project site</a> to download the correct
-                version.
-            </div>
-            <div id="error-donation-not-started" class="error" style="display: none">
-                The seed donation phase has not yet started. Before the donation start, this application will not forward any ETH/BTC transaction.
-                <br>
-                Donation expected start time: <span id="donation-start-time">?</span>
-
-                <br>
-                Visit official <a href="http://dfinity.network">DFINITY project site</a> for more details.
-            </div>
-            <div id="error-donation-over" class="error" style="display: none">
-                The seed donation phase has already ended.
-                <a id="withdraw-eth-link-2" class="blink" href="#">Please withdraw any remaining ETH/BTC that could not be forwarded.</a>
-                <br>
-
-                Regarding timing for the next phase (main) donation round,  visit official
-                <a href="http://dfinity.network">DFINITY project site</a> for more details.
-                <br>
-
-            </div>
-            <div id="error-eth-forwarding" class="error" style="display: none">
-                There was an error forwarding ETH. Check the log below or Chrome browser's console for more information.
-                <br/>
-                <a class="blink" id="retry-forward-link" href="#">Please try forwarding again</a>, or <a class="blink" id="withdraw-eth-link" href="#">withdraw remaining ETH</a>.
-            </div>
-            <div id="error-btc-forwarding" class="error" style="display: none">
-                There was an error forwarding BTC or communicating with Bitcoin node:
-                <div id="error-btc-forwarding-msg"></div>
-                <br/>
-
-                <a class="blink" id="retry-forward-btc-link" href="#">Try forwarding again</a>, or
-                <a class="blink" id="show-withdraw-btc-link" href="#"> withdraw remaining BTC</a>
-            </div>
-            <div id="genesis-dfinities">
-                <div><span class="amount" id="genesis-dfinities-amount">0 DFN</span>
-                    <a class="tooltip" id="show-dfinities-info" href="#">
-                        <p class="icon info hidden" id="genesis-dfinities-info-icon"></p>
-                    </a>
-
                 </div>
-                <div class="legend ">Genesis dfinities <a class="tip-link tooltip" href="#">
+                <div id="total-received">? CHF Received.</div>
+                <div class="dim">Total value of seed funding received in ETH, BTC and fiat (recorded in Swiss Francs)</div>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <!-- Tasks List -->
+        <div id="tasks">
+            <div class="box-header">MAKE DONATIONS</div>
+            <div class="box-content">
+                <ul>
+                    <li id="show-terms-task">
+                        <div id="task-agree"><span class="task-number">1</span> &nbsp; Review the process &amp; terms<span class="tick"><span style="visibility:hidden">&#10004</span></span>
+                        </div>
+                    </li>
+                    <li id="show-create-seed-task">
+                        <div id="task-create-seed"><span class="task-number">2</span> &nbsp; Create &amp; save your DFN address
+                            <span class="tick"><span style="visibility:hidden">&#10004</span></span>
+                        </div>
+                    </li>
+                    <li id="show-explain-forwarding-task">
+                        <div id="task-understand-fwd-eth"><span class="task-number">3</span> &nbsp; Understand ETH/BTC forwarding
+                            <span class="tick"><span style="visibility:hidden">&#10004</span></span>
+                        </div>
+                    </li>
+                    <li>
+                        <div id="task-donate"><span class="task-number">4</span> &nbsp; Make ETH/BTC donations<span class="tick"><span style="visibility:hidden">&#10004</span></span>
+                        </div>
+                    </li>
+                </ul>
+                <br/>
+                <br/>
+                <br/>
+            </div>
+        </div>
+        <!-- Dashboard -->
+        <div id="dashboard">
+            <div class="box-header">YOUR STATUS</div>
+            <div class="box-content">
+                <div id="error-donation-contract-invalid" class="error" style="display: none">
+                    The Foundation Donation Contract currently configured with this software is invalid and the donation cannot proceed. This software may be outdated, corrupt or mis-configured.
+                    <br> Please visit official <a href="http://dfinity.network">DFINITY project site</a> to download the correct version.
+                </div>
+                <div id="error-donation-not-started" class="error" style="display: none">
+                    The seed donation phase has not yet started. Before the donation start, this application will not forward any ETH/BTC transaction.
+                    <br> Donation expected start time: <span id="donation-start-time">?</span>
+                    <br> Visit official <a href="http://dfinity.network">DFINITY project site</a> for more details.
+                </div>
+                <div id="error-donation-over" class="error" style="display: none">
+                    The seed donation phase has already ended.
+                    <a id="withdraw-eth-link-2" class="blink" href="#">Please withdraw any remaining ETH/BTC that could not be forwarded.</a>
+                    <br> Regarding timing for the next phase (main) donation round, visit official
+                    <a href="http://dfinity.network">DFINITY project site</a> for more details.
+                    <br>
+                </div>
+                <div id="error-eth-forwarding" class="error" style="display: none">
+                    There was an error forwarding ETH. Check the log below or Chrome browser's console for more information.
+                    <br/>
+                    <a class="blink" id="retry-forward-link" href="#">Please try forwarding again</a>, or <a class="blink" id="withdraw-eth-link" href="#">withdraw remaining ETH</a>.
+                </div>
+                <div id="error-btc-forwarding" class="error" style="display: none">
+                    There was an error forwarding BTC or communicating with Bitcoin node:
+                    <div id="error-btc-forwarding-msg"></div>
+                    <br/>
+                    <a class="blink" id="retry-forward-btc-link" href="#">Try forwarding again</a>, or
+                    <a class="blink" id="show-withdraw-btc-link" href="#"> withdraw remaining BTC</a>
+                </div>
+                <div id="genesis-dfinities">
+                    <div><span class="amount" id="genesis-dfinities-amount">0 DFN</span>
+                        <a class="tooltip" id="show-dfinities-info" href="#">
+                            <p class="icon info hidden" id="genesis-dfinities-info-icon"></p>
+                        </a>
+                    </div>
+                    <div class="legend ">Genesis dfinities <a class="tip-link tooltip" href="#">
                     ?
                     <span>
                     <strong>Genesis dfinities</strong><br/>
-                        <!--
-                         -->
-
                     <p>This shows how many dfinities are being recorded so far based on your successful donation. </p>
                         <p>In return for your donation, DFINITY Stiftung will recommend a token allocation scheme for DFINITY network, which is based on the pro-rata amount of everyone's donation, adjusted for bonus multipliers.</p>
 
@@ -134,11 +114,11 @@
 
                     </span>
                 </a></div>
-            </div>
-            <div id="eth-forwarding-address">
-                <div class="eth-address">&lt;not generated&gt;</div>
-                <div class="legend">ETH Forwarding Address
-                    <a class="tip-link tooltip" href="#">
+                </div>
+                <div id="eth-forwarding-address">
+                    <div class="eth-address">&lt;not generated&gt;</div>
+                    <div class="legend">ETH Forwarding Address
+                        <a class="tip-link tooltip" href="#">
                         ?
                         <span>
                     <strong>ETH Forwarding Address</strong><br/>
@@ -148,11 +128,11 @@
                     </span>
 
                     </a></div>
-            </div>
-            <div id="btc-forwarding-address">
-                <div class="eth-address">&lt;not generated&gt;</div>
-                <div class="legend">BTC Forwarding Address
-                    <a class="tip-link tooltip" href="#">
+                </div>
+                <div id="btc-forwarding-address">
+                    <div class="eth-address">&lt;not generated&gt;</div>
+                    <div class="legend">BTC Forwarding Address
+                        <a class="tip-link tooltip" href="#">
                         ?
                         <span>
                     <strong>BTC Forwarding Address</strong><br/>
@@ -162,10 +142,10 @@
                     </span>
 
                     </a></div>
-            </div>
-            <ul>
-                <li class="dim">
-                    <div>Ethereum full node <a class="tip-link tooltip" href="">?
+                </div>
+                <ul>
+                    <li class="dim">
+                        <div>Ethereum full node <a class="tip-link tooltip" href="">?
                         <span>
                     <strong>Ethereum full node</strong><br/>
                             <p>
@@ -176,13 +156,13 @@
                     <p>However, you can also connect to your own remote or local Ethereum node. Make sure the node you connect to is trustworthy.</p>
                     </span>
                     </a>
-                        <span><a id="btn-ethereum-node">...</a>&nbsp; | &nbsp;<span
+                            <span><a id="btn-ethereum-node">...</a>&nbsp; | &nbsp;<span
                                 id="eth-client-status">?</span></span>
-                    </div>
-                </li>
-                <li class="dim">
-                    <div>Bitcoin node
-                        <a class="tip-link tooltip" href="">?
+                        </div>
+                    </li>
+                    <li class="dim">
+                        <div>Bitcoin node
+                            <a class="tip-link tooltip" href="">?
                         <span>
                     <strong>Bitcoin node</strong><br/>
                     <p>
@@ -192,15 +172,13 @@
                             <p>However, you can also connect to your own remote or local Bitcoin node (with Insight API service). Make sure the node you connect to is trustworthy.</p>
                         </span>
                     </a>
-
-                        <span><a id="btn-bitcoin-node" >...</a>&nbsp; | &nbsp;
+                            <span><a id="btn-bitcoin-node" >...</a>&nbsp; | &nbsp;
                             <span
                                 id="btc-client-status">?</span>
-                        </span>
-
-                </li>
-                <li class="dim">
-                    <div>ETH donations <a class="tip-link tooltip" href="">?
+                            </span>
+                    </li>
+                    <li class="dim">
+                        <div>ETH donations <a class="tip-link tooltip" href="">?
                         <span>
                     <strong>ETH donations</strong><br/>
                             <p>
@@ -211,12 +189,11 @@
                     </p>
 
                     </span>
-                    </a><span><span id="donated-eth">0</span> donated (<span id="waiting-eth">0</span> <a
-                            href="#" id="remaining-eth-link">waiting</a>)</span>
-                    </div>
-                </li>
-                <li class="dim">
-                    <div>BTC donations <a class="tip-link tooltip" href="">?
+                    </a><span><span id="donated-eth">0</span> donated (<span id="waiting-eth">0</span> <a href="#" id="remaining-eth-link">waiting</a>)</span>
+                        </div>
+                    </li>
+                    <li class="dim">
+                        <div>BTC donations <a class="tip-link tooltip" href="">?
                         <span>
                     <strong>BTC donations</strong><br/>
                             <p>
@@ -228,581 +205,419 @@
                     </p>
 
                     </span>
-                    </a><span><span id="donated-btc">0</span> donated (<span id="waiting-btc">0</span> <a
-                            href="#" id="remaining-btc-link">waiting</a>)</span>
-                    </div>
-                </li>
-            </ul>
-
-            <div id="page-mask">
-
+                    </a><span><span id="donated-btc">0</span> donated (<span id="waiting-btc">0</span> <a href="#" id="remaining-btc-link">waiting</a>)</span>
+                        </div>
+                    </li>
+                </ul>
+                <div id="page-mask">
+                </div>
+                </div>
             </div>
-
+            <div class="clearfix"></div>
+            <!-- Console/event log -->
+            <div id="console">
+            </div>
+            <div id="info">
+                <div class="box-header">Seed Funding Overview</div>
+                <div class="box-content">
+                    DFINITY is a decentralized "world compute platform" with numerous advanced features. Donations for DFINITY Stiftung, a supporting Swiss not-for-profit &amp; tax exempt foundation, are being collected in two rounds. DFINITY Stiftung will recommend genesis allocations of dfinities in return for donations. Donations made in this first "seed" round will be counted in multiplier of 3x.
+                    <br/>
+                    <i>Note: this Chrome extension must be open to forward the Ether or Bitcoin you are donating.</i>
+                </div>
+            </div>
+            <!-- Disclaimer -->
+            <div id="disclaimer">
+                <div class="box-header">Software Disclaimer</div>
+                <div class="box-content">
+                    THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+                </div>
+            </div>
+            <div class="clearfix"></div>
         </div>
-    </div>
-    <div class="clearfix"></div>
-    <!-- Console/event log -->
-    <div id="console">
-    </div>
-    <div id="info">
-        <div class="box-header">Seed Funding Overview</div>
-        <div class="box-content">
-            DFINITY is a decentralized "world compute platform" with numerous advanced features. Donations for DFINITY
-            Stiftung, a supporting Swiss not-for-profit &amp; tax exempt foundation, are being collected in two rounds.
-            DFINITY Stiftung will recommend genesis allocations of dfinities in return for donations. Donations made in
-            this first "seed" round will be counted in multiplier of 3x.
-            <br/>
-            <i>Note: this Chrome extension must be open to forward the Ether or Bitcoin you are donating.</i>
+        <div id="page-mask">
         </div>
-    </div>
-    <!-- Disclaimer -->
-    <div id="disclaimer">
-        <div class="box-header">Software Disclaimer</div>
-        <div class="box-content">
-            THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-            THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
-            SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-            CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
-            USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-            CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-            THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        <!-- Popup Dialog Windows -->
+        <div id="withdraw-eth" class="dialog  dialog-small">
+            <h2>Withdraw unsent ETH in your forwarding account</h2>
+            <p>If there is ETH in your forwarding account that has not already been forwarded to the Foundation Collection Contract, you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a private wallet).</p>
+            <p>
+                <b>ETH balance in forwarding address: </b><span id="withdraw-waiting-eth"></span>
+            </p>
+            <p>
+                <h3>Withdraw to ETH address: </h3>
+                <input id="withdraw-eth-addr" type="text" class="textbox-custom" />
+            </p>
+            <p>
+                <a id="do-withdraw-eth-button" href="#" class="btn">Withdraw</a>
+                <a id="hide-withdraw-eth-button" href="#" class="btn">Cancel</a>
+            </p>
         </div>
-    </div>
-    <div class="clearfix"></div>
-</div>
-
-
-<div id="page-mask">
-
-</div>
-
-<!-- Popup Dialog Windows -->
-<div id="withdraw-eth" class="dialog  dialog-small">
-    <h2>Withdraw unsent ETH in your forwarding account</h2>
-    <p>If there is ETH in your forwarding account that has not already been forwarded to the Foundation Collection
-        Contract, you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a
-        private wallet).</p>
-    <p>
-        <b>ETH balance in forwarding address: </b><span id="withdraw-waiting-eth"></span>
-    </p>
-    <p>
-    <h3>Withdraw to ETH address: </h3>
-    <input id="withdraw-eth-addr" type="text" class="textbox-custom"/>
-    </p>
-    <p>
-        <a id="do-withdraw-eth-button" href="#" class="btn">Withdraw</a>
-        <a id="hide-withdraw-eth-button" href="#" class="btn">Cancel</a>
-    </p>
-</div>
-<div id="withdraw-btc" class="dialog dialog-small">
-    <h2>Withdraw unsent BTC in your forwarding account</h2>
-    <p>
-        If there is BTC in your forwarding account that has not already been forwarded to the Foundation address,
-        you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a
-        private wallet).
-    </p>
-    <!-- <p>
+        <div id="withdraw-btc" class="dialog dialog-small">
+            <h2>Withdraw unsent BTC in your forwarding account</h2>
+            <p>
+                If there is BTC in your forwarding account that has not already been forwarded to the Foundation address, you can withdraw it to an address you specify (such as an account at a cryptocurrency exchange or a private wallet).
+            </p>
+            <!-- <p>
         <b>BTC balance in forwarding address: </b><span id="withdraw-waiting-btc"></span>
     </p> -->
-    <p>
-    <h3>Withdraw to BTC address: </h3>
-    <input id="withdraw-btc-addr" type="text" class="textbox-custom"/>
-    </p>
-    <p>
-        <a id="do-withdraw-btc-button" href="#" class="btn">Withdraw</a>
-        <a id="hide-withdraw-btc-button" href="#" class="btn">Cancel</a>
-    </p>
-</div>
-<div id="dfinities-info" class="dialog dialog-small dialog-no-scroll">
-    <h2>Your Genesis dfinities </h2>
-    <p>
-        Since the DFINITY network requires Participants to hold DFN in order to function, donations to the
-        Foundation will be recorded in a special smart contract hosted on Ethereum
-        (“FDC”).  The hope of the Foundation is that the FDC will define the initial allocations of DFN made to Participants.
-
-        Therefore when the Foundation judges that special client software required to create the
-        network is sufficiently mature,  the Foundation will
-        recommend that the FDC is used as part of an initial state (“Genesis State”) of the DFINITY Network.
-    </p>
-
-
-    <p><b>dfinities recorded based on succcesful donation:</b> <span class="textbox-custom" id="genesis-dfinities-amount-2"></span></p>
-    <p><b>dfinities address:</b> <br>
-        This is the address that will hold your dfinities when DFINITY network goes live. <span
-            class="textbox-custom" id="dfn-address"></span>
-        <textarea class="textbox-custom " style="display:none;" rows="2" cols="100" id="dfn-xpub"></textarea>
-    </p>
-
-    <div class="important-notes">
-        <h3>Important Notes on Bitcoin Donation</h3>
-        Due to the long confirmation time required for Bitcoin network, your DFN
-        may appear after 6 or more confirmations (typically 60 minutes or more) has passed. So long as your
-        donation transaction's first confirmation time is prior to donation end time, you should feel confident that
-        the donation will be accounted accordingly.
-        </p>
-    </div>
-    <p>
-    <a id="close-dfinities-info"  class="btn">Got it</a>
-    </p>
-</div>
-<div id="create-dfn-seed" class="dialog  dialog-small">
-    <h2>Create your DFN address seed, and store it very safely</h2>
-    <p><i>This application does not store your DFN seed. <b>You must securely maintain this yourself</b>.</i>
-    <p id="seed" class="seed"></p>
-    <p>Your DFN (DFINITY token) seed is a string of random words and is shown <em>above</em>. You must have this seed to
-        access your DFN later. This application does not store the seed for security reasons, and only keeps the derived
-        keys it needs. Therefore, it is ESSENTIAL that you take a copy of your seed <i>right now</i> and store it safely
-        or YOU WILL LOSE ALL ACCESS TO YOUR DFN.</p>
-    <div class="important-notes">
-        <h3>Security Notes</h3>
-        <p>We recommend that you create physical, printed copies of your seed. For example, print out the seed onto
-            paper and put it into a fireproof safe. If you keep electronic copies of your seed, make sure they are
-            secure and nobody else can access them. For example, store an electronic seed inside a Mac OS X encrypted
-            file.
-        </p>
-    </div>
-    <p>
-        <details>
-            <summary>Advanced Function</summary>
-    <p><a id="show-import-seed-button" href="#">Import seed</a></p>
-    </details>
-    </p>
-    <!-- <p id="download-seed"><a href="data:application/octet-stream;charset=utf-16le;base64,//5mAG8AbwAgAGIAYQByAAoA">Optionally, download your seed as a file</a></p> -->
-    <p>
-        <a id="after-create-seed-button" href="#" class="btn">OK, I have now
+            <p>
+                <h3>Withdraw to BTC address: </h3>
+                <input id="withdraw-btc-addr" type="text" class="textbox-custom" />
+            </p>
+            <p>
+                <a id="do-withdraw-btc-button" href="#" class="btn">Withdraw</a>
+                <a id="hide-withdraw-btc-button" href="#" class="btn">Cancel</a>
+            </p>
+        </div>
+        <div id="dfinities-info" class="dialog dialog-small dialog-no-scroll">
+            <h2>Your Genesis dfinities </h2>
+            <p>
+                Since the DFINITY network requires Participants to hold DFN in order to function, donations to the Foundation will be recorded in a special smart contract hosted on Ethereum (“FDC”). The hope of the Foundation is that the FDC will define the initial allocations of DFN made to Participants. Therefore when the Foundation judges that special client software required to create the network is sufficiently mature, the Foundation will recommend that the FDC is used as part of an initial state (“Genesis State”) of the DFINITY Network.
+            </p>
+            <p><b>dfinities recorded based on succcesful donation:</b> <span class="textbox-custom" id="genesis-dfinities-amount-2"></span></p>
+            <p><b>dfinities address:</b>
+                <br> This is the address that will hold your dfinities when DFINITY network goes live. <span class="textbox-custom" id="dfn-address"></span>
+                <textarea class="textbox-custom " style="display:none;" rows="2" cols="100" id="dfn-xpub"></textarea>
+            </p>
+            <div class="important-notes">
+                <h3>Important Notes on Bitcoin Donation</h3> Due to the long confirmation time required for Bitcoin network, your DFN may appear after 6 or more confirmations (typically 60 minutes or more) has passed. So long as your donation transaction's first confirmation time is prior to donation end time, you should feel confident that the donation will be accounted accordingly.
+                </p>
+            </div>
+            <p>
+                <a id="close-dfinities-info" class="btn">Got it</a>
+            </p>
+        </div>
+        <div id="create-dfn-seed" class="dialog  dialog-small">
+            <h2>Create your DFN address seed, and store it very safely</h2>
+            <p><i>This application does not store your DFN seed. <b>You must securely maintain this yourself</b>.</i>
+                <p id="seed" class="seed"></p>
+                <p>Your DFN (DFINITY token) seed is a string of random words and is shown <em>above</em>. You must have this seed to access your DFN later. This application does not store the seed for security reasons, and only keeps the derived keys it needs. Therefore, it is ESSENTIAL that you take a copy of your seed <i>right now</i> and store it safely or YOU WILL LOSE ALL ACCESS TO YOUR DFN.</p>
+                <div class="important-notes">
+                    <h3>Security Notes</h3>
+                    <p>We recommend that you create physical, printed copies of your seed. For example, print out the seed onto paper and put it into a fireproof safe. If you keep electronic copies of your seed, make sure they are secure and nobody else can access them. For example, store an electronic seed inside a Mac OS X encrypted file.
+                    </p>
+                </div>
+                <p>
+                    <details>
+                        <summary>Advanced Function</summary>
+                        <p><a id="show-import-seed-button" href="#">Import seed</a></p>
+                    </details>
+                </p>
+                <!-- <p id="download-seed"><a href="data:application/octet-stream;charset=utf-16le;base64,//5mAG8AbwAgAGIAYQByAAoA">Optionally, download your seed as a file</a></p> -->
+                <p>
+                    <a id="after-create-seed-button" href="#" class="btn">OK, I have now
             saved my seed and will never lose it</a>
-        <a id="cancel-create-seed-button" href="#" class="btn">Cancel</a>
-    </p>
-</div>
-<div id="verify-dfn-seed" class="dialog dialog-small ">
-    <h2>Check you have your DFN seed in your possession!</h2>
-    <p>This is your last chance to make sure you have your own copy of your seed. Please prove you have it.</p>
-    <p>
-    <h3>Retype the DFN seed:</h3>
-    <input id="typed-seed" type="text" class="textbox-custom"/>
-    </p>
-    <div id="verify-seed-error" class="error-block" style="display:none;">
-        You've entered an incorrect seed. Please retry, or go back and copy down the seed exactly as is.
-    </div>
-    <p>
-    <div class="important-notes">
-        <h3>Security Notes</h3>
-        <i>After you have completed this step this application will <b>erase its copy of the seed</b> !!!</i>
-    </div>
-    </p>
-    <p>
-        <a id="do-validate-seed-button" href="#" class="btn">Validate Seed and ERASE</a>
-        <a id="before-validate-seed-button" href="#" class="btn">Back</a>
-    </p>
-</div>
-<div id="import-dfn-seed" class="dialog dialog-small ">
-    <h2>Import DFN seed</h2>
-    <p>This allows you to import custom seed generated by other software or hardware wallet. The correct seed format
-        should be 12 or 24 words with spaces in between, e.g.:
-    </p>
-    <p>
-    <h3>Enter your seed below:</h3>
-    <input id="imported-seed" type="text" class="textbox-custom"/>
-    </p>
-    <div id="import-seed-error" class="error-block" style="display:none;">
-        You've entered an invalid seed. Make sure the words entered are correctly spelled.
-    </div>
-    <p>
-    <div class="important-notes">
-        <h3>Security Notes</h3>
-        <i>Make sure the seed you are importing are generated by a secure and trusted software or hardware wallet.</i>
-    </div>
-    </p>
-    <p>
-        <a id="do-import-seed-button" class="btn">Import Seed</a>
-        <a id="hide-import-seed-button"  class="btn">Cancel</a>
-    </p>
-</div>
-<div id="explain-eth-forwarding" class="dialog dialog-small">
-    <h2>You are ready to make ETH/BTC donations</h2>
-    <div class="dialog-container">
-        <p>Send ETH donations to: </p>
-        <p id="eth-forwarding-address-explained" class="seed">...</p>
-        <p>Send BTC donations to: </p>
-        <p id="btc-forwarding-address-explained" class="seed">...</p>
-        <p>You can use any method you like to send ETH/BTC to these forwarding addresses. For example, you could send it
-            directly from a cryptocurrency exchange, or from a wallet application such as Mist.</p>
-        <p><i>KEEP THIS APPLICATION OPEN to allow it to forward donated ETH/BTC, and to monitor progress.</i></p>
-        <div class="important-notes">
-            <h3>Important Notes</h3>
-            <p>These special "ETH forwarding address" and "BTC forwarding address" were created from your DFN seed.</p>
-            <p>Whenever this application detects that the forwarding address has received ETH, it forwards them
-                to the DFINITY Stiftung smart contracts that are collecting donations
-                (or a foundation-managed multi-sig wallet in the case of BTC donation).</p>
-            <p> DFINITY Stiftung records the value donated in Swiss Francs (CHF) and uses this to calculate
-                recommendations for genesis DFN. Its systems are regularly updated with the CHF to ETH exchange
-                rate for this purpose.</p>
-            <p>Once a total of 1M CHF in value has been received, DFINITY Stiftung will stop accepting further ETH/BTC
-                donations in 24 hours. The application will allow you to withdraw any ETH/BTC you sent to the forwarding address(es) after
-                the limit was reached.</p>
-            <p>Note that there is a small Ethereum gas cost associated with each ETH donation, and this is deducted from the
-                amount.</p>
+                    <a id="cancel-create-seed-button" href="#" class="btn">Cancel</a>
+                </p>
         </div>
-        <!--<div class="important-notes">-->
-        <!--<details>-->
-        <!--<summary>-->
-        <!--<h3>If You Have Made A Direct Donation in CHF...</h3>-->
-        <!--</summary>-->
-        <!--<p>-->
-        <!--<p>This ONLY applies if you have made a wire transfer of fiat money directly to DFINITY Stiftung (and-->
-        <!--made appropriate agreements with DFINITY Stiftung)</p>-->
-        <!--<p>In this case, DFINITY Stiftung needs the public key of your future DFINITY account before it can-->
-        <!--record your donation.</p>-->
-        <!--<p>Please notify an appropriate representative at DFINITY Stiftung that this is your DFINITY address (do-->
-        <!--NOT send ETH to this address):</p>-->
-        <!--<p><span id="dfn-address" class="eth-address">1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX</span></p>-->
-        <!--<p>Once DFINITY Stiftung has reported your donation this extension will report the genesis DFN it will-->
-        <!--recommend you receive. Please report this address before the start of the funder period. Thank-->
-        <!--you.</p>-->
-        <!--</p>-->
-        <!--</details>-->
-        <!--</div>-->
-        <p>
-            <a id="done-explain-forwarding-button" href="#" class="btn">OK I'm Ready!</a>
-        </p>
-    </div>
-</div>
-
-<div id="select-full-node-eth" class="dialog dialog-small ">
-    <h2>Select Ethereum full node</h2>
-
-    <p>Choose one of the following options for this application to connect to the Ethereum network:</p>
-    <ul>
-        <li>
-            <h3>Recommended: Hosted Node (DFINITY Stiftung)</h3>
+        <div id="verify-dfn-seed" class="dialog dialog-small ">
+            <h2>Check you have your DFN seed in your possession!</h2>
+            <p>This is your last chance to make sure you have your own copy of your seed. Please prove you have it.</p>
             <p>
-                This is the recommended and easiest option, withou need to setup any Ethereum instance.
-                If you are not sure what Ethereum node means, just go with this.
+                <h3>Retype the DFN seed:</h3>
+                <input id="typed-seed" type="text" class="textbox-custom" />
             </p>
-            <a id="connect-hosted" class="eth-host btn"
-               href="#">
+            <div id="verify-seed-error" class="error-block" style="display:none;">
+                You've entered an incorrect seed. Please retry, or go back and copy down the seed exactly as is.
+            </div>
+            <p>
+                <div class="important-notes">
+                    <h3>Security Notes</h3>
+                    <i>After you have completed this step this application will <b>erase its copy of the seed</b> !!!</i>
+                </div>
+            </p>
+            <p>
+                <a id="do-validate-seed-button" href="#" class="btn">Validate Seed and ERASE</a>
+                <a id="before-validate-seed-button" href="#" class="btn">Back</a>
+            </p>
+        </div>
+        <div id="import-dfn-seed" class="dialog dialog-small ">
+            <h2>Import DFN seed</h2>
+            <p>This allows you to import custom seed generated by other software or hardware wallet. The correct seed format should be 12 or 24 words with spaces in between, e.g.:
+            </p>
+            <p>
+                <h3>Enter your seed below:</h3>
+                <input id="imported-seed" type="text" class="textbox-custom" />
+            </p>
+            <div id="import-seed-error" class="error-block" style="display:none;">
+                You've entered an invalid seed. Make sure the words entered are correctly spelled.
+            </div>
+            <p>
+                <div class="important-notes">
+                    <h3>Security Notes</h3>
+                    <i>Make sure the seed you are importing are generated by a secure and trusted software or hardware wallet.</i>
+                </div>
+            </p>
+            <p>
+                <a id="do-import-seed-button" class="btn">Import Seed</a>
+                <a id="hide-import-seed-button" class="btn">Cancel</a>
+            </p>
+        </div>
+        <div id="explain-eth-forwarding" class="dialog dialog-small">
+            <h2>You are ready to make ETH/BTC donations</h2>
+            <div class="dialog-container">
+                <p>Send ETH donations to: </p>
+                <p id="eth-forwarding-address-explained" class="seed">...</p>
+                <p>Send BTC donations to: </p>
+                <p id="btc-forwarding-address-explained" class="seed">...</p>
+                <p>You can use any method you like to send ETH/BTC to these forwarding addresses. For example, you could send it directly from a cryptocurrency exchange, or from a wallet application such as Mist.</p>
+                <p><i>KEEP THIS APPLICATION OPEN to allow it to forward donated ETH/BTC, and to monitor progress.</i></p>
+                <div class="important-notes">
+                    <h3>Important Notes</h3>
+                    <p>These special "ETH forwarding address" and "BTC forwarding address" were created from your DFN seed.</p>
+                    <p>Whenever this application detects that the forwarding address has received ETH, it forwards them to the DFINITY Stiftung smart contracts that are collecting donations (or a foundation-managed multi-sig wallet in the case of BTC donation).</p>
+                    <p> DFINITY Stiftung records the value donated in Swiss Francs (CHF) and uses this to calculate recommendations for genesis DFN. Its systems are regularly updated with the CHF to ETH exchange rate for this purpose.</p>
+                    <p>Once a total of 1M CHF in value has been received, DFINITY Stiftung will stop accepting further ETH/BTC donations in 24 hours. The application will allow you to withdraw any ETH/BTC you sent to the forwarding address(es) after the limit was reached.</p>
+                    <p>Note that there is a small Ethereum gas cost associated with each ETH donation, and this is deducted from the amount.
+                    </p>
+                </div>
+                <p>
+                    <a id="done-explain-forwarding-button" href="#" class="btn">OK I'm Ready!</a>
+                </p>
+            </div>
+        </div>
+        <div id="select-full-node-eth" class="dialog dialog-small ">
+            <h2>Select Ethereum full node</h2>
+            <p>Choose one of the following options for this application to connect to the Ethereum network:</p>
+            <ul>
+                <li>
+                    <h3>Recommended: Hosted Node (DFINITY Stiftung)</h3>
+                    <p>
+                        This is the recommended and easiest option, withou need to setup any Ethereum instance. If you are not sure what Ethereum node means, just go with this.
+                    </p>
+                    <a id="connect-hosted" class="eth-host btn" href="#">
                 Hosted node
             </a>
-        </li>
-        <li>
-            <h3>Local node (http://localhost:8545) </h3>
-            <p>
-                Select this option if you run a Ethereum full node locally and would prefer this software to connect to it.
-            </p>
-            <a id="connect-localhost" class="eth-host btn"
-               href="#">Local node</a>
-        </li>
-        <li>
-            <h3>Custom Node</h3>
-            <p>
-                Enter an alternative custom node that you trust, for example a full node that your company runs, or which
-                DFINITY Stiftung announced on its Twitter feed:
-                <input id='custom-full-node-address-eth' placeholder="http://server:port/" type='text' class="textbox-custom"/>
-                <a id='btn-custom-full-node-eth' class="btn"
-                   href="#">Connect to this
+                </li>
+                <li>
+                    <h3>Local node (http://localhost:8545) </h3>
+                    <p>
+                        Select this option if you run a Ethereum full node locally and would prefer this software to connect to it.
+                    </p>
+                    <a id="connect-localhost" class="eth-host btn" href="#">Local node</a>
+                </li>
+                <li>
+                    <h3>Custom Node</h3>
+                    <p>
+                        Enter an alternative custom node that you trust, for example a full node that your company runs, or which DFINITY Stiftung announced on its Twitter feed:
+                        <input id='custom-full-node-address-eth' placeholder="http://server:port/" type='text' class="textbox-custom" />
+                        <a id='btn-custom-full-node-eth' class="btn" href="#">Connect to this
                     node </a>
-            </p>
-        </li>
-    </ul>
-    <p>
-
-
-        <a id="close-select-full-node-eth" href="#" class="btn">Cancel</a>
-
-    </p>
-</div>
-
-<div id="select-full-node-btc" class="dialog dialog-small ">
-    <h2>Select Bitcoin Full Node (with Insight service)</h2>
-
-    <p>Choose one of the following options for this application to connect to the Bitcoin network:</p>
-    <ul>
-        <li>
-            <h3>Recommended: Hosted Node (DFINITY Stiftung)</h3>
+                    </p>
+                </li>
+            </ul>
             <p>
-                This is the recommended and easiest option, without need to setup any Bitcoin node/Insight service.
-                If you are not sure what Bitcoin node means, just go with this.
+                <a id="close-select-full-node-eth" href="#" class="btn">Cancel</a>
             </p>
-            <a id="connect-hosted-btc" class="btc-host btn"
-               href="#">
+        </div>
+        <div id="select-full-node-btc" class="dialog dialog-small ">
+            <h2>Select Bitcoin Full Node (with Insight service)</h2>
+            <p>Choose one of the following options for this application to connect to the Bitcoin network:</p>
+            <ul>
+                <li>
+                    <h3>Recommended: Hosted Node (DFINITY Stiftung)</h3>
+                    <p>
+                        This is the recommended and easiest option, without need to setup any Bitcoin node/Insight service. If you are not sure what Bitcoin node means, just go with this.
+                    </p>
+                    <a id="connect-hosted-btc" class="btc-host btn" href="#">
                 Hosted node
             </a>
-        </li>
-        <li>
-            <h3>Local node (http://localhost:3001) </h3>
-            <p>
-                Select this option if you run a Bitcoin block explorer locally and would prefer this software to connect to it.
-            </p>
-            <a id="connect-localhost-btc" class="btc-host btn"
-               href="#">Local node</a>
-        </li>
-        <li>
-            <h3>Custom Node</h3>
-            <p>
-                Enter an alternative custom node that you trust, for example a full node that your company runs, or which
-                DFINITY Stiftung announced on its Twitter feed:
-                <input id='custom-full-node-address-btc' placeholder="http://server:port/" type='text' class="textbox-custom"/>
-                <a id='btn-custom-full-node-btc' class="btn"
-                   href="#">Connect to this
+                </li>
+                <li>
+                    <h3>Local node (http://localhost:3001) </h3>
+                    <p>
+                        Select this option if you run a Bitcoin block explorer locally and would prefer this software to connect to it.
+                    </p>
+                    <a id="connect-localhost-btc" class="btc-host btn" href="#">Local node</a>
+                </li>
+                <li>
+                    <h3>Custom Node</h3>
+                    <p>
+                        Enter an alternative custom node that you trust, for example a full node that your company runs, or which DFINITY Stiftung announced on its Twitter feed:
+                        <input id='custom-full-node-address-btc' placeholder="http://server:port/" type='text' class="textbox-custom" />
+                        <a id='btn-custom-full-node-btc' class="btn" href="#">Connect to this
                     node </a>
+                    </p>
+                </li>
+            </ul>
+            <p>
+                <a id="close-select-full-node-btc" href="#" class="btn">Cancel</a>
             </p>
-        </li>
-    </ul>
-    <p>
-
-
-        <a id="close-select-full-node-btc" href="#" class="btn">Cancel</a>
-
-    </p>
-</div>
-<div id="terms" class="dialog">
-    <h2>DFINITY Donation and DFN Tokens Allocation Terms</h2>
-    <div class="text-blocks">
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c11 c0">-->
+        </div>
+        <div id="terms" class="dialog">
+            <h2>DFINITY Donation and DFN Tokens Allocation Terms</h2>
+            <div class="text-blocks">
                 <h3>1. Principles</h3>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol>
-    <li>The following Terms (&ldquo;Terms&rdquo;) govern the donation procedure (&ldquo;Donations&rdquo; collectively, and &ldquo;Donation&rdquo; individually) to the DFINITY Foundation (&ldquo;DFINITY&rdquo;) by Donors (&ldquo;Donors&rdquo; collectively, and &ldquo;Donor&rdquo; individually) and the subsequent allocation of transferable cryptographic blockchain-based digital information units called dfinities (&ldquo;DFN&rdquo;) to Donors.</li>
-    <li>DFINITY will promote the development of software technology (&ldquo;The Client&rdquo;) that enables the creation of a public decentralized cloud computing platform the public can use to run server applications (&ldquo;DFINITY Network&rdquo;). Operation of the DFINITY Network involves transferable cryptographic blockchain-based digital information units called dfinities (DFN). DFN is a participatory token that allows the holder to deploy and run software code, vote on network governance issues, support operation of the network through &ldquo;mining&rdquo;, and connect private DFINITY networks (&ldquo;Private Networks&rdquo;) to the DFINITY Network.</li>
-    <li>When DFINITY judges that The Client has been sufficiently developed to allow the DFINITY Network to be launched, DFINITY will issue a public announcement recommending what initial state (&ldquo;Genesis State&rdquo;) it should have. The Genesis State will include allocations of DFN that are essential for the DFINITY Network to operate. The recommended allocations of DFN will reflect early contributions made towards the development of the network, and Donations made to support DFINITY. However, since the DFINITY Network will be operated by an independent community of participants around the world using The Client, the community has discretion to adopt or not to adopt the recommendation. Therefore, DFINITY cannot guarantee to any party that they will have an initial allocation of DFN, because this depends upon the discretion of the community. <strong>The Donor understands and accepts that DFINITY cannot guarantee that Donors shall have any allocation of DFN when the DFINITY Network is created</strong>.</li>
-    <li>The Donor understands and accepts that while the individuals and entities, including involved entities assigned to this task will make reasonable efforts to develop and complete the DFINITY Network, <strong>it is possible that such development may fail and that the DFINITY Network and any DFN will not be created, become useless and/or valueless due to technical, commercial, regulatory or any other reasons </strong>(see also Chapter 7 regarding Risks).</li>
-    <li>The Donor is also aware of the risk that even if all or parts of the DFINITY Network are successfully developed and released in full or in parts, due to a lack of public interest, the DFINITY Network could be fully or partially abandoned, remain unsuccessful according to any measure, or shut down for lack of interest or other reasons. <strong>The</strong><strong>Donor therefore understands and accepts that the Donation to DFINITY, and/or the allocation, use and ownership of DFN, carries significant financial, regulatory and/or reputational risks (including the complete loss of value (if any) of DFN and attributed features)</strong>.</li>
-    <li>By donating to DFINITY, the Donor expressly agrees to all of the terms and conditions set forth in the Ethereum smart contract called the &ldquo;Foundation Donations Contract&rdquo; or &ldquo;FDC&rdquo;, existing on the Ethereum blockchain at <strong>0x1be116204bb55cb61c821a1c7866fa6f94b561a5</strong>, and in this document (together the &ldquo;Terms&rdquo;). The Donor further confirms to have carefully reviewed the Terms and fully understands the risks and costs of making a Donation to DFINITY.</li>
-    <li>The Donor also understands and accepts that - as the allocation of DFN is smart contract based - the functions, terms and conditions applicable thereon are set forth in the FDC. To the extent the terms contained herein or in any other document or communication contradict to the ones set forth in the FDC, the terms of the FDC prevail. Furthermore, no other document or communication may modify or add any additional obligations or covenants to DFINITY beyond those set forth in the FDC or in this document.</li>
-    <li>This document does not constitute a prospectus of any sort, is not a solicitation for investment and does not pertain in any way to an offering of securities in any jurisdiction. It is a description of the functionality of a smart contract system.</li>
-    <li>By donating to DFINITY, and/or by receiving, using and holding DFN, no form of partnership, joint venture or any similar relationship between the Donors, DFINITY and/or other individuals or entities involved with the DFINITY Network is created.</li>
-</ol>
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol>
+                    <li>The following Terms (&ldquo;Terms&rdquo;) govern the donation procedure (&ldquo;Donations&rdquo; collectively, and &ldquo;Donation&rdquo; individually) to the DFINITY Foundation (&ldquo;DFINITY&rdquo;) by Donors (&ldquo;Donors&rdquo; collectively, and &ldquo;Donor&rdquo; individually) and the subsequent allocation of transferable cryptographic blockchain-based digital information units called dfinities (&ldquo;DFN&rdquo;) to Donors.</li>
+                    <li>DFINITY will promote the development of software technology (&ldquo;The Client&rdquo;) that enables the creation of a public decentralized cloud computing platform the public can use to run server applications (&ldquo;DFINITY Network&rdquo;). Operation of the DFINITY Network involves transferable cryptographic blockchain-based digital information units called dfinities (DFN). DFN is a participatory token that allows the holder to deploy and run software code, vote on network governance issues, support operation of the network through &ldquo;mining&rdquo;, and connect private DFINITY networks (&ldquo;Private Networks&rdquo;) to the DFINITY Network.</li>
+                    <li>When DFINITY judges that The Client has been sufficiently developed to allow the DFINITY Network to be launched, DFINITY will issue a public announcement recommending what initial state (&ldquo;Genesis State&rdquo;) it should have. The Genesis State will include allocations of DFN that are essential for the DFINITY Network to operate. The recommended allocations of DFN will reflect early contributions made towards the development of the network, and Donations made to support DFINITY. However, since the DFINITY Network will be operated by an independent community of participants around the world using The Client, the community has discretion to adopt or not to adopt the recommendation. Therefore, DFINITY cannot guarantee to any party that they will have an initial allocation of DFN, because this depends upon the discretion of the community. <strong>The Donor understands and accepts that DFINITY cannot guarantee that Donors shall have any allocation of DFN when the DFINITY Network is created</strong>.</li>
+                    <li>The Donor understands and accepts that while the individuals and entities, including involved entities assigned to this task will make reasonable efforts to develop and complete the DFINITY Network, <strong>it is possible that such development may fail and that the DFINITY Network and any DFN will not be created, become useless and/or valueless due to technical, commercial, regulatory or any other reasons </strong>(see also Chapter 7 regarding Risks).</li>
+                    <li>The Donor is also aware of the risk that even if all or parts of the DFINITY Network are successfully developed and released in full or in parts, due to a lack of public interest, the DFINITY Network could be fully or partially abandoned, remain unsuccessful according to any measure, or shut down for lack of interest or other reasons. <strong>The</strong><strong>Donor therefore understands and accepts that the Donation to DFINITY, and/or the allocation, use and ownership of DFN, carries significant financial, regulatory and/or reputational risks (including the complete loss of value (if any) of DFN and attributed features)</strong>.</li>
+                    <li>By donating to DFINITY, the Donor expressly agrees to all of the terms and conditions set forth in the Ethereum smart contract called the &ldquo;Foundation Donations Contract&rdquo; or &ldquo;FDC&rdquo;, existing on the Ethereum blockchain at <strong>0x1be116204bb55cb61c821a1c7866fa6f94b561a5</strong>, and in this document (together the &ldquo;Terms&rdquo;). The Donor further confirms to have carefully reviewed the Terms and fully understands the risks and costs of making a Donation to DFINITY.</li>
+                    <li>The Donor also understands and accepts that - as the allocation of DFN is smart contract based - the functions, terms and conditions applicable thereon are set forth in the FDC. To the extent the terms contained herein or in any other document or communication contradict to the ones set forth in the FDC, the terms of the FDC prevail. Furthermore, no other document or communication may modify or add any additional obligations or covenants to DFINITY beyond those set forth in the FDC or in this document.</li>
+                    <li>This document does not constitute a prospectus of any sort, is not a solicitation for investment and does not pertain in any way to an offering of securities in any jurisdiction. It is a description of the functionality of a smart contract system.</li>
+                    <li>By donating to DFINITY, and/or by receiving, using and holding DFN, no form of partnership, joint venture or any similar relationship between the Donors, DFINITY and/or other individuals or entities involved with the DFINITY Network is created.</li>
+                </ol>
                 <h3>2. Representations and Warranties of Donor</h3>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol start="10">
-    <li>The Donor understands and accepts that DFN do not represent or constitute any ownership right or stake, share or security or equivalent right in or relating to DFINITY, The Client, the DFINITY Network and/or any software, any public or private company, corporation, entity or property.</li>
-    <li>By donating to DFINITY, and/or by receiving, using and holding of DFN, the Donor represents and warrants that:</li>
-    <ol type="a">
-        <li>the Donor understands and expressly accepts that due to legal uncertainties and complexity of US financial regulations, DFINITY will not accept any Donations of US persons by residency or citizenship;</li>
-        <li>the Donor is not a US person by residency or citizenship;</li>
-        <li>the Donor has a deep understanding of the functionality, usage, storage, transmission mechanisms and intricacies associated with cryptographic tokens, like bitcoin (BTC) and ether (ETH), and blockchain-based software systems and intends to build applications on top of the DFINITY Network or otherwise to use DFN to participate in network governance, mining activities or connecting Private Networks;</li>
-        <li>the Donor is legally permitted to receive and hold and make use of DFN in the Donor&rsquo;s jurisdiction;</li>
-        <li>the Donor is legally permitted to receive software and contributing to DFINITY;</li>
-        <li>the Donor is of a sufficient age to legally obtain DFN;</li>
-        <li>User will donate only from a wallet or wallet service provider that technically supports the DFN. User understands and accepts, that failure to assure this may have the result that User will not gain access to his DFN.</li>
-        <li>the Donor will take sole responsibility for any restrictions and risks associated with the receiving and holding of DFN;</li>
-        <li>the Donor is not donating to DFINITY to obtain DFN for the purpose of speculative investment;</li>
-        <li>the Donor is not obtaining or using DFN for any illegal purposes;</li>
-        <li>the Donor waives the right to participate in a class action lawsuit or a classwide arbitration against any entity or individual involved with the Donation to DFINITY, with the allocation of DFN and with the operation of the DFINITY Network;</li>
-        <li>the Donor understands the Donation to DFINITY and the allocation of DFN do not involve the purchase of shares or any equivalent in any existing or future public or private company, corporation or other entity in any jurisdiction;</li>
-        <li>the Donor understands and expressly accepts that there is no warranty whatsoever on DFN and/or the success of the DFINITY Network, expressed or implied, to the extent permitted by law, and that DFN is created and obtained at the sole risk of the Donor on an &ldquo;as is&rdquo; and &ldquo;under development&rdquo; basis and without, to the extent permitted by law, any warranties of any kind, including, but not limited to, warranties of title or implied warranties, merchantability or fitness for a particular purpose;</li>
-        <li>the Donor understands with regard to DFN no market liquidity may be guaranteed and that the value of DFN over time (if any) may experience extreme volatility or depreciate in full;</li>
-        <li>the Donor understands that the Donor bears the sole responsibility to determine if the Donation to DFINITY, the allocation, use or ownership of DFN, the potential appreciation or depreciation in the value of DFN over time (if any), the sale and purchase of DFN and/or any other action or transaction related to the DFINITY Network have tax implications; by donating to DFINITY, and/or by receiving, using or holding DFN, and to the extent permitted by law, the Donor agrees not to hold any associated party (including developers, auditors, contractors or founders) liable for any tax liability associated with or arising from the Donation to DFINITY, the allocation, use or ownership of DFN or any other action or transaction related to the DFINITY Network.</li>
-    </ol>
-</ol>
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol start="10">
+                    <li>The Donor understands and accepts that DFN do not represent or constitute any ownership right or stake, share or security or equivalent right in or relating to DFINITY, The Client, the DFINITY Network and/or any software, any public or private company, corporation, entity or property.</li>
+                    <li>By donating to DFINITY, and/or by receiving, using and holding of DFN, the Donor represents and warrants that:</li>
+                    <ol type="a">
+                        <li>the Donor understands and expressly accepts that due to legal uncertainties and complexity of US financial regulations, DFINITY will not accept any Donations of US persons by residency or citizenship;</li>
+                        <li>the Donor is not a US person by residency or citizenship;</li>
+                        <li>the Donor has a deep understanding of the functionality, usage, storage, transmission mechanisms and intricacies associated with cryptographic tokens, like bitcoin (BTC) and ether (ETH), and blockchain-based software systems and intends to build applications on top of the DFINITY Network or otherwise to use DFN to participate in network governance, mining activities or connecting Private Networks;</li>
+                        <li>the Donor is legally permitted to receive and hold and make use of DFN in the Donor&rsquo;s jurisdiction;</li>
+                        <li>the Donor is legally permitted to receive software and contributing to DFINITY;</li>
+                        <li>the Donor is of a sufficient age to legally obtain DFN;</li>
+                        <li>User will donate only from a wallet or wallet service provider that technically supports the DFN. User understands and accepts, that failure to assure this may have the result that User will not gain access to his DFN.</li>
+                        <li>the Donor will take sole responsibility for any restrictions and risks associated with the receiving and holding of DFN;</li>
+                        <li>the Donor is not donating to DFINITY to obtain DFN for the purpose of speculative investment;</li>
+                        <li>the Donor is not obtaining or using DFN for any illegal purposes;</li>
+                        <li>the Donor waives the right to participate in a class action lawsuit or a classwide arbitration against any entity or individual involved with the Donation to DFINITY, with the allocation of DFN and with the operation of the DFINITY Network;</li>
+                        <li>the Donor understands the Donation to DFINITY and the allocation of DFN do not involve the purchase of shares or any equivalent in any existing or future public or private company, corporation or other entity in any jurisdiction;</li>
+                        <li>the Donor understands and expressly accepts that there is no warranty whatsoever on DFN and/or the success of the DFINITY Network, expressed or implied, to the extent permitted by law, and that DFN is created and obtained at the sole risk of the Donor on an &ldquo;as is&rdquo; and &ldquo;under development&rdquo; basis and without, to the extent permitted by law, any warranties of any kind, including, but not limited to, warranties of title or implied warranties, merchantability or fitness for a particular purpose;</li>
+                        <li>the Donor understands with regard to DFN no market liquidity may be guaranteed and that the value of DFN over time (if any) may experience extreme volatility or depreciate in full;</li>
+                        <li>the Donor understands that the Donor bears the sole responsibility to determine if the Donation to DFINITY, the allocation, use or ownership of DFN, the potential appreciation or depreciation in the value of DFN over time (if any), the sale and purchase of DFN and/or any other action or transaction related to the DFINITY Network have tax implications; by donating to DFINITY, and/or by receiving, using or holding DFN, and to the extent permitted by law, the Donor agrees not to hold any associated party (including developers, auditors, contractors or founders) liable for any tax liability associated with or arising from the Donation to DFINITY, the allocation, use or ownership of DFN or any other action or transaction related to the DFINITY Network.</li>
+                    </ol>
+                </ol>
                 <h3><span class="c10">3. DFINITY Donation Procedure</span></h3>
-            <!--</li>-->
-        <!--</ol>-->
-        <!--<ol class="c13 lst-kix_list_9-3 start" start="1">-->
-            <!--<li class="c11 c0">-->
                 <h4>3.1 Qualification</h4>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol start="12"> 
-<li>Any contribution made to DFINITY during the Donation Rounds as described below is qualified as a non-refundable Donation.</li>
-</ol>
-        <!--<ol class="c13 lst-kix_list_9-3 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol start="12">
+                    <li>Any contribution made to DFINITY during the Donation Rounds as described below is qualified as a non-refundable Donation.</li>
+                </ol>
                 <h4>3.2 Donation Rounds and Donation Periods</h4>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol class="c13 lst-kix_list_6-0" start="13">
-<li>Donations will be collected in two rounds, a &ldquo;Seed Round&rdquo; and a &ldquo;Main Round&rdquo; (together &ldquo;Donation Rounds&rdquo;).</li>
-<li>The Seed Round will start on 12<sup>th</sup> of February 2017.</li>
-<li>The Main Round will take place no sooner than 4 months after the Seed Round, but can be delayed by up to 270 days at the discretion of DFINITY using a privileged call it can make into the FDC.</li>
-<li>The two Donation Rounds last a maximum of 6 weeks (&ldquo;Donation Period&rdquo;). For both Donation Rounds, maximum Donation amounts (&ldquo;Donation Caps&rdquo;) have been defined (see section 3.4).</li>
-<li>No minimal or maximal Donation amounts per Donor exist.</li>
-        </ol>
-        <!--<ol class="c13 lst-kix_list_9-3 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol class="c13 lst-kix_list_6-0" start="13">
+                    <li>Donations will be collected in two rounds, a &ldquo;Seed Round&rdquo; and a &ldquo;Main Round&rdquo; (together &ldquo;Donation Rounds&rdquo;).</li>
+                    <li>The Seed Round will start on 12<sup>th</sup> of February 2017.</li>
+                    <li>The Main Round will take place no sooner than 4 months after the Seed Round, but can be delayed by up to 270 days at the discretion of DFINITY using a privileged call it can make into the FDC.</li>
+                    <li>The two Donation Rounds last a maximum of 6 weeks (&ldquo;Donation Period&rdquo;). For both Donation Rounds, maximum Donation amounts (&ldquo;Donation Caps&rdquo;) have been defined (see section 3.4).</li>
+                    <li>No minimal or maximal Donation amounts per Donor exist.</li>
+                </ol>
                 <h4>3.3 Accepted Currencies</h4>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol class="c13 lst-kix_list_6-0" start="18">
-<li>Donations can be made using ether (ETH), bitcoin (BTC) or CHF.</li>
-<li>Donations in ETH or BTC must be made by using the DFINITY Stiftung Donation Chrome Extension Software (&ldquo;Donation Software&rdquo;) provided by DFINITY. The Donation Software will allocate the Donation to the FDC. Any ETH or BTC Donation to DFINITY made without using the Donation Software may not lead to a recommendation for DFN allocation as set forth below (see section 4).</li>
-<li>If the Donor wishes to make a Donation in CHF, it must be specially pre-approved and verified by DFINITY. Any CHF Donation to DFINITY without following this procedure will not lead to a recommendation for DFN allocation as set forth below (see section 4).</li>
-        </ol>
-        <!--<ol class="c13 lst-kix_list_9-3 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol class="c13 lst-kix_list_6-0" start="18">
+                    <li>Donations can be made using ether (ETH), bitcoin (BTC) or CHF.</li>
+                    <li>Donations in ETH or BTC must be made by using the DFINITY Stiftung Donation Chrome Extension Software (&ldquo;Donation Software&rdquo;) provided by DFINITY. The Donation Software will allocate the Donation to the FDC. Any ETH or BTC Donation to DFINITY made without using the Donation Software may not lead to a recommendation for DFN allocation as set forth below (see section 4).</li>
+                    <li>If the Donor wishes to make a Donation in CHF, it must be specially pre-approved and verified by DFINITY. Any CHF Donation to DFINITY without following this procedure will not lead to a recommendation for DFN allocation as set forth below (see section 4).</li>
+                </ol>
                 <h4>3.4 Donation Cap Amounts</h4>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol class="c13 lst-kix_list_6-0" start="21">
-         <li>The Donation Cap for the Seed Round is CHF 1 Mio (CHF 1&rsquo;000&rsquo;000).</li>
-<li>The Donation Cap for the Main Round is CHF 20 Mio (CHF 20&rsquo;000&rsquo;000).</li>
-<li>If the Seed Round reaches its Donation Cap before the end date of the Donation Period, the FDC will automatically stop accepting additional Donations 24 hours after the Donation Cap was reached. Donations made before the FDC stops accepting additional Donations will be accepted.</li>
-<li>If the Main Round reaches its Donation Cap before the end date of the Donation Period, the FDC will automatically stop accepting additional Donations.</li>
-<li>Donor is aware that, due to Ethereum block time delay, the exact time of the end of the Donation Period may not be warranted.</li>
-<li>If a Donor has correctly used the Donation Software, and their Donation is not accepted, then it will be returned to the forwarding address managed by the Donation Software, allowing the Donor to recover their funds. The Donor shall therefore be sure to use the Donation Software and an Address to which the FDC can send back the Donation to (e.g. not sending a Donation directly from a currency exchange without using the Donation Software).</li>
-        </ol>
-        <!--<ol class="c13 lst-kix_list_9-3 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol class="c13 lst-kix_list_6-0" start="21">
+                    <li>The Donation Cap for the Seed Round is CHF 1 Mio (CHF 1&rsquo;000&rsquo;000).</li>
+                    <li>The Donation Cap for the Main Round is CHF 20 Mio (CHF 20&rsquo;000&rsquo;000).</li>
+                    <li>If the Seed Round reaches its Donation Cap before the end date of the Donation Period, the FDC will automatically stop accepting additional Donations 24 hours after the Donation Cap was reached. Donations made before the FDC stops accepting additional Donations will be accepted.</li>
+                    <li>If the Main Round reaches its Donation Cap before the end date of the Donation Period, the FDC will automatically stop accepting additional Donations.</li>
+                    <li>Donor is aware that, due to Ethereum block time delay, the exact time of the end of the Donation Period may not be warranted.</li>
+                    <li>If a Donor has correctly used the Donation Software, and their Donation is not accepted, then it will be returned to the forwarding address managed by the Donation Software, allowing the Donor to recover their funds. The Donor shall therefore be sure to use the Donation Software and an Address to which the FDC can send back the Donation to (e.g. not sending a Donation directly from a currency exchange without using the Donation Software).</li>
+                </ol>
                 <h4>3.5 Foundations Donations Contract (FDC)</h4>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol class="c13 lst-kix_list_6-0" start="27">
-<li>Donations made to DFINITY during the Donation Rounds are being recorded in an Ethereum smart contract called the FDC.</li>
-<li>The FDC will record the equivalent "value" of Donations in CHF (Swiss francs). The CHF equivalent for ETH or BTC shall be calculated using the time-averaged price provided by CoinMarketCap or equivalent service chosen by DFINITY at approx. the time of the Donation (the exchange rates used will be updated approx. once per hour).</li>
-<li>When Donations are recorded by the FDC, a multiplier is applied for the purpose of DFN allocation (&ldquo;Donation Multiplier). Thereby, the multiplication of the Donation amount (in CHF) with the Donation Multiplier results in the exact amount of &ldquo;FDC Allocation Units&rdquo; for each Donation. A fixed Donation Multiplier of 3 will be applied to Donations made in the Seed Round (thus a Donation of 1 CHF will be recorded with 3 FDC Allocation Units). For each week of the Main Round, a different Donation Multiplier will be applied:</li>
-       <ol type="a">
-<li>Week 1: Donation Multiplier of 1.25</li>
-<li>Week 2: Donation Multiplier of 1.20</li>
-<li>Week 3: Donation Multiplier of 1.15</li>
-<li>Week 4: Donation Multiplier of 1.10</li>
-<li>Week 5: Donation Multiplier of 1.05</li>
-<li>Week 6: No Donation Multiplier</li>
-</ol>
-<li>Upon a successful Donation being made, a digital receipt will be created by the FDC that reflects the quantity of the DFN tokens DFINITY shall propose to allocate to the Donor in accordance to his respective amount of FDC Allocation Units (&ldquo;Donation Receipt)&rdquo;. Such allocation shall be proposed in accordance to the mechanism set forth below (see section 4). The time that it takes for the FDC to create the receipt depends upon whether the Donor used BTC, ETH or CHF, and mechanisms inside the FDC and other technology used to collect Donations.</li>
-     
-        </ol>
-
-
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol class="c13 lst-kix_list_6-0" start="27">
+                    <li>Donations made to DFINITY during the Donation Rounds are being recorded in an Ethereum smart contract called the FDC.</li>
+                    <li>The FDC will record the equivalent "value" of Donations in CHF (Swiss francs). The CHF equivalent for ETH or BTC shall be calculated using the time-averaged price provided by CoinMarketCap or equivalent service chosen by DFINITY at approx. the time of the Donation (the exchange rates used will be updated approx. once per hour).</li>
+                    <li>When Donations are recorded by the FDC, a multiplier is applied for the purpose of DFN allocation (&ldquo;Donation Multiplier). Thereby, the multiplication of the Donation amount (in CHF) with the Donation Multiplier results in the exact amount of &ldquo;FDC Allocation Units&rdquo; for each Donation. A fixed Donation Multiplier of 3 will be applied to Donations made in the Seed Round (thus a Donation of 1 CHF will be recorded with 3 FDC Allocation Units). For each week of the Main Round, a different Donation Multiplier will be applied:</li>
+                    <ol type="a">
+                        <li>Week 1: Donation Multiplier of 1.25</li>
+                        <li>Week 2: Donation Multiplier of 1.20</li>
+                        <li>Week 3: Donation Multiplier of 1.15</li>
+                        <li>Week 4: Donation Multiplier of 1.10</li>
+                        <li>Week 5: Donation Multiplier of 1.05</li>
+                        <li>Week 6: No Donation Multiplier</li>
+                    </ol>
+                    <li>Upon a successful Donation being made, a digital receipt will be created by the FDC that reflects the quantity of the DFN tokens DFINITY shall propose to allocate to the Donor in accordance to his respective amount of FDC Allocation Units (&ldquo;Donation Receipt)&rdquo;. Such allocation shall be proposed in accordance to the mechanism set forth below (see section 4). The time that it takes for the FDC to create the receipt depends upon whether the Donor used BTC, ETH or CHF, and mechanisms inside the FDC and other technology used to collect Donations.</li>
+                </ol>
                 <h3><span class="c10">4. DFN Allocation Proposal</span></h3>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol start="31">
-<li>When DFINITY judges in its sole discretion both that The Client is sufficiently developed to launch the DFINITY Network and that it is a good time to launch the DFINITY Network, it will issue a public announcement recommending what the Genesis State should be. In the Genesis State it shall recommend the allocations of DFN as set forth below.</li>
-<li>It remains in the community&rsquo;s discretion to adopt or not to adopt the Genesis State that DFINITY recommends. DFINITY cannot guarantee to Donors that they shall have any allocation and/or creation of DFN as set forth in these terms.</li>
-<li>In the Genesis State, DFINITY shall recommend the allocations of DFN according to the principles set forth below and under Section 3.5 above:</li>
-<ul>
-<li><strong>Pool A</strong>: 78% of the &ldquo;Total DFN Amount&rdquo; allocated by the Genesis State shall be allocated to Donors who made Donations to DFINITY during the Donation Rounds (the Seed Round and the Main Round) as recorded by the FDC.
-</li>
-<p>For Pool A, DFINITY will recommend that for each FDC Allocation Unit (see para 29) 10 (ten) DFN are created and allocated to the Donors in accordance to their respective amount of FDC Allocation Units recorded by the FDC during the Donation Rounds.</p>
-
-<li>
-<p><strong>Pool B</strong>: 12.5% of the Total DFN Amount shall be reserved for an allocation (an endowment) to be used at the complete discretion of DFINITY. E.g. for funding operations, disbursement of grants to developers and partners, and so on.</p>
-</li>
-
-<li><strong>Pool C</strong>: 9.5% of the Total DFN Amount shall be allocated in return for Donations from special persons, organizations and partners who made early financial, development or management contributions or provided other support resources or guarantees that were needed to realize the current design of the DFINITY Network (&ldquo;Early Contributions&rdquo;).</li>
-
-<p>For Pool B and Pool C, DFINITY will recommend that - since the total amount of DFN created for Pool A represents 78% of the Total DFN Amount - an additional 28.2% of the total amount of DFN of Pool A will be created and split between Pool B and Pool C using the ratio 12.5/9.5 (For example, if DFINITY recommends the genesis allocations in Pool A consists of a total of 78&rsquo;000 DFN, then it will recommend that 12&rsquo;500 DFN will be created for Pool B and 9,500 DFN will be created for Pool C, such that a total of 100,000 DFN are created).</p>
-</ul>
-
-<li>The Allocation of DFN will be conducted to Donor&rsquo;s wallet address, which is specified to the FDC by the Donation Software. If the Donation has been made in CHF, the corresponding amount of DFN will be allocated to the Donor&rsquo;s wallet address as specified by the Donor. The Donor only uses an address for the Donation, that is technically compatible to the DFN. User understands and accepts, that failure to assure this may have the result that User will not gain access to his or her DFN.</li>
-</ol>
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol start="31">
+                    <li>When DFINITY judges in its sole discretion both that The Client is sufficiently developed to launch the DFINITY Network and that it is a good time to launch the DFINITY Network, it will issue a public announcement recommending what the Genesis State should be. In the Genesis State it shall recommend the allocations of DFN as set forth below.</li>
+                    <li>It remains in the community&rsquo;s discretion to adopt or not to adopt the Genesis State that DFINITY recommends. DFINITY cannot guarantee to Donors that they shall have any allocation and/or creation of DFN as set forth in these terms.</li>
+                    <li>In the Genesis State, DFINITY shall recommend the allocations of DFN according to the principles set forth below and under Section 3.5 above:</li>
+                    <ul>
+                        <li><strong>Pool A</strong>: 78% of the &ldquo;Total DFN Amount&rdquo; allocated by the Genesis State shall be allocated to Donors who made Donations to DFINITY during the Donation Rounds (the Seed Round and the Main Round) as recorded by the FDC.
+                        </li>
+                        <p>For Pool A, DFINITY will recommend that for each FDC Allocation Unit (see para 29) 10 (ten) DFN are created and allocated to the Donors in accordance to their respective amount of FDC Allocation Units recorded by the FDC during the Donation Rounds.</p>
+                        <li>
+                            <p><strong>Pool B</strong>: 12.5% of the Total DFN Amount shall be reserved for an allocation (an endowment) to be used at the complete discretion of DFINITY. E.g. for funding operations, disbursement of grants to developers and partners, and so on.</p>
+                        </li>
+                        <li><strong>Pool C</strong>: 9.5% of the Total DFN Amount shall be allocated in return for Donations from special persons, organizations and partners who made early financial, development or management contributions or provided other support resources or guarantees that were needed to realize the current design of the DFINITY Network (&ldquo;Early Contributions&rdquo;).</li>
+                        <p>For Pool B and Pool C, DFINITY will recommend that - since the total amount of DFN created for Pool A represents 78% of the Total DFN Amount - an additional 28.2% of the total amount of DFN of Pool A will be created and split between Pool B and Pool C using the ratio 12.5/9.5 (For example, if DFINITY recommends the genesis allocations in Pool A consists of a total of 78&rsquo;000 DFN, then it will recommend that 12&rsquo;500 DFN will be created for Pool B and 9,500 DFN will be created for Pool C, such that a total of 100,000 DFN are created).</p>
+                    </ul>
+                    <li>The Allocation of DFN will be conducted to Donor&rsquo;s wallet address, which is specified to the FDC by the Donation Software. If the Donation has been made in CHF, the corresponding amount of DFN will be allocated to the Donor&rsquo;s wallet address as specified by the Donor. The Donor only uses an address for the Donation, that is technically compatible to the DFN. User understands and accepts, that failure to assure this may have the result that User will not gain access to his or her DFN.</li>
+                </ol>
                 <h3>5. DFINITY Project Execution</h3>
-            <!--</li>-->
-        <!--</ol>-->
-       <ol start="35">
-<li>DFINITY has the right to engage subcontractors to perform the entire or partial development and execution of the DFINITY Project.</li>
-<li>It remains at DFINITY's sole discretion to decide how to allocate the Donations received in order to develop and execute the DFINITY Project.</li>
-<li>The Donor understands and accepts that he may not have any expectation of influence over governance on DFINITY.</li>
-<li>The Donor understands and accepts that the DFINITY Network will need to go through substantial development works as part of which it may become subject of significant conceptual, technical and commercial changes before release.</li>
-</ol>
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol start="35">
+                    <li>DFINITY has the right to engage subcontractors to perform the entire or partial development and execution of the DFINITY Project.</li>
+                    <li>It remains at DFINITY's sole discretion to decide how to allocate the Donations received in order to develop and execute the DFINITY Project.</li>
+                    <li>The Donor understands and accepts that he may not have any expectation of influence over governance on DFINITY.</li>
+                    <li>The Donor understands and accepts that the DFINITY Network will need to go through substantial development works as part of which it may become subject of significant conceptual, technical and commercial changes before release.</li>
+                </ol>
                 <h3>6. Technical Checks of the Donation Software and the FDC</h3>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol class="c13 lst-kix_list_6-0" start="39">
-       
-<li>The Donation Software and the FDC have been, on a reasonable effort basis, examined by technical experts with regard to their functionality. The technical experts have confirmed that the Donation Software and the FDC have, with regard to both accuracy and security, been programmed according to the current state of the art.</li>
-<li>However, the Donor understands and accepts that the used software and technology is still in an early development stage and its application of experimental nature which carries significant operational, technological, financial, regulatory and reputational risks. Accordingly, while the examineations performed raise the level of security and accuracy, the Donor understands and accepts that such examinations do not amount to any form of warranty, including direct or indirect warranties that the Donation Software and the FDC are fit for a particular purpose or do not contain any weaknesses, vulnerabilities or bugs which could cause, inter alia, the complete loss of BTC, ETH and/or DFN.</li>
-        </ol>
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c0 c11">-->
+                <ol class="c13 lst-kix_list_6-0" start="39">
+                    <li>The Donation Software and the FDC have been, on a reasonable effort basis, examined by technical experts with regard to their functionality. The technical experts have confirmed that the Donation Software and the FDC have, with regard to both accuracy and security, been programmed according to the current state of the art.</li>
+                    <li>However, the Donor understands and accepts that the used software and technology is still in an early development stage and its application of experimental nature which carries significant operational, technological, financial, regulatory and reputational risks. Accordingly, while the examineations performed raise the level of security and accuracy, the Donor understands and accepts that such examinations do not amount to any form of warranty, including direct or indirect warranties that the Donation Software and the FDC are fit for a particular purpose or do not contain any weaknesses, vulnerabilities or bugs which could cause, inter alia, the complete loss of BTC, ETH and/or DFN.</li>
+                </ol>
                 <h3>7. Risks</h3>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol class="c13 lst-kix_list_6-0" start="41">
-        <li>The Donor understands and accepts the risks in connection with the Donation to DFINITY, and/or with the allocation, use and ownership of DFN, as exemplary set forth above and hereinafter. In particular, but not concluding, the Donor understands the inherent risks listed hereinafter:
-       <ul>
-<li><strong>Risk of software weaknesses</strong>: The Donor understands and accepts that the decentralized cloud concept, The Client, the Donation Software, the FDC and other involved software and technology and technical concepts and theories (including but not limited to Threshold Relay, Threshold Relay blockchains, Validation Towers, Validation Trees, USCIDs, Blockchain Nervous Systems, cryptography and game theoretic assumptions related to Proof of Stake networks involving security deposits) are still in an early development stage and unproven, why there is no warranty that the process for receiving, use and ownership of DFN will be uninterrupted or error-free and why there is an inherent risk that the software and related technologies and theories could contain weaknesses, vulnerabilities or bugs causing, inter alia, the complete loss of DFN.</li>
-<li><strong>Regulatory risk</strong>: The Donor understands and accepts that the blockchain technology allows new forms of interaction and that it is possible that certain jurisdictions will apply existing regulations on, or introduce new regulations addressing, blockchain technology based applications, which may be contrary to the current setup of the FDC anddecentralized cloud concept and which may, inter alia, result in substantial modifications of the decentralized cloud concept and/or the DFINITY Network, including its termination and the loss of DFN for the Donor.</li>
-<li><strong>Risk of abandonment / lack of success</strong>: The Donor understands and accepts that the allocation of the DFN and the development of the DFINITY Network may be abandoned for a number of reasons, including lack of interest from industry and/or the public, lack of funding, lack of commercial success or prospects (e.g. caused by competing projects). The Donor therefore understands that there is no assurance that, even if the DFINITY Network is partially or fully developed and launched, the Donor will receive any functionality through the DFN held by him.</li>
-<li><strong>Risk associated with other applications</strong>: The Donor understands and accepts that the DFINITY Network may give rise to other, alternative projects, promoted by unaffiliated third parties, under which DFN will have no intrinsic value.</li>
-<li><strong>Risk of loss of private key</strong>: DFN may only be accessed using a private key that corresponds to the address at which it is stored. Donor understands and accepts that if his private key, or the &ldquo;seed&rdquo; used to create his address and corresponding private key got lost or stolen, the obtained DFN associated with the Donor&rsquo;s address will be unrecoverable and will be permanently lost.</li>
-<li><strong>Risk of theft:</strong> The Donor understands and accepts that the decentralized cloud concept, the Donation Software, The Client, the virtual platform created by the DFINITY Network, the Ethereum network, the FDC smart contract hosted on Ethereum, and other technology components or platforms may be exposed to attacks by hackers or other individuals that that could result in theft or loss of DFN, or the theft or loss of Donations, impacting the ability to develop and launch the DFINITY Network.</li>
-<li><strong>Risk of blockchain mining attacks:</strong> The Donor understands and accepts that, as with other public blockchain based systems that depend upon independent miners, the DFINITY Network may be susceptible to mining attacks including but not limited to double-spend attacks, majority mining power attacks, &ldquo;selfish-mining&rdquo; attacks, and race condition attacks. Any successful attacks present a risk to the decentralized cloud system created by the DFINITY Network, expected proper execution and sequencing of DFN transactions, and expected proper execution and sequencing of software computations.</li>
-<li><strong>Risk of governance attacks and failure: </strong>The Donor understands and accepts that the DFINITY Network uses an in-built decentralized governance system called the Blockchain Nervous System, which involves &ldquo;neurons&rdquo; that can be created by supplying security deposits to the system in the form of DFN. These neurons vote on proposals submitted to the Blockchain Nervous System. The neurons can be controlled directly by their owners and can also operate automatically by following other neurons. Because the Blockchain Nervous System is integrated into the workings of the DFINITY Network, it can perform arbitrary privileged actions including freezing smart contract software, redistributing DFN, running software to modify smart contracts and/or their associated persistent data, changing the rules concerning the issuance of new DFN to miners as rewards, changing the quantity of DFN that must be deposited to create a mining identity or neuron, or to connect a Private Network, changing constitutional guidelines that might be provided to neuron owners to inform their collective decision making, and many other actions. For these reasons, it is possible that the Blockchain Nervous System adopts proposals that have an adverse effect on the useful functioning of the DFINITY Network and/or the value of DFN. If the Blockchain Nervous System is attacked, or becomes controlled either directly or indirectly by some party who makes unwise decisions, or the community generally makes unwise decisions, the value of DFN held by a Donor might be greatly reduced or even permanently lost.</li>
-</ul>
-</li>
-</ol>
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol class="c13 lst-kix_list_6-0" start="41">
+                    <li>The Donor understands and accepts the risks in connection with the Donation to DFINITY, and/or with the allocation, use and ownership of DFN, as exemplary set forth above and hereinafter. In particular, but not concluding, the Donor understands the inherent risks listed hereinafter:
+                        <ul>
+                            <li><strong>Risk of software weaknesses</strong>: The Donor understands and accepts that the decentralized cloud concept, The Client, the Donation Software, the FDC and other involved software and technology and technical concepts and theories (including but not limited to Threshold Relay, Threshold Relay blockchains, Validation Towers, Validation Trees, USCIDs, Blockchain Nervous Systems, cryptography and game theoretic assumptions related to Proof of Stake networks involving security deposits) are still in an early development stage and unproven, why there is no warranty that the process for receiving, use and ownership of DFN will be uninterrupted or error-free and why there is an inherent risk that the software and related technologies and theories could contain weaknesses, vulnerabilities or bugs causing, inter alia, the complete loss of DFN.</li>
+                            <li><strong>Regulatory risk</strong>: The Donor understands and accepts that the blockchain technology allows new forms of interaction and that it is possible that certain jurisdictions will apply existing regulations on, or introduce new regulations addressing, blockchain technology based applications, which may be contrary to the current setup of the FDC anddecentralized cloud concept and which may, inter alia, result in substantial modifications of the decentralized cloud concept and/or the DFINITY Network, including its termination and the loss of DFN for the Donor.</li>
+                            <li><strong>Risk of abandonment / lack of success</strong>: The Donor understands and accepts that the allocation of the DFN and the development of the DFINITY Network may be abandoned for a number of reasons, including lack of interest from industry and/or the public, lack of funding, lack of commercial success or prospects (e.g. caused by competing projects). The Donor therefore understands that there is no assurance that, even if the DFINITY Network is partially or fully developed and launched, the Donor will receive any functionality through the DFN held by him.</li>
+                            <li><strong>Risk associated with other applications</strong>: The Donor understands and accepts that the DFINITY Network may give rise to other, alternative projects, promoted by unaffiliated third parties, under which DFN will have no intrinsic value.</li>
+                            <li><strong>Risk of loss of private key</strong>: DFN may only be accessed using a private key that corresponds to the address at which it is stored. Donor understands and accepts that if his private key, or the &ldquo;seed&rdquo; used to create his address and corresponding private key got lost or stolen, the obtained DFN associated with the Donor&rsquo;s address will be unrecoverable and will be permanently lost.</li>
+                            <li><strong>Risk of theft:</strong> The Donor understands and accepts that the decentralized cloud concept, the Donation Software, The Client, the virtual platform created by the DFINITY Network, the Ethereum network, the FDC smart contract hosted on Ethereum, and other technology components or platforms may be exposed to attacks by hackers or other individuals that that could result in theft or loss of DFN, or the theft or loss of Donations, impacting the ability to develop and launch the DFINITY Network.</li>
+                            <li><strong>Risk of blockchain mining attacks:</strong> The Donor understands and accepts that, as with other public blockchain based systems that depend upon independent miners, the DFINITY Network may be susceptible to mining attacks including but not limited to double-spend attacks, majority mining power attacks, &ldquo;selfish-mining&rdquo; attacks, and race condition attacks. Any successful attacks present a risk to the decentralized cloud system created by the DFINITY Network, expected proper execution and sequencing of DFN transactions, and expected proper execution and sequencing of software computations.</li>
+                            <li><strong>Risk of governance attacks and failure: </strong>The Donor understands and accepts that the DFINITY Network uses an in-built decentralized governance system called the Blockchain Nervous System, which involves &ldquo;neurons&rdquo; that can be created by supplying security deposits to the system in the form of DFN. These neurons vote on proposals submitted to the Blockchain Nervous System. The neurons can be controlled directly by their owners and can also operate automatically by following other neurons. Because the Blockchain Nervous System is integrated into the workings of the DFINITY Network, it can perform arbitrary privileged actions including freezing smart contract software, redistributing DFN, running software to modify smart contracts and/or their associated persistent data, changing the rules concerning the issuance of new DFN to miners as rewards, changing the quantity of DFN that must be deposited to create a mining identity or neuron, or to connect a Private Network, changing constitutional guidelines that might be provided to neuron owners to inform their collective decision making, and many other actions. For these reasons, it is possible that the Blockchain Nervous System adopts proposals that have an adverse effect on the useful functioning of the DFINITY Network and/or the value of DFN. If the Blockchain Nervous System is attacked, or becomes controlled either directly or indirectly by some party who makes unwise decisions, or the community generally makes unwise decisions, the value of DFN held by a Donor might be greatly reduced or even permanently lost.</li>
+                        </ul>
+                    </li>
+                </ol>
                 <h3>8. Taxation</h3>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol class="c13 lst-kix_list_6-0" start="42">
-           <li>The Donor bears the sole responsibility to determine if his Donation to DFINITY, the allocation, use or ownership of DFN, the potential appreciation or depreciation in the value of DFN over time (if any), the sale and purchase of DFN and/or any other action or transaction related to the DFINITY Network have tax implications for him.</li>
-<li>By donating to the DFINITY, and/or by receiving, using or holding DFN, and to the extent permitted by law, the Donor agrees not to hold any third party (including developers, auditors, contractors or founders) liable for any tax liability associated with or arising from the Donation to DFINITY, the allocation, use or ownership of DFN or any other action or transaction related to the DFINITY Network.</li>
-        </ol>
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol class="c13 lst-kix_list_6-0" start="42">
+                    <li>The Donor bears the sole responsibility to determine if his Donation to DFINITY, the allocation, use or ownership of DFN, the potential appreciation or depreciation in the value of DFN over time (if any), the sale and purchase of DFN and/or any other action or transaction related to the DFINITY Network have tax implications for him.</li>
+                    <li>By donating to the DFINITY, and/or by receiving, using or holding DFN, and to the extent permitted by law, the Donor agrees not to hold any third party (including developers, auditors, contractors or founders) liable for any tax liability associated with or arising from the Donation to DFINITY, the allocation, use or ownership of DFN or any other action or transaction related to the DFINITY Network.</li>
+                </ol>
                 <h3>9. No Liability</h3>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol class="c13 lst-kix_list_6-0" start="44">
-          
-<li>The Donor acknowledges and agrees that, to the fullest extent permitted by any applicable law, the Donor will not hold DFINITY, any developers, auditors, contractors or founders and/or the DFINITY Network liable for any and all damages or injury whatsoever caused by or related to the use of, or the inability to use, the Donation Software, the FDC, the DFN, the DFINITY Network or the decentralized cloud platform produced under any cause or action whatsoever of any kind in any jurisdiction, including, without limitation, actions for breach of warranty, breach of contract or tort (including negligence) and that developers, auditors, contractors or founders of the Donation Software, the FDC, the DFN, the DFINITY Network or the decentralized cloud platform produced shall not be liable for any indirect, incidental, special, exemplary or consequential damages, including for loss of profits, goodwill or data, in any way whatsoever arising out of the use of, or the inability to use of the Donation Software, the FDC, the DFN, the DFINITY Network or the decentralized cloud platform produced.</li>
-<li>The Donor further specifically acknowledges that developers, auditors, contractors or founders of the Donation Software, the FDC, the DFN, the DFINITY Network or the decentralized cloud platform produced are not liable, and the Donor agrees not to seek to hold them liable, for the conduct of third parties, including other creators of DFN, and that the risk of creating, holding and using DFN rests entirely with the Donor.</li>
-<li>By receiving, holding or using DFN, and to the extent permitted by law, the Donor agrees not to hold any third party (including developers, auditors, contractors or founders) liable for any regulatory implications or liability associated with or arising from the allocation, ownership or use of DFN or any other action or transaction related to the DFINITY Network.</li>
-        </ol>
-        <!--<ol class="c13 lst-kix_list_9-2 start" start="1">-->
-            <!--<li class="c11 c0">-->
+                <ol class="c13 lst-kix_list_6-0" start="44">
+                    <li>The Donor acknowledges and agrees that, to the fullest extent permitted by any applicable law, the Donor will not hold DFINITY, any developers, auditors, contractors or founders and/or the DFINITY Network liable for any and all damages or injury whatsoever caused by or related to the use of, or the inability to use, the Donation Software, the FDC, the DFN, the DFINITY Network or the decentralized cloud platform produced under any cause or action whatsoever of any kind in any jurisdiction, including, without limitation, actions for breach of warranty, breach of contract or tort (including negligence) and that developers, auditors, contractors or founders of the Donation Software, the FDC, the DFN, the DFINITY Network or the decentralized cloud platform produced shall not be liable for any indirect, incidental, special, exemplary or consequential damages, including for loss of profits, goodwill or data, in any way whatsoever arising out of the use of, or the inability to use of the Donation Software, the FDC, the DFN, the DFINITY Network or the decentralized cloud platform produced.</li>
+                    <li>The Donor further specifically acknowledges that developers, auditors, contractors or founders of the Donation Software, the FDC, the DFN, the DFINITY Network or the decentralized cloud platform produced are not liable, and the Donor agrees not to seek to hold them liable, for the conduct of third parties, including other creators of DFN, and that the risk of creating, holding and using DFN rests entirely with the Donor.</li>
+                    <li>By receiving, holding or using DFN, and to the extent permitted by law, the Donor agrees not to hold any third party (including developers, auditors, contractors or founders) liable for any regulatory implications or liability associated with or arising from the allocation, ownership or use of DFN or any other action or transaction related to the DFINITY Network.</li>
+                </ol>
                 <h3>10. Miscellaneous</h3>
-            <!--</li>-->
-        <!--</ol>-->
-        <ol class="c13 lst-kix_list_6-0" start="47">
-        
-<li>The Donor agrees that if any portion of these Terms is found illegal or unenforceable, in whole or in part, such provision shall, as to such jurisdiction, be ineffective solely to the extent of such determination of invalidity or unenforceability without affecting the validity or enforceability thereof in any other manner or jurisdiction and without affecting the remaining provisions of the Terms, which shall continue to be in full force and effect.</li>
-<li>The FDC is located in Alderney. Consequently, the DFN creation and allocation is considered to be executed in Alderney.</li>
-<li>The Terms govern the Donations to DFINITY, and the allocation, use and holding of DFN and supersede any public statements about the launch of DFINITY Network, the DFN and/or the decentralized cloud system made by anyone in the past, present and future.</li>
-<li>The applicable law is Swiss law. Any dispute arising out of or in connection with the creation of the DFN and the development and execution of the DFINITY Network shall be finally settled by the ordinary courts of the registered domicile of the defendant.</li>
-        </ol>
-        <p class="c0 c24">&nbsp;</p>
-        <p class="c0"><span class="c15"><i>Version 6 / February 11, 2017</i></span></p>
-
-
-        <p>
-        <div id="us-person-error" class="error-block" style="display:none;">
-            You seem to be accessing from a US location. DFINITY Stiftung do not accept donations from any US persons or
-            resident, due to regulatory complexities.
-        </div>
-        </p>
-        <p>
-            <input id="i-accept-terms" class="checkbox-custom" type="checkbox"/>
-            <label for="i-accept-terms" class="checkbox-custom-label">I accept all the terms and conditions above.</label>
-        </p>
-        <p>
-            <input id="i-am-not-usa-resident" class="checkbox-custom" type="checkbox"/>
-            <label for="i-am-not-usa-resident" class="checkbox-custom-label">I confirm I am not a resident in or citzen
-                of the United States of America.</label>
-        </p>
-        <p>
-            <a  id="agree-terms-button" class="btn disabled " href="#">I Agree Terms &amp;
+                <ol class="c13 lst-kix_list_6-0" start="47">
+                    <li>The Donor agrees that if any portion of these Terms is found illegal or unenforceable, in whole or in part, such provision shall, as to such jurisdiction, be ineffective solely to the extent of such determination of invalidity or unenforceability without affecting the validity or enforceability thereof in any other manner or jurisdiction and without affecting the remaining provisions of the Terms, which shall continue to be in full force and effect.</li>
+                    <li>The FDC is located in Alderney. Consequently, the DFN creation and allocation is considered to be executed in Alderney.</li>
+                    <li>The Terms govern the Donations to DFINITY, and the allocation, use and holding of DFN and supersede any public statements about the launch of DFINITY Network, the DFN and/or the decentralized cloud system made by anyone in the past, present and future.</li>
+                    <li>The applicable law is Swiss law. Any dispute arising out of or in connection with the creation of the DFN and the development and execution of the DFINITY Network shall be finally settled by the ordinary courts of the registered domicile of the defendant.</li>
+                </ol>
+                <p class="c0 c24">&nbsp;</p>
+                <p class="c0"><span class="c15"><i>Version 6 / February 11, 2017</i></span></p>
+                <p>
+                    <div id="us-person-error" class="error-block" style="display:none;">
+                        You seem to be accessing from a US location. DFINITY Stiftung do not accept donations from any US persons or resident, due to regulatory complexities.
+                    </div>
+                </p>
+                <p>
+                    <input id="i-accept-terms" class="checkbox-custom" type="checkbox" />
+                    <label for="i-accept-terms" class="checkbox-custom-label">I accept all the terms and conditions above.</label>
+                </p>
+                <p>
+                    <input id="i-am-not-usa-resident" class="checkbox-custom" type="checkbox" />
+                    <label for="i-am-not-usa-resident" class="checkbox-custom-label">I confirm I am not a resident in or citzen of the United States of America.</label>
+                </p>
+                <p>
+                    <a id="agree-terms-button" class="btn disabled " href="#">I Agree Terms &amp;
                 Conditions </a>
-            <a id="disagree-terms-button" class="btn " href="#">Cancel</a>
-        </p>
-    </div>
-    <script type="text/javascript" src="./deps/bitcore-lib.js"></script>
-    <script type="text/javascript" src="./deps/bitcore-mnemonic.js"></script>
-    <script type="text/javascript" src="./deps/bitcore-explorers.js"></script>
-    <!--<script type="text/javascript" src="./deps/ethereumjs-util.js"></script>-->
-    <script type="text/javascript" src="./deps/ethereumjs-tx.js"></script>
-    <script type="text/javascript" src="./deps/ethereumjs-all.js"></script>
-    <script type="text/javascript" src="./deps/ethereumjs-util.js"></script>
-
-    <script type="text/javascript" src="./deps/moment.min.js"></script>
-    <script type="text/javascript" src="./constants.js"></script>
-    <script type="text/javascript" src="./eth.js"></script>
-    <script type="text/javascript" src="./app.js"></script>
+                    <a id="disagree-terms-button" class="btn " href="#">Cancel</a>
+                </p>
+            </div>
+            <script type="text/javascript" src="./deps/bitcore-lib.js"></script>
+            <script type="text/javascript" src="./deps/bitcore-mnemonic.js"></script>
+            <script type="text/javascript" src="./deps/bitcore-explorers.js"></script>
+            <!--<script type="text/javascript" src="./deps/ethereumjs-util.js"></script>-->
+            <script type="text/javascript" src="./deps/ethereumjs-tx.js"></script>
+            <script type="text/javascript" src="./deps/ethereumjs-all.js"></script>
+            <script type="text/javascript" src="./deps/ethereumjs-util.js"></script>
+            <script type="text/javascript" src="./deps/moment.min.js"></script>
+            <script type="text/javascript" src="./constants.js"></script>
+            <script type="text/javascript" src="./eth.js"></script>
+            <script type="text/javascript" src="./app.js"></script>
 </body>
+
 </html>
