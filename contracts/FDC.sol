@@ -48,11 +48,11 @@ SOFTWARE.
 
 pragma solidity ^0.4.6;
 
-import "TokenTracker.sol";
-import "Phased.sol";
-import "StepFunction.sol";
-import "Targets.sol";
-import "Parameters.sol";
+import "./TokenTracker.sol";
+import "./Phased.sol";
+import "./StepFunction.sol";
+import "./Targets.sol";
+import "./Parameters.sol";
 
 contract FDC is TokenTracker, Phased, StepFunction, Targets, Parameters {
   // An identifying string, set by the constructor

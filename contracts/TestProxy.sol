@@ -1,6 +1,6 @@
 pragma solidity >=0.4.6;
 
-import "FDC.sol";
+import "./FDC.sol";
 
 /* Used only by the unit tests. It implements a simple proxy for the
    FDC to verify the `is_contract` function in Base.sol as well some

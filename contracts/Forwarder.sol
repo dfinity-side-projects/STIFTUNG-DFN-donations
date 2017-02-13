@@ -1,6 +1,6 @@
 pragma solidity >=0.4.6;
 
-import "FDC.sol";
+import "./FDC.sol";
 
 contract Forwarder {
   FDC public fdc;

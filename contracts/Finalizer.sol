@@ -1,6 +1,6 @@
 pragma solidity >=0.4.6;
 
-import "FDC.sol";
+import "./FDC.sol";
 
 /* Helper contract to, in a single tx, make multiple calls to the
    unauthenticated `unrestrict` function in the FDC.

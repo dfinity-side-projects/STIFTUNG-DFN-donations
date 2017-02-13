@@ -1,6 +1,6 @@
 pragma solidity ^0.4.6;
 
-import "Wallet.sol";
+import "./Wallet.sol";
 
 contract multiauth is multiowned {
   address public toAddr;
